@@ -40,28 +40,6 @@ if [ "$WEB_UPGRADE" = false ]; then
   # clear screen
   clear;
 
-  # Set color of logo
-  tput setaf 6
-  tput bold
-
-  cat << EOF
-       _____                           __         ____  _____ ______
-      / ___/_____________  ___  ____  / /_  __   / __ \/ ___// ____/
-      \__ \/ ___/ ___/ _ \/ _ \/ __ \/ / / / /  / / / /\__ \/ __/
-     ___/ / /__/ /  /  __/  __/ / / / / /_/ /  / /_/ /___/ / /___
-    /____/\___/_/   \___/\___/_/ /_/_/\__, /   \____//____/_____/
-                                     /____/
-EOF
-
-  # Reset color
-  tput sgr 0
-
-  echo -e "Screenly OSE requires a dedicated Raspberry Pi / SD card.\nYou will not be able to use the regular desktop environment once installed.\n"
-  read -p "Do you still want to continue? (y/N)" -n 1 -r -s INSTALL
-  if [ "$INSTALL" != 'y' ]; then
-    echo
-    exit 1
-  fi
 
 echo -e "\n________________________________________\n"
 echo -e "Which version/branch of Screenly OSE would you like to install:\n"
@@ -69,17 +47,9 @@ echo " Press (1) for the Production branch, which is the latest stable."
 echo " Press (2) for the Development/Master branch, which has the latest features and fixes, but things may break."
 echo ""
 
-read -n 1 -r -s BRANCHSELECTION
-case $BRANCHSELECTION in
-  1) echo "You selected: Production";export DOCKER_TAG="production";BRANCH="production"
-    ;;
-  2) echo "You selected: Development/Master";export DOCKER_TAG="latest";BRANCH="master"
-    ;;
-  *) echo "(Error) That was not an option, installer will now exit.";exit
-    ;;
-esac
+export DOCKER_TAG="latest";BRANCH="master"
 
-  echo && read -p "Do you want Screenly OSE to manage your network? This is recommended for most users because this adds features to manage your network. (Y/n)" -n 1 -r -s NETWORK && echo
+  echo && read -p "Do you want Kenban OS to manage your network? This is recommended for most users because this adds features to manage your network. (Y/n)" -n 1 -r -s NETWORK && echo
 
   echo && read -p "Would you like to perform a full system upgrade as well? (y/N)" -n 1 -r -s UPGRADE && echo
   if [ "$UPGRADE" != 'y' ]; then
@@ -121,10 +91,10 @@ fi
 if [ -z "${REPOSITORY}" ]; then
   if [ "$WEB_UPGRADE" = false ]; then
     set -x
-    REPOSITORY=${1:-https://github.com/screenly/screenly-ose.git}
+    REPOSITORY=${1:-https://github.com/kenban/kenban_os.git}
   else
     set -e
-    REPOSITORY=https://github.com/screenly/screenly-ose.git
+    REPOSITORY=https://github.com/kenban/kenban_os.git
   fi
 fi
 
@@ -161,7 +131,7 @@ fi
 
 # Install Ansible from requirements file.
 if [ "$BRANCH" = "master" ]; then
-    ANSIBLE_VERSION=$(curl -s https://raw.githubusercontent.com/Screenly/screenly-ose/$BRANCH/requirements/requirements.host.txt | grep ansible)
+    ANSIBLE_VERSION=$(curl -s https://raw.githubusercontent.com/Kenban/kenban_os/$BRANCH/requirements/requirements.host.txt | grep ansible)
 else
     ANSIBLE_VERSION=ansible==2.8.8
 fi
