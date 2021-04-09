@@ -66,6 +66,9 @@ CELERY_TASK_RESULT_EXPIRES = timedelta(hours=6)
 app = Flask(__name__)
 app.debug = string_to_bool(os.getenv('DEBUG', 'False'))
 
+from kenban.server_kenban import bp
+app.register_blueprint(bp)
+
 CORS(app)
 api = Api(app, api_version="v1", title="Screenly OSE API")
 
@@ -88,6 +91,8 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(3600, cleanup.s(), name='cleanup')
     sender.add_periodic_task(3600, cleanup_usb_assets.s(), name='cleanup_usb_assets')
     sender.add_periodic_task(60*5, get_display_power.s(), name='display_power')
+    from kenban.server_kenban import update_schedule
+    sender.add_periodic_task(10, update_schedule.s(), name='schedule_update')
 
 
 @celery.task
@@ -1865,6 +1870,10 @@ def main():
             cursor.execute(queries.exists_table)
             if cursor.fetchone() is None:
                 cursor.execute(assets_helper.create_assets_table)
+
+    from kenban import schedule
+    schedule.init_kenban()
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 
 if __name__ == "__main__":

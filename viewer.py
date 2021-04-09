@@ -16,6 +16,7 @@ import requests
 import sh
 import zmq
 
+from kenban.authentication import register_new_client, poll_for_authentication
 from lib import assets_helper
 from lib import db
 from lib.diagnostics import get_raspberry_code, get_raspberry_model
@@ -427,6 +428,16 @@ def wait_for_server(retries, wt=1):
 def main():
     global db_conn, scheduler
     setup()
+
+    from kenban.settings_kenban import settings as k_settings
+    # Check to see if device is paired
+    if k_settings["refresh_token"] is None:
+        logging.info("Starting pairing")
+        device_code, verification_uri = register_new_client()
+        url = 'http://{0}:{1}/pair?user_code={2}&verification_uri={3}' \
+            .format(LISTEN, PORT, device_code, verification_uri)
+        view_webpage(url)
+        poll_for_authentication(device_code=device_code)
 
     subscriber = ZmqSubscriber()
     subscriber.daemon = True
