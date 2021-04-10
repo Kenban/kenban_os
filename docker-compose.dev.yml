@@ -1,23 +1,23 @@
 version: "2.2"
 services:
-  srly-ose-base:
-    image: screenly/srly-ose-base:latest-x86
+  kb-os-base:
+    image: kenban/kb-os-base:latest-x86
     build:
       context: .
       dockerfile: docker/Dockerfile.base.dev
       cache_from:
-        - screenly/srly-ose-base:latest-x86
+        - kenban/kb-os-base:latest-x86
 
-  srly-ose-server:
-    image: screenly/srly-ose-server:latest-x86
+  kb-os-server:
+    image: kenban/kb-os-server:latest-x86
     build:
       context: .
       dockerfile: docker/Dockerfile.server.dev
       cache_from:
-        - screenly/srly-ose-base:latest-x86
-        - screenly/srly-ose-server:latest-x86
+        - kenban/kb-os-base:latest-x86
+        - kenban/kb-os-server:latest-x86
     depends_on:
-      - srly-ose-base
+      - kb-os-base
     environment:
       - HOME=/data
       - LISTEN=0.0.0.0
@@ -28,33 +28,33 @@ services:
       - resin-data:/data
 
 # We might bring this in in the future
-#  srly-ose-viewer:
+#  kb-os-viewer:
 #    build:
 #      context: .
 #      dockerfile: docker/Dockerfile.viewer
 #    depends_on:
-#      - srly-ose-server
+#      - kb-os-server
 #    environment:
 #      - HOME=/data
 #      - PORT=80
 #      - NOREFRESH=1
-#      - LISTEN=srly-ose-nginx
+#      - LISTEN=kb-os-nginx
 #    privileged: true
 #    restart: always
 #    volumes:
 #      - resin-data:/data
 
-  srly-ose-websocket:
-    image: screenly/srly-ose-websocket:latest-x86
+  kb-os-websocket:
+    image: kenban/kb-os-websocket:latest-x86
     build:
       context: .
       dockerfile: docker/Dockerfile.websocket.dev
       cache_from:
-        - screenly/srly-ose-base:latest-x86
-        - screenly/srly-ose-websocket:latest-x86
+        - kenban/kb-os-base:latest-x86
+        - kenban/kb-os-websocket:latest-x86
     depends_on:
-      - srly-ose-base
-      - srly-ose-server
+      - kb-os-base
+      - kb-os-server
     environment:
       - HOME=/data
       - LISTEN=0.0.0.0
@@ -62,17 +62,17 @@ services:
     volumes:
       - resin-data:/data
 
-  srly-ose-celery:
-    image: screenly/srly-ose-celery:latest-x86
+  kb-os-celery:
+    image: kenban/kb-os-celery:latest-x86
     build:
       context: .
       dockerfile: docker/Dockerfile.celery.dev
       cache_from:
-        - screenly/srly-ose-base:latest-x86
-        - screenly/srly-ose-celery:latest-x86
+        - kenban/kb-os-base:latest-x86
+        - kenban/kb-os-celery:latest-x86
     depends_on:
-      - srly-ose-base
-      - srly-ose-server
+      - kb-os-base
+      - kb-os-server
       - redis
     environment:
       - HOME=/data
@@ -85,21 +85,21 @@ services:
   redis:
     image: redis:alpine
 
-  srly-ose-nginx:
-    image: screenly/srly-ose-nginx:latest-x86
+  kb-os-nginx:
+    image: kenban/kb-os-nginx:latest-x86
     build:
       context: .
       dockerfile: docker/Dockerfile.nginx
       cache_from:
-        - screenly/srly-ose-nginx:latest-x86
+        - kenban/kb-os-nginx:latest-x86
     ports:
       - 8000:80
     environment:
       - HOME=/data
     depends_on:
-      - srly-ose-base
-      - srly-ose-server
-      - srly-ose-websocket
+      - kb-os-base
+      - kb-os-server
+      - kb-os-websocket
     restart: always
     volumes:
       - resin-data:/data:ro

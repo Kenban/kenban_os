@@ -1,7 +1,7 @@
 version: "2"
 services:
-  srly-ose-server:
-    image: screenly/srly-ose-server:${DOCKER_TAG}
+  kb-os-server:
+    image: kenban/kb-os-server:${DOCKER_TAG}
     environment:
       - MY_IP=${MY_IP}
     volumes:
@@ -11,8 +11,8 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
-  srly-ose-viewer:
-    image: screenly/srly-ose-viewer:${DOCKER_TAG}-${DEVICE_TYPE}
+  kb-os-viewer:
+    image: kenban/kb-os-viewer:${DOCKER_TAG}-${DEVICE_TYPE}
     mem_limit: ${VIEWER_MEMORY_LIMIT_KB}k
     volumes:
       - /home/pi/.screenly:/data/.screenly
@@ -20,16 +20,16 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
-  srly-ose-websocket:
-    image: screenly/srly-ose-websocket:${DOCKER_TAG}
+  kb-os-websocket:
+    image: kenban/kb-os-websocket:${DOCKER_TAG}
     volumes:
       - /home/pi/.screenly:/data/.screenly
       - /home/pi/screenly_assets:/data/screenly_assets
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
-  srly-ose-celery:
-    image: screenly/srly-ose-celery:${DOCKER_TAG}
+  kb-os-celery:
+    image: kenban/kb-os-celery:${DOCKER_TAG}
     volumes:
       - /home/pi/.screenly:/data/.screenly
       - /home/pi/screenly_assets:/data/screenly_assets
@@ -37,10 +37,10 @@ services:
       - /etc/localtime:/etc/localtime:ro
 
   redis:
-    image: screenly/srly-ose-redis:${DOCKER_TAG}
+    image: kenban/kb-os-redis:${DOCKER_TAG}
 
-  srly-ose-nginx:
-    image: screenly/srly-ose-nginx:${DOCKER_TAG}
+  kb-os-nginx:
+    image: kenban/kb-os-nginx:${DOCKER_TAG}
     volumes:
       - /home/pi/.screenly:/data/.screenly:ro
       - /home/pi/screenly_assets:/data/screenly_assets:ro

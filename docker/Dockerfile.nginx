@@ -12,7 +12,7 @@ ENV GIT_SHORT_HASH=$GIT_SHORT_HASH
 ARG GIT_BRANCH
 ENV GIT_BRANCH=$GIT_BRANCH
 
-COPY docker/nginx/nginx.conf /etc/nginx/sites-enabled/srly-ose.conf
+COPY docker/nginx/nginx.conf /etc/nginx/sites-enabled/kb-os.conf
 RUN rm -f /etc/nginx/sites-enabled/default
 
 CMD ["nginx", "-g", "daemon off;"]

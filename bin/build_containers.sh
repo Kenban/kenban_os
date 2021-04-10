@@ -36,12 +36,12 @@ for container in base server celery redis websocket nginx; do
         --build-arg "GIT_SHORT_HASH=$GIT_SHORT_HASH" \
         --build-arg "GIT_BRANCH=$GIT_BRANCH" \
         -f "docker/Dockerfile.$container" \
-        -t "screenly/srly-ose-$container:$DOCKER_TAG" .
+        -t "kenban/kb-os-$container:$DOCKER_TAG" .
 
     # Push if the push flag is set and not cross compiling
     if [[ ( -n "${PUSH+x}" && -z "${CROSS_COMPILE+x}" ) ]]; then
-        docker push "screenly/srly-ose-$container:$DOCKER_TAG"
-        docker push "screenly/srly-ose-$container:latest"
+        docker push "kenban/kb-os-$container:$DOCKER_TAG"
+        docker push "kenban/kb-os-$container:latest"
     fi
 done
 
@@ -54,12 +54,12 @@ for pi_version in pi4 pi3 pi2 pi1; do
         --build-arg "GIT_SHORT_HASH=$GIT_SHORT_HASH" \
         --build-arg "GIT_BRANCH=$GIT_BRANCH" \
         -f docker/Dockerfile.viewer \
-        -t "screenly/srly-ose-viewer:$DOCKER_TAG-$pi_version" .
+        -t "kenban/kb-os-viewer:$DOCKER_TAG-$pi_version" .
 
     # Push if the push flag is set and not cross compiling
     if [[ ( -n "${PUSH+x}" && -z "${CROSS_COMPILE+x}" ) ]]; then
-        docker push "screenly/srly-ose-viewer:$DOCKER_TAG-$pi_version"
-        docker push "screenly/srly-ose-viewer:$DOCKER_TAG-latest"
+        docker push "kenban/kb-os-viewer:$DOCKER_TAG-$pi_version"
+        docker push "kenban/kb-os-viewer:$DOCKER_TAG-latest"
     fi
 done
 

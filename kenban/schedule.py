@@ -178,7 +178,7 @@ def create_asset_from_schedule_slot(schedule_slot, start, end):
 
 
 def create_asset_from_event(event, schedule_slot):
-    asset_uri = "http://srly-ose-server/kenban?foreground_image_uuid={image}&display_text={text}&template_uuid={template}".format(
+    asset_uri = "http://kb-os-server/kenban?foreground_image_uuid={image}&display_text={text}&template_uuid={template}".format(
         image=event["foreground_image_uuid"],
         text=event["display_text"],
         template=schedule_slot["template_uuid"]

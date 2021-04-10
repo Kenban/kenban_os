@@ -36,7 +36,7 @@ build-variables:
     - GIT_SHORT_HASH=$GIT_SHORT_HASH
     - GIT_BRANCH=$GIT_BRANCH
   services:
-      srly-ose-viewer:
+      kb-os-viewer:
         - DEVICE_TYPE=$DEVICE_TYPE
 EOF
 

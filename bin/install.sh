@@ -40,13 +40,6 @@ if [ "$WEB_UPGRADE" = false ]; then
   # clear screen
   clear;
 
-
-echo -e "\n________________________________________\n"
-echo -e "Which version/branch of Screenly OSE would you like to install:\n"
-echo " Press (1) for the Production branch, which is the latest stable."
-echo " Press (2) for the Development/Master branch, which has the latest features and fixes, but things may break."
-echo ""
-
 export DOCKER_TAG="latest";BRANCH="master"
 
   echo && read -p "Do you want Kenban OS to manage your network? This is recommended for most users because this adds features to manage your network. (Y/n)" -n 1 -r -s NETWORK && echo

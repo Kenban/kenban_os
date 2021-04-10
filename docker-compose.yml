@@ -1,7 +1,7 @@
 version: "2"
 services:
-  srly-ose-server:
-    image: screenly/srly-ose-server
+  kb-os-server:
+    image: kenban/kb-os-server
     build:
       context: .
       dockerfile: docker/Dockerfile.server
@@ -18,30 +18,30 @@ services:
     labels:
       io.balena.features.supervisor-api: '1'
 
-  srly-ose-viewer:
-    image: screenly/srly-ose-viewer
+  kb-os-viewer:
+    image: kenban/kb-os-viewer
     build:
       context: .
       dockerfile: docker/Dockerfile.viewer
     depends_on:
-      - srly-ose-server
+      - kb-os-server
     environment:
       - HOME=/data
       - PORT=80
       - NOREFRESH=1
-      - LISTEN=srly-ose-nginx
+      - LISTEN=kb-os-nginx
     privileged: true
     restart: always
     volumes:
       - resin-data:/data
 
-  srly-ose-websocket:
-    image: screenly/srly-ose-websocket
+  kb-os-websocket:
+    image: kenban/kb-os-websocket
     build:
       context: .
       dockerfile: docker/Dockerfile.websocket
     depends_on:
-      - srly-ose-server
+      - kb-os-server
     environment:
       - HOME=/data
       - LISTEN=0.0.0.0
@@ -49,13 +49,13 @@ services:
     volumes:
       - resin-data:/data
 
-  srly-ose-celery:
-    image: screenly/srly-ose-celery
+  kb-os-celery:
+    image: kenban/kb-os-celery
     build:
       context: .
       dockerfile: docker/Dockerfile.celery
     depends_on:
-      - srly-ose-server
+      - kb-os-server
       - redis
     environment:
       - HOME=/data
@@ -68,7 +68,7 @@ services:
       - resin-data:/data
 
   redis:
-    image: screenly/srly-ose-redis
+    image: kenban/kb-os-redis
     build:
       context: .
       dockerfile: docker/Dockerfile.redis
@@ -78,8 +78,8 @@ services:
     volumes:
       - redis-data:/var/lib/redis
 
-  srly-ose-nginx:
-    image: screenly/srly-ose-nginx
+  kb-os-nginx:
+    image: kenban/kb-os-nginx
     build:
       context: .
       dockerfile: docker/Dockerfile.nginx
@@ -88,8 +88,8 @@ services:
     environment:
       - HOME=/data
     depends_on:
-      - srly-ose-server
-      - srly-ose-websocket
+      - kb-os-server
+      - kb-os-websocket
     restart: always
     volumes:
       - resin-data:/data:ro
