@@ -1,0 +1,1 @@
+bash <(curl -sL https://raw.githubusercontent.com/kenban/kenban_os/master/bin/install.sh)

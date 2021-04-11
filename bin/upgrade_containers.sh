@@ -26,7 +26,7 @@ fi
 
 sudo -E docker-compose \
     -f /home/pi/screenly/docker-compose.yml \
-    -f /home/pi/screenly/docker-compose.override.yml \
+    -f /home/pi/screenly/docker-compose.override.yml \s
     pull
 
 sudo -E docker-compose \
