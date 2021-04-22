@@ -154,7 +154,8 @@ def build_assets_table():
 
 
 def create_asset_from_schedule_slot(schedule_slot, start, end):
-    asset_uri = "http://localhost/kenban?foreground_image_uuid={image}&display_text={text}&template_uuid={template}".format(
+    base_uri = k_settings['local_address']
+    asset_uri = base_uri + "/kenban?foreground_image_uuid={image}&display_text={text}&template_uuid={template}".format(
         image=schedule_slot["foreground_image_uuid"],
         text=schedule_slot["display_text"],
         template=schedule_slot["template_uuid"]
@@ -178,7 +179,8 @@ def create_asset_from_schedule_slot(schedule_slot, start, end):
 
 
 def create_asset_from_event(event, schedule_slot):
-    asset_uri = "http://kb-os-server/kenban?foreground_image_uuid={image}&display_text={text}&template_uuid={template}".format(
+    base_uri = k_settings['local_address']
+    asset_uri = base_uri + "/kenban?foreground_image_uuid={image}&display_text={text}&template_uuid={template}".format(
         image=event["foreground_image_uuid"],
         text=event["display_text"],
         template=schedule_slot["template_uuid"]
@@ -200,42 +202,3 @@ def create_asset_from_event(event, schedule_slot):
     }
     with db.conn(s_settings['database']) as conn:
         assets_helper.create(conn, asset)
-
-
-
-
-    # asset = {
-    #     "asset_id": asset_id,
-    #     "mimetype": "webpage",
-    #     "is_enabled": 1,
-    #     "name": event["uuid"],
-    #     "end_date": event["event_end"].isoformat(),
-    #     "duration": "string",
-    #     "play_order": 0,
-    #     "nocache": 0,
-    #     "uri": asset_uri,
-    #     "skip_asset_check": 1,
-    #     "start_date": event["event_start"].isoformat()
-    # }
-    # data = {
-    #     "name": "Website",
-    #     "mimetype": "webpage",
-    #     "uri": "http://example.com",
-    #     "is_active": 0,
-    #     "start_date": "2017-02-02T00:33:00.000Z",
-    #     "end_date": "2017-03-01T00:33:00.000Z",
-    #     "duration": "10",
-    #     "is_enabled": 0,
-    #     "is_processing": 0,
-    #     "nocache": 0,
-    #     "play_order": 0,
-    #     "skip_asset_check": 0
-    # }
-    # data = json.dumps(asset)
-    # print(data)
-    # url = "http://localhost:8080/api/v1.2/assets"
-    # headers = {"content-type": "application/json"}
-    # response = requests.post(url=url, data=data, json=json.dumps(data))
-    # print(response.content)
-
-

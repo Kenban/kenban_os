@@ -1,20 +1,12 @@
 import json
 import logging
 import os
-import urllib
-import schedule
-import jwt
-from time import mktime
-import datetime
-from os import getenv
-from time import sleep, time
 
 import requests
 from requests.exceptions import ConnectionError
-from kenban.authentication import get_auth_header
-from simplejson.scanner import JSONDecodeError
 
-from settings import settings as s_settings
+import schedule
+from kenban.authentication import get_auth_header
 from settings_kenban import settings as k_settings
 
 
@@ -57,6 +49,7 @@ def get_all_images(overwrite=False):
 
 
 def get_all_templates(overwrite=False):
+    #todo error check. A server error will save a file with the server error in it
     logging.debug("Syncing templates")
     try:
         url = k_settings['server_address'] + k_settings['template_url']
@@ -81,6 +74,7 @@ def get_all_templates(overwrite=False):
 
 
 def get_schedule():
+    logging.debug("Getting schedule")
     try:
         url = k_settings['server_address'] + k_settings['schedule_url'] + k_settings["device_uuid"]
         headers = get_auth_header()
@@ -105,7 +99,11 @@ def get_all_events():
     except ConnectionError:
         logging.warning("Could not connect to authorisation server at {0}".format(url))
         return None
-    events = json.loads(response.content)
+    try:
+        events = json.loads(response.content)
+    except ValueError as e:
+        logging.error(e)
+
     existing_event_uuids = schedule.get_event_uuids()
     for event in events:
         event_exists = event["uuid"] in existing_event_uuids

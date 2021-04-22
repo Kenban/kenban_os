@@ -8,7 +8,6 @@ from time import sleep
 import jwt
 import requests
 from requests.exceptions import ConnectionError
-from simplejson.scanner import JSONDecodeError
 
 from settings_kenban import settings as k_settings
 
@@ -41,9 +40,6 @@ def register_new_client():
                                  headers={'content-type': 'application/json'})
     except ConnectionError:
         logging.warning("Could not connect to authorisation server at {0}".format(url))
-        return None
-    except JSONDecodeError:
-        logging.error("Bad server response")
         return None
     response_body = json.loads(response.content)
     return response_body["device_code"], response_body["verification_uri"]

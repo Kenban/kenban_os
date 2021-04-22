@@ -9,6 +9,8 @@ import sync
 from kenban import schedule
 from settings_kenban import settings as k_settings
 
+#todo think we need to add zmq to requirements
+
 bp = Blueprint('kenban', __name__,
                template_folder='templates')
 
@@ -32,7 +34,6 @@ def kenban_display():
     foreground_image = "kenban_img/" + foreground_image_uuid
     template_uuid = request.args.get('template_uuid')
     template_filename = template_uuid
-
     return render_template(template_filename,
                            display_text=display_text,
                            foreground_image=foreground_image)

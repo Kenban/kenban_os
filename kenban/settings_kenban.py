@@ -6,7 +6,15 @@ import os
 from settings import CONFIG_DIR
 
 DEFAULTS = {
-    'authentication': {
+    'main': {
+        'server_address': 'https://kenban.co.uk',
+        'local_address': 'http://kb-os-nginx',
+        'device_uuid': None,
+        'last_update': None,
+        'access_token': None,
+        'refresh_token': None
+    },
+    'api': {
         'device_register_uri': '/api/v1/device_pairing/new',
         'device_auth_uri': '/api/v1/device_pairing/authorise',
         'refresh_access_token_url': '/api/v1/auth/access-token-refresh',
@@ -14,14 +22,11 @@ DEFAULTS = {
         'image_url': '/api/v1/image/',
         'template_url': '/api/v1/template/',
         'schedule_url': '/api/v1/schedule/screen/',
-        'event_url': '/api/v1/event/',
-        'server_address': 'http://192.168.0.100',
-        'images_folder': '/home/pi/screenly/static/kenban_img/',
-        'templates_folder': '/home/pi/screenly/kenban/templates/',
-        'device_uuid': None,
-        'last_update': None,
-        'access_token': None,
-        'refresh_token': None
+        'event_url': '/api/v1/event/screen/',
+    },
+    'folders': {
+        'images_folder': '/data/static/kenban_img/',
+        'templates_folder': '/usr/src/app/templates/',
     }
 }
 

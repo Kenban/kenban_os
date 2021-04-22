@@ -438,6 +438,8 @@ def main():
             .format(LISTEN, PORT, device_code, verification_uri)
         view_webpage(url)
         poll_for_authentication(device_code=device_code)
+    else:
+        logging.info("Device already paired")
 
     subscriber = ZmqSubscriber()
     subscriber.daemon = True
