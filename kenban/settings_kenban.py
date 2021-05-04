@@ -25,7 +25,7 @@ DEFAULTS = {
         'event_url': '/api/v1/event/screen/',
     },
     'folders': {
-        'images_folder': '/data/static/kenban_img/',
+        'images_folder': '/data/screenly/static/kenban_img/',
         'templates_folder': '/usr/src/app/templates/',
     }
 }

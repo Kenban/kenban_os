@@ -33,7 +33,7 @@ DEFAULTS = {
         'default_streaming_duration': '300',
         'player_name': '',
         'resolution': '1920x1080',
-        'show_splash': True,
+        'show_splash': False,
         'shuffle_playlist': False,
         'verify_ssl': True,
         'usb_assets_key': '',

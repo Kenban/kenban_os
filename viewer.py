@@ -431,7 +431,7 @@ def main():
 
     from kenban.settings_kenban import settings as k_settings
     # Check to see if device is paired
-    if k_settings["refresh_token"] is None:
+    if k_settings["refresh_token"] in [None, "None"]:
         logging.info("Starting pairing")
         device_code, verification_uri = register_new_client()
         url = 'http://{0}:{1}/pair?user_code={2}&verification_uri={3}' \
