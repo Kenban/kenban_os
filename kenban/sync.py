@@ -35,6 +35,7 @@ def get_all_images(overwrite=False):
         logging.warning("Could not connect to authorisation server at {0}".format(url))
         return None
     images = json.loads(response.content)
+    os.makedirs(k_settings["images_folder"])
     existing_file_uuids = os.listdir(k_settings["images_folder"])
     logging.debug("Existing images: " + str(existing_file_uuids))
     for image in images:
@@ -59,6 +60,7 @@ def get_all_templates(overwrite=False):
         logging.warning("Could not connect to authorisation server at {0}".format(url))
         return None
     template_uuids = json.loads(response.content)
+    os.makedirs(k_settings["templates_folder"])
     existing_template_uuids = os.listdir(k_settings["templates_folder"])
     logging.debug("Existing templates: " + str(existing_template_uuids))
     for template_uuid in template_uuids:
