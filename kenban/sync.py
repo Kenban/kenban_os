@@ -15,7 +15,7 @@ def get_server_last_update_time():
     logging.debug("Checking for update")
     try:
         device_uuid = str(k_settings['device_uuid']).decode('utf-8')
-        url = k_settings['server_address'] + k_settings['update_url'] + device_uuid
+        url = k_settings['server_address'] + k_settings['update_url'] + "/" + device_uuid
         headers = get_auth_header()
         response = requests.get(url=url, headers=headers)
     except ConnectionError:
@@ -35,7 +35,8 @@ def get_all_images(overwrite=False):
         logging.warning("Could not connect to authorisation server at {0}".format(url))
         return None
     images = json.loads(response.content)
-    os.makedirs(k_settings["images_folder"])
+    if not os.path.exists(k_settings["images_folder"]):
+        os.makedirs(k_settings["images_folder"])
     existing_file_uuids = os.listdir(k_settings["images_folder"])
     logging.debug("Existing images: " + str(existing_file_uuids))
     for image in images:
@@ -60,7 +61,8 @@ def get_all_templates(overwrite=False):
         logging.warning("Could not connect to authorisation server at {0}".format(url))
         return None
     template_uuids = json.loads(response.content)
-    os.makedirs(k_settings["templates_folder"])
+    if not os.path.exists(k_settings["templates_folder"]):
+        os.makedirs(k_settings["templates_folder"])
     existing_template_uuids = os.listdir(k_settings["templates_folder"])
     logging.debug("Existing templates: " + str(existing_template_uuids))
     for template_uuid in template_uuids:
