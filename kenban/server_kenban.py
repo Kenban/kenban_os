@@ -40,7 +40,7 @@ def kenban_display():
     if not template_uuid:
         return "Could not get template_uuid"
 
-    foreground_image = k_settings["images_folder"] + foreground_image_uuid
+    foreground_image = k_settings["local_address"] + "/kenban_img/" + foreground_image_uuid  # Served by nginx
     template_filename = template_uuid
     return render_template(template_filename,
                            display_text=display_text,
