@@ -69,8 +69,8 @@ def update_schedule(force=False):
         sync.get_all_events()
         schedule.build_assets_table()
 
-    k_settings["last_update"] = server_update_time  # todo test this is a date before saving
-    k_settings.save()
+        k_settings["last_update"] = server_update_time  # This may save an error message returned from the server
+        k_settings.save()
 
 
 @celery.on_after_finalize.connect
