@@ -12,7 +12,7 @@ from settings_kenban import settings as k_settings
 #todo think we need to add zmq to requirements
 
 bp = Blueprint('kenban', __name__,
-               template_folder='templates')
+               template_folder=k_settings["templates_folder"])
 
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
@@ -40,7 +40,7 @@ def kenban_display():
     if not template_uuid:
         return "Could not get template_uuid"
 
-    foreground_image = "kenban_img/" + foreground_image_uuid
+    foreground_image = k_settings["images_folder"] + foreground_image_uuid
     template_filename = template_uuid
     return render_template(template_filename,
                            display_text=display_text,
