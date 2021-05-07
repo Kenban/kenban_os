@@ -3,7 +3,8 @@ import json
 import logging
 import os
 import uuid
-
+from dateutil.tz import tzlocal
+import pytz
 import requests
 
 from lib import db, assets_helper
@@ -110,7 +111,12 @@ def build_assets_table():
 
     # Parse the times
     for slot in schedule_slots:
-        slot["start_time"] = datetime.datetime.strptime(slot["start_time"], "%H:%M:%S").time()
+        # This gets the start time in UTC to save in the database. It's messy but when I made it shorter it broke
+        slot_start_local = datetime.datetime.strptime(slot["start_time"], "%H:%M:%S")
+        as_full_datetime = datetime.datetime.now(tz=tzlocal())\
+            .replace(hour=slot_start_local.hour, minute=0, second=0, microsecond=0)
+        utc_start = as_full_datetime.astimezone(pytz.utc)
+        slot["start_time"] = utc_start.time()
 
     for event in events:
         try:
@@ -134,16 +140,21 @@ def build_assets_table():
             day_slots[day][x]["end_time"] = day_slots[day][x+1]["start_time"]
         # The last slot of the day finishes at 23:59
         if day_slots[day]:
-            day_slots[day][-1]["end_time"] = datetime.datetime(2000,1,1,23,59,59,999999).time()
+            # Create 23:59 in local time and convert it to UTC
+            end = datetime.datetime.now(tz=tzlocal()).replace(hour=23, minute=59, second=59, microsecond=9999)
+            day_slots[day][-1]["end_time"] = end.astimezone(pytz.utc).replace(tzinfo=None).time()
 
     # Loop through the days of the upcoming week and apply the schedule
-    midnight = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    # Create 00:00 in local time and convert to UTC
+    midnight = datetime.datetime.now(tz=tzlocal()).replace(hour=0, minute=0, second=0, microsecond=0)
+    utc_midnight = midnight.astimezone(pytz.utc)
     for x in range(0, 7):
-        day_start = midnight + datetime.timedelta(days=x)
-        day_end = midnight + datetime.timedelta(days=x+1)
+        day_start = utc_midnight + datetime.timedelta(days=x)
+        day_end = utc_midnight + datetime.timedelta(days=x+1)
 
         # Loop through every slot on this day and create an asset
-        for slot in day_slots[day_start.strftime("%A")]:
+        day_name = day_start.strftime("%A")
+        for slot in day_slots[day_name]:
             asset_start = datetime.datetime.combine(day_start.date(), slot["start_time"])
             asset_end = datetime.datetime.combine(day_start.date(), slot["end_time"])
             # Check if any events are during this period

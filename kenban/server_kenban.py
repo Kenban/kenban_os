@@ -3,13 +3,11 @@ import os
 from datetime import timedelta
 
 from celery import Celery
-from flask import Blueprint, request, render_template, current_app, url_for
+from flask import Blueprint, request, render_template
 
 import sync
 from kenban import schedule
 from settings_kenban import settings as k_settings
-
-#todo think we need to add zmq to requirements
 
 bp = Blueprint('kenban', __name__,
                template_folder=k_settings["templates_folder"])
@@ -69,7 +67,7 @@ def update_schedule(force=False):
         sync.get_all_events()
         schedule.build_assets_table()
 
-        k_settings["last_update"] = server_update_time  # This may save an error message returned from the server
+        k_settings["last_update"] = server_update_time  # May save an error message returned from the server. This is ok
         k_settings.save()
 
 
