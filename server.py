@@ -19,12 +19,14 @@ import yaml
 import uuid
 from base64 import b64encode
 from celery import Celery
+from celery.schedules import crontab
 from datetime import datetime, timedelta
 from dateutil import parser as date_parser
 from functools import wraps
 from hurry.filesize import size
 from mimetypes import guess_type, guess_extension
 from os import getenv, listdir, makedirs, mkdir, path, remove, rename, statvfs, stat, walk
+from random import randrange
 from subprocess import check_output
 from urlparse import urlparse
 
@@ -93,6 +95,10 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(60*5, get_display_power.s(), name='display_power')
     from kenban.server_kenban import update_schedule
     sender.add_periodic_task(10, update_schedule.s(), name='schedule_update')
+    hour = randrange(0, 25)
+    minute = randrange(0, 61)
+    day = randrange(0, 8)
+    sender.add_periodic_task(crontab(hour=hour, minute=minute, day_of_week=day),update_schedule.s(True),)
 
 
 @celery.task
