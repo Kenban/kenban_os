@@ -15,15 +15,14 @@ def pair_device_to_user():
     if device_code:
         # Display the user_code and verification uri
         url = 'http://{0}:{1}/pair?user_code={2}&verification_uri={3}' \
-            .format(LISTEN, PORT, device_code, verification_uri) #FIXME what if use ssl in settings
+            .format(LISTEN, PORT, device_code, verification_uri)
         print("device code = ", device_code)
         # Ping the server until the device pairing is complete
         poll_for_authentication(device_code=device_code)
-        # todo Need to refresh the user code if it times out. Also what happens if this goes on forever?
     else:
         # If the connection to the server fails, show the connection failed screen and pause 15 seconds before continuing
         url = 'http://{0}:{1}/connection_failed' \
-            .format(LISTEN, PORT)  # FIXME what if use ssl in settings
+            .format(LISTEN, PORT)
         #browser_url(url=url)
         sleep(15)
 

@@ -54,7 +54,6 @@ def pair():
     return render_template('pair.html', pair_code=pair_code, verification_uri=verification_uri)
 
 
-# TODO Trigger a force update once per week(day?) to ensure existing templates are up to date
 @celery.task()
 def update_schedule(force=False):
     logging.debug("Checking for update")

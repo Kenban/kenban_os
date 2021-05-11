@@ -124,7 +124,7 @@ def build_assets_table():
             event["event_end"] = datetime.datetime.strptime(event["event_end"], "%Y-%m-%dT%H:%M:%S+00:00")
         except ValueError:
             logging.error("Failed converting event datetime")
-        # todo if we ever convert to python3, use datetime.isoformat().
+        # if we ever convert to python3, use datetime.isoformat() instead of this mess
         # The current method assumes utc which it should always be but ya never know
 
     # Put slots in a dict according to the weekday
@@ -147,16 +147,16 @@ def build_assets_table():
     # Loop through the days of the upcoming week and apply the schedule
     # Create 00:00 in local time and convert to UTC
     midnight = datetime.datetime.now(tz=tzlocal()).replace(hour=0, minute=0, second=0, microsecond=0)
-    utc_midnight = midnight.astimezone(pytz.utc)
+    utc_midnight_in_local_time = midnight.astimezone(pytz.utc)
     for x in range(0, 7):
-        day_start = utc_midnight + datetime.timedelta(days=x)
-        day_end = utc_midnight + datetime.timedelta(days=x+1)
+        day_start = utc_midnight_in_local_time + datetime.timedelta(days=x)
+        day_end = utc_midnight_in_local_time + datetime.timedelta(days=x+1)
 
         # Loop through every slot on this day and create an asset
         day_name = day_start.strftime("%A")
         for slot in day_slots[day_name]:
             asset_start = datetime.datetime.combine(day_start.date(), slot["start_time"])
-            asset_end = datetime.datetime.combine(day_start.date(), slot["end_time"])
+            asset_end = datetime.datetime.combine(day_end.date(), slot["end_time"])
             # Check if any events are during this period
             for event in events:
                 if day_start <= event["event_start"] <= day_end:
