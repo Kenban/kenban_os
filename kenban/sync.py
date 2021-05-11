@@ -18,6 +18,10 @@ def get_server_last_update_time():
         url = k_settings['server_address'] + k_settings['update_url'] + "/" + device_uuid
         headers = get_auth_header()
         response = requests.get(url=url, headers=headers)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as error:
+        logging.warning("HTTP Error while requesting update time:" + str(error))
+        return None
     except ConnectionError:
         logging.warning("Could not connect to authorisation server at {0}".format(url))
         return None
@@ -31,6 +35,10 @@ def get_all_images(overwrite=False):
         url = k_settings['server_address'] + k_settings['image_url']
         headers = get_auth_header()
         response = requests.get(url=url, headers=headers)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as error:
+        logging.warning("HTTP Error while requesting images:" + str(error))
+        return None
     except ConnectionError:
         logging.warning("Could not connect to authorisation server at {0}".format(url))
         return None
@@ -51,12 +59,15 @@ def get_all_images(overwrite=False):
 
 
 def get_all_templates(overwrite=False):
-    #todo error check. A server error will save a file with the server error in it
     logging.debug("Syncing templates")
     try:
         url = k_settings['server_address'] + k_settings['template_url']
         headers = get_auth_header()
         response = requests.get(url=url, headers=headers)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as error:
+        logging.warning("HTTP Error while requesting templates:" + str(error))
+        return None
     except ConnectionError:
         logging.warning("Could not connect to authorisation server at {0}".format(url))
         return None
@@ -83,6 +94,9 @@ def get_schedule():
         url = k_settings['server_address'] + k_settings['schedule_url'] + k_settings["device_uuid"]
         headers = get_auth_header()
         response = requests.get(url=url, headers=headers)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as error:
+        logging.warning("HTTP Error while requesting schedule:" + str(error))
     except ConnectionError:
         logging.warning("Could not connect to authorisation server at {0}".format(url))
         return None
@@ -100,6 +114,10 @@ def get_all_events():
         url = k_settings['server_address'] + k_settings['event_url'] + k_settings["device_uuid"]
         headers = get_auth_header()
         response = requests.get(url=url, headers=headers)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as error:
+        logging.warning("HTTP Error while requesting events:" + str(error))
+        return None
     except ConnectionError:
         logging.warning("Could not connect to authorisation server at {0}".format(url))
         return None
@@ -107,6 +125,7 @@ def get_all_events():
         events = json.loads(response.content)
     except ValueError as e:
         logging.error(e)
+        return None
 
     existing_event_uuids = schedule.get_event_uuids()
     for event in events:
