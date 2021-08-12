@@ -9,6 +9,7 @@ DEFAULTS = {
     'main': {
         'server_address': 'https://kenban.co.uk',
         'local_address': 'http://kb-os-nginx',
+        'websocket_updates_address': 'ws://kenban.co.uk/api/v1/screen/subscribe/',
         'device_uuid': None,
         'last_update': None,
         'access_token': None,

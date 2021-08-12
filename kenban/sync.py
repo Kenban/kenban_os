@@ -1,14 +1,44 @@
+import asyncio
 import json
 import logging
 import os
 
 import requests
+import websockets
 from requests.exceptions import ConnectionError
 
-import schedule
+from kenban.schedule import get_event_uuids, get_schedule_slot_uuids, save_event, save_schedule_slot
 from kenban.authentication import get_auth_header
-from settings_kenban import settings as k_settings
+from kenban.settings_kenban import settings as k_settings
 
+
+async def subscribe_to_updates():
+    url = "ws://localhost:5000/api/v1/screen/subscribe/a5bc93fcae8011ebad410242ac120004test"
+    while True:
+        # outer loop restarted every time the connection fails
+        try:
+            async with websockets.connect(url) as ws:
+                print("Websocket connected")
+                while True:
+                    try:
+                        msg = await asyncio.wait_for(ws.recv(), timeout=10)
+                        print(msg)
+                    except (asyncio.TimeoutError, websockets.ConnectionClosed):
+                        try:
+                            pong = await ws.ping()
+                            await asyncio.wait_for(pong, timeout=10)
+                            logging.debug('Ping OK, keeping connection alive...')
+                            continue
+                        except:
+                            await asyncio.sleep(9)
+                            break  # inner loop
+                    # do stuff with reply object
+        except socket.gaierror:
+            print("Websocket error")
+            continue
+        except ConnectionRefusedError:
+            print("Websocket connection refused")
+            continue
 
 def get_server_last_update_time():
     """ Compares the last updated time with the server. Returns true if an update is needed"""
@@ -101,12 +131,12 @@ def get_schedule():
         logging.warning("Could not connect to authorisation server at {0}".format(url))
         return None
     schedule_slots = json.loads(response.content)
-    existing_slot_uuids = schedule.get_schedule_slot_uuids()
+    existing_slot_uuids = get_schedule_slot_uuids()
     for slot in schedule_slots:
         # If the slot already exists, update the table
         slot_exists = slot["uuid"] in existing_slot_uuids
         logging.debug("Saving slot " + slot["uuid"])
-        schedule.save_schedule_slot(slot, update=slot_exists)
+        save_schedule_slot(slot, update=slot_exists)
 
 
 def get_all_events():
@@ -127,8 +157,29 @@ def get_all_events():
         logging.error(e)
         return None
 
-    existing_event_uuids = schedule.get_event_uuids()
+    existing_event_uuids = get_event_uuids()
     for event in events:
         event_exists = event["uuid"] in existing_event_uuids
         logging.debug("Saving slot " + event["uuid"])
-        schedule.save_event(event, update=event_exists)
+        save_event(event, update=event_exists)
+
+
+# @celery.task()
+# def update_schedule(force=False):
+#     logging.debug("Checking for update")
+#     local_update_time = k_settings["last_update"]
+#     server_update_time = sync.get_server_last_update_time()
+#     if local_update_time != server_update_time or force:
+#         sync.get_all_images()
+#         sync.get_all_templates()
+#         sync.get_schedule()
+#         sync.get_all_events()
+#         schedule.build_assets_table()
+#
+#         k_settings["last_update"] = server_update_time  # May save an error message returned from the server. This is ok
+#         k_settings.save()
+#
+#
+# @celery.on_after_finalize.connect
+# def setup_periodic_kenban_tasks(sender, **kwargs):
+#     sender.add_periodic_task(10, update_schedule.s(), name='schedule_update')

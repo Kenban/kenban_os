@@ -9,7 +9,7 @@ import jwt
 import requests
 from requests.exceptions import ConnectionError
 
-from settings_kenban import settings as k_settings
+from kenban.settings_kenban import settings as k_settings
 
 PORT = int(getenv('PORT', 8080))
 LISTEN = getenv('LISTEN', '127.0.0.1')

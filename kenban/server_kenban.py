@@ -52,24 +52,3 @@ def pair():
     if not verification_uri:
         verification_uri = "kenban.co.uk/pair"
     return render_template('pair.html', pair_code=pair_code, verification_uri=verification_uri)
-
-
-@celery.task()
-def update_schedule(force=False):
-    logging.debug("Checking for update")
-    local_update_time = k_settings["last_update"]
-    server_update_time = sync.get_server_last_update_time()
-    if local_update_time != server_update_time or force:
-        sync.get_all_images()
-        sync.get_all_templates()
-        sync.get_schedule()
-        sync.get_all_events()
-        schedule.build_assets_table()
-
-        k_settings["last_update"] = server_update_time  # May save an error message returned from the server. This is ok
-        k_settings.save()
-
-
-@celery.on_after_finalize.connect
-def setup_periodic_kenban_tasks(sender, **kwargs):
-    sender.add_periodic_task(10, update_schedule.s(), name='schedule_update')

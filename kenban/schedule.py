@@ -1,15 +1,14 @@
 import datetime
-import json
 import logging
 import os
 import uuid
-from dateutil.tz import tzlocal
+
 import pytz
-import requests
+from dateutil.tz import tzlocal
 
 from lib import db, assets_helper
 from settings import settings as s_settings
-from settings_kenban import settings as k_settings
+from kenban.settings_kenban import settings as k_settings
 
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -126,7 +125,7 @@ def build_assets_table():
             logging.error("Failed converting event datetime")
         # if we ever convert to python3, use datetime.isoformat() instead of this mess
         # The current method assumes utc which it should always be but ya never know
-
+    # TODO Dont use utc to set the times for daily schedules. i dont know why i tried to do this anyway
     # Put slots in a dict according to the weekday
     day_slots = {}
     for day in WEEKDAYS:
