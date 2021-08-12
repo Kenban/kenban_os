@@ -1,0 +1,4 @@
+websockets==7.0
+requests==2.25.1
+dateutil==2.8.2
+
