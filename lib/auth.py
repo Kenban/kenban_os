@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import hashlib
+import json
+import os.path
 from abc import ABCMeta, abstractmethod, abstractproperty
 from functools import wraps
-import hashlib
-import os.path
-import json
 
 from flask import request, Response
 

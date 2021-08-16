@@ -5,7 +5,7 @@ import json
 import logging
 import os
 import zmq
-import ConfigParser
+import configparser
 from os import path, getenv
 from time import sleep
 from UserDict import IterableUserDict
@@ -92,8 +92,8 @@ class ScreenlySettings(IterableUserDict):
                 self[field] = config.get(section, field)
                 if field == 'password' and self[field] != '' and len(self[field]) != 64:   # likely not a hashed password.
                     self[field] = hashlib.sha256(self[field]).hexdigest()   # hash the original password.
-        except ConfigParser.Error as e:
-            logging.debug("Could not parse setting '%s.%s': %s. Using default value: '%s'." % (section, field, unicode(e), default))
+        except configparser.Error as e:
+            logging.debug("Could not parse setting '%s.%s': %s. Using default value: '%s'." % (section, field, str(e), default))
             self[field] = default
         if field in ['database', 'assetdir']:
             self[field] = str(path.join(self.home, self[field]))
@@ -107,16 +107,16 @@ class ScreenlySettings(IterableUserDict):
     def load(self):
         """Loads the latest settings from screenly.conf into memory."""
         logging.debug('Reading config-file...')
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.read(self.conf_file)
 
         for section, defaults in DEFAULTS.items():
-            for field, default in defaults.items():
+            for field, default in list(defaults.items()):
                 self._get(config, section, field, default)
 
     def use_defaults(self):
         for defaults in DEFAULTS.items():
-            for field, default in defaults[1].items():
+            for field, default in list(defaults[1].items()):
                 self[field] = default
 
     def save(self):
@@ -124,7 +124,7 @@ class ScreenlySettings(IterableUserDict):
         config = ConfigParser.ConfigParser()
         for section, defaults in DEFAULTS.items():
             config.add_section(section)
-            for field, default in defaults.items():
+            for field, default in list(defaults.items()):
                 self._set(config, section, field, default)
         with open(self.conf_file, "w") as f:
             config.write(f)

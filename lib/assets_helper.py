@@ -1,6 +1,6 @@
-import db
-import queries
 import datetime
+
+from lib import db, queries
 
 FIELDS = ["asset_id", "name", "uri", "start_date",
           "end_date", "duration", "mimetype", "is_enabled", "is_processing", "nocache", "play_order",
@@ -43,7 +43,7 @@ def get_names_of_assets(conn):
 
 def get_playlist(conn):
     """Returns all currently active assets."""
-    return filter(is_active, read(conn))
+    return list(filter(is_active, read(conn)))
 
 
 def mkdict(keys):
@@ -60,7 +60,7 @@ def create(conn, asset):
     if 'is_active' in asset:
         asset.pop('is_active')
     with db.commit(conn) as c:
-        c.execute(queries.create(asset.keys()), asset.values())
+        c.execute(queries.create(list(asset.keys())), list(asset.values()))
     asset.update({'is_active': is_active(asset)})
     return asset
 
@@ -77,7 +77,7 @@ def create_multiple(conn, assets):
             if 'is_active' in asset:
                 asset.pop('is_active')
 
-            c.execute(queries.create(asset.keys()), asset.values())
+            c.execute(queries.create(list(asset.keys())), list(asset.values()))
 
             asset.update({'is_active': is_active(asset)})
 
@@ -115,7 +115,7 @@ def update(conn, asset_id, asset):
     if 'is_active' in asset:
         asset.pop('is_active')
     with db.commit(conn) as c:
-        c.execute(queries.update(asset.keys()), asset.values() + [asset_id])
+        c.execute(queries.update(list(asset.keys())), list(asset.values()) + [asset_id])
     asset.update({'asset_id': asset_id})
     if 'start_date' in asset:
         asset.update({'is_active': is_active(asset)})

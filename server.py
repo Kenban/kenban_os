@@ -69,6 +69,7 @@ app = Flask(__name__)
 app.debug = string_to_bool(os.getenv('DEBUG', 'False'))
 
 from kenban.server_kenban import bp
+
 app.register_blueprint(bp)
 
 CORS(app)
@@ -92,13 +93,13 @@ def setup_periodic_tasks(sender, **kwargs):
     # Calls cleanup() every hour.
     sender.add_periodic_task(3600, cleanup.s(), name='cleanup')
     sender.add_periodic_task(3600, cleanup_usb_assets.s(), name='cleanup_usb_assets')
-    sender.add_periodic_task(60*5, get_display_power.s(), name='display_power')
+    sender.add_periodic_task(60 * 5, get_display_power.s(), name='display_power')
     from kenban.server_kenban import update_schedule
     sender.add_periodic_task(10, update_schedule.s(), name='schedule_update')
     hour = randrange(0, 25)
     minute = randrange(0, 61)
     day = randrange(0, 8)
-    sender.add_periodic_task(crontab(hour=hour, minute=minute, day_of_week=day),update_schedule.s(True),)
+    sender.add_periodic_task(crontab(hour=hour, minute=minute, day_of_week=day), update_schedule.s(True), )
 
 
 @celery.task
@@ -396,9 +397,9 @@ def prepare_asset(request, unique_name=False):
 
     def get(key):
         val = data.get(key, '')
-        if isinstance(val, unicode):
+        if isinstance(val, str):
             return val.strip()
-        elif isinstance(val, basestring):
+        elif isinstance(val, bytes):
             return val.strip().decode('utf-8')
         else:
             return val
@@ -479,9 +480,9 @@ def prepare_asset_v1_2(request_environ, asset_id=None, unique_name=False):
 
     def get(key):
         val = data.get(key, '')
-        if isinstance(val, unicode):
+        if isinstance(val, str):
             return val.strip()
-        elif isinstance(val, basestring):
+        elif isinstance(val, bytes):
             return val.strip().decode('utf-8')
         else:
             return val
@@ -517,7 +518,8 @@ def prepare_asset_v1_2(request_environ, asset_id=None, unique_name=False):
         'nocache': get('nocache')
     }
 
-    uri = (get('uri')).replace(ampfix, '&').replace('<', '&lt;').replace('>', '&gt;').replace('\'', '&apos;').replace('\"', '&quot;')
+    uri = (get('uri')).replace(ampfix, '&').replace('<', '&lt;').replace('>', '&gt;').replace('\'', '&apos;').replace(
+        '\"', '&quot;')
 
     if uri.startswith('/'):
         if not path.isfile(uri):
@@ -602,7 +604,8 @@ def prepare_default_asset(**kwargs):
         return
 
     asset_id = 'default_{}'.format(uuid.uuid4().hex)
-    duration = int(get_video_duration(kwargs['uri']).total_seconds()) if "video" == kwargs['mimetype'] else kwargs['duration']
+    duration = int(get_video_duration(kwargs['uri']).total_seconds()) if "video" == kwargs['mimetype'] else kwargs[
+        'duration']
 
     return {
         'asset_id': asset_id,
@@ -683,7 +686,7 @@ def api_response(view):
             return view(*args, **kwargs)
         except Exception as e:
             traceback.print_exc()
-            return api_error(unicode(e))
+            return api_error(str(e))
 
     return api_view
 
@@ -1321,13 +1324,10 @@ class ResetWifiConfig(Resource):
         if wireless_connections is not None:
             device_uuid = None
 
-            wireless_connections = filter(
-                lambda c: not pattern_exclude.search(str(c['Id'])),
-                filter(
-                    lambda c: pattern_include.search(str(c['Devices'])),
-                    wireless_connections
-                )
-            )
+            wireless_connections = [
+                c for c in wireless_connections
+                if pattern_include.search(str(c['Devices'])) and not pattern_exclude.search(str(c['Id']))
+            ]
 
             if len(wireless_connections) > 0:
                 device_uuid = wireless_connections[0].get('Uuid')
@@ -1674,7 +1674,7 @@ def settings_page():
             next_auth_backend.update_settings(current_pass_correct)
             settings['auth_backend'] = auth_backend
 
-            for field, default in CONFIGURABLE_SETTINGS.items():
+            for field, default in list(CONFIGURABLE_SETTINGS.items()):
                 value = request.form.get(field, default)
 
                 if not value and field in ['default_duration', 'default_streaming_duration']:
@@ -1702,7 +1702,7 @@ def settings_page():
             context['flash'] = {'class': "danger", 'message': e}
     else:
         settings.load()
-    for field, default in DEFAULTS['viewer'].items():
+    for field, default in list(DEFAULTS['viewer'].items()):
         if field == 'usb_assets_key':
             if not settings[field]:
                 settings[field] = generate_perfect_paper_password(20, False)
@@ -1768,7 +1768,7 @@ def system_info():
     raspberry_pi_revision = raspberry_pi_helper.parse_cpu_info().get('revision', False)
     if raspberry_pi_revision:
         raspberry_pi_details = raspberry_pi_helper.lookup_raspberry_pi_revision(
-                raspberry_pi_revision
+            raspberry_pi_revision
         )
         raspberry_pi_model = '{} ({})'.format(
             raspberry_pi_details['model'],
@@ -1801,7 +1801,6 @@ def system_info():
 @app.route('/integrations')
 @authorized
 def integrations():
-
     context = {
         'player_name': settings['player_name'],
         'is_balena': is_balena_app(),
@@ -1889,11 +1888,13 @@ if __name__ == "__main__":
         'timeout': 20
     }
 
+
     class GunicornApplication(Application):
         def init(self, parser, opts, args):
             return config
 
         def load(self):
             return app
+
 
     GunicornApplication().run()

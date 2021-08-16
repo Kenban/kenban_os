@@ -1,4 +1,4 @@
-import ConfigParser
+import configparser
 import logging
 import uuid
 from UserDict import IterableUserDict
@@ -52,9 +52,9 @@ class KenbanSettings(IterableUserDict):
                 self[field] = config.getint(section, field)
             else:
                 self[field] = config.get(section, field)
-        except ConfigParser.Error as e:
+        except configparser.Error as e:
             logging.debug("Could not parse setting '%s.%s': %s. Using default value: '%s'." % (
-                section, field, unicode(e), default))
+                section, field, str(e), default))
 
     def _set(self, config, section, field, default):
         if isinstance(default, bool):
@@ -65,16 +65,16 @@ class KenbanSettings(IterableUserDict):
     def load(self):
         """Loads the latest settings from kenban.conf into memory."""
         logging.debug('Reading config-file...')
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.read(self.conf_file)
 
-        for section, defaults in DEFAULTS.items():
-            for field, default in defaults.items():
+        for section, defaults in list(DEFAULTS.items()):
+            for field, default in list(defaults.items()):
                 self._get(config, section, field, default)
 
     def use_defaults(self):
         for defaults in DEFAULTS.items():
-            for field, default in defaults[1].items():
+            for field, default in list(defaults[1].items()):
                 if field == 'device_uuid':
                     self[field] = uuid.uuid1().hex
                 else:
@@ -82,10 +82,10 @@ class KenbanSettings(IterableUserDict):
 
     def save(self):
         # Write new settings to disk.
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         for section, defaults in DEFAULTS.items():
             config.add_section(section)
-            for field, default in defaults.items():
+            for field, default in list(defaults.items()):
                 self._set(config, section, field, default)
         with open(self.conf_file, "w") as f:
             config.write(f)
