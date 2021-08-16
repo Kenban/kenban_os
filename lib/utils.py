@@ -18,7 +18,7 @@ import redis
 import requests
 import sh
 
-from assets_helper import update
+from lib.assets_helper import update
 from settings import settings, ZmqPublisher
 
 WOTT_PATH = '/opt/wott'
