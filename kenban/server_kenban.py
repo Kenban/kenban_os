@@ -4,7 +4,7 @@ from datetime import timedelta
 from celery import Celery
 from flask import Blueprint, request, render_template
 
-from settings_kenban import settings as k_settings
+from kenban.settings_kenban import settings as k_settings
 
 bp = Blueprint('kenban', __name__,
                template_folder=k_settings["templates_folder"])

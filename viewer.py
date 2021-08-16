@@ -2,30 +2,29 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import pydbus
 import re
-import string
-from datetime import datetime, timedelta
+from datetime import datetime
 from os import path, getenv, utime, system
 from random import shuffle
 from signal import signal, SIGALRM, SIGUSR1
-from time import sleep
 from threading import Thread
+from time import sleep
 
+import pydbus
 import requests
 import sh
 import zmq
+from netifaces import gateways
 
 from kenban.authentication import register_new_client, poll_for_authentication
 from lib import assets_helper
 from lib import db
 from lib.diagnostics import get_raspberry_code, get_raspberry_model
-from lib.github import is_up_to_date
 from lib.errors import SigalrmException
+from lib.github import is_up_to_date
 from lib.media_player import VLCMediaPlayer, OMXMediaPlayer
 from lib.utils import get_active_connections, url_fails, is_balena_app, get_node_ip, string_to_bool, connect_to_redis
 from settings import settings, LISTEN, PORT, ZmqConsumer
-
 
 __author__ = "Screenly, Inc"
 __copyright__ = "Copyright 2012-2020, Screenly, Inc"
@@ -256,7 +255,7 @@ def load_browser():
     logging.info('Loading browser...')
 
     browser = sh.Command('ScreenlyWebview')(_bg=True, _err_to_out=True)
-    while 'Screenly service start' not in browser.process.stdout:
+    while 'Screenly service start' not in str(browser.process.stdout):
         sleep(1)
 
 

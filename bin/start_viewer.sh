@@ -32,11 +32,11 @@ chmod -f 4755 /usr/bin/sudo
 # Prevent it so that the container does not fail
 trap '' 16
 
-sudo -E -u viewer dbus-run-session python viewer.py &
+sudo -E -u viewer dbus-run-session python3 viewer.py &
 
 # Waiting for the viewer
 while true; do
-  PID=$(pidof python)
+  PID=$(pidof python3)
   if [ "$?" == '0' ]; then
     break
   fi
