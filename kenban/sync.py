@@ -40,11 +40,12 @@ async def subscribe_to_updates():
             print("Websocket connection refused")
             continue
 
+
 def get_server_last_update_time():
     """ Compares the last updated time with the server. Returns true if an update is needed"""
     logging.debug("Checking for update")
     try:
-        device_uuid = str(k_settings['device_uuid']).decode('utf-8')
+        device_uuid = str(k_settings['device_uuid'])
         url = k_settings['server_address'] + k_settings['update_url'] + "/" + device_uuid
         headers = get_auth_header()
         response = requests.get(url=url, headers=headers)

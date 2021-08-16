@@ -8,7 +8,7 @@ import zmq
 import configparser
 from os import path, getenv
 from time import sleep
-from UserDict import IterableUserDict
+from collections import UserDict
 
 from lib.auth import WoTTAuth, BasicAuth, NoAuth
 from lib.errors import ZmqCollectorTimeout
@@ -60,11 +60,11 @@ requests_log.setLevel(logging.WARNING)
 logging.debug('Starting viewer.py')
 
 
-class ScreenlySettings(IterableUserDict):
+class ScreenlySettings(UserDict):
     """Screenly OSE's Settings."""
 
     def __init__(self, *args, **kwargs):
-        IterableUserDict.__init__(self, *args, **kwargs)
+        UserDict.__init__(self, *args, **kwargs)
         self.home = getenv('HOME')
         self.conf_file = self.get_configfile()
         self.auth_backends_list = [NoAuth(), BasicAuth(self)]

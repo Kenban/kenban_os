@@ -94,12 +94,10 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(3600, cleanup.s(), name='cleanup')
     sender.add_periodic_task(3600, cleanup_usb_assets.s(), name='cleanup_usb_assets')
     sender.add_periodic_task(60 * 5, get_display_power.s(), name='display_power')
-    from kenban.server_kenban import update_schedule
-    sender.add_periodic_task(10, update_schedule.s(), name='schedule_update')
     hour = randrange(0, 25)
     minute = randrange(0, 61)
     day = randrange(0, 8)
-    sender.add_periodic_task(crontab(hour=hour, minute=minute, day_of_week=day), update_schedule.s(True), )
+    sender.add_periodic_task(crontab(hour=hour, minute=minute, day_of_week=day))
 
 
 @celery.task
@@ -1360,55 +1358,6 @@ class GenerateUsbAssetsKey(Resource):
         return settings['usb_assets_key']
 
 
-class UpgradeScreenly(Resource):
-    method_decorators = [api_response, authorized]
-
-    @swagger.doc({
-        'responses': {
-            '200': {
-                'description': 'Upgrade system'
-            }
-        }
-    })
-    def post(self):
-        for task in celery.control.inspect(timeout=2.0).active().get('worker@screenly'):
-            if task.get('type') == 'server.upgrade_screenly':
-                return jsonify({'id': task.get('id')})
-        branch = request.form.get('branch')
-        manage_network = request.form.get('manage_network')
-        system_upgrade = request.form.get('system_upgrade')
-        task = upgrade_screenly.apply_async(args=(branch, manage_network, system_upgrade))
-        return jsonify({'id': task.id})
-
-
-@app.route('/upgrade_status/<task_id>')
-def upgrade_screenly_status(task_id):
-    status_code = 200
-    task = upgrade_screenly.AsyncResult(task_id)
-    if task.state == 'PENDING':
-        response = {
-            'state': task.state,
-            'status': ''
-        }
-        status_code = 202
-    elif task.state == 'PROGRESS':
-        response = {
-            'state': task.state,
-            'status': task.info.get('status', '')
-        }
-        status_code = 202
-    elif task.state != 'FAILURE':
-        response = {
-            'state': task.state,
-            'status': task.info.get('status', '')
-        }
-    else:
-        response = {
-            'state': task.state,
-            'status': str(task.info)
-        }
-    return jsonify(response), status_code
-
 
 class RebootScreenly(Resource):
     method_decorators = [api_response, authorized]
@@ -1592,7 +1541,6 @@ api.add_resource(AssetsControl, '/api/v1/assets/control/<command>')
 api.add_resource(Info, '/api/v1/info')
 api.add_resource(ResetWifiConfig, '/api/v1/reset_wifi')
 api.add_resource(GenerateUsbAssetsKey, '/api/v1/generate_usb_assets_key')
-api.add_resource(UpgradeScreenly, '/api/v1/upgrade_screenly')
 api.add_resource(RebootScreenly, '/api/v1/reboot_screenly')
 api.add_resource(ShutdownScreenly, '/api/v1/shutdown_screenly')
 api.add_resource(ViewerCurrentAsset, '/api/v1/viewer_current_asset')

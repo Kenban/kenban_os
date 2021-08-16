@@ -33,7 +33,7 @@ def register_new_client():
     """ Sends the client uuid to the server and receives the device code/verification uri in response"""
     try:
         url = k_settings['server_address'] + k_settings['device_register_uri']
-        device_uuid = str(k_settings['device_uuid']).decode('utf-8')
+        device_uuid = str(k_settings['device_uuid'])
         data = json.dumps({u"uuid": device_uuid})
         response = requests.post(url=url,
                                  data=data,
