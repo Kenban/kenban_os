@@ -1,12 +1,9 @@
-import logging
 import os
 from datetime import timedelta
 
 from celery import Celery
 from flask import Blueprint, request, render_template
 
-import sync
-from kenban import schedule
 from settings_kenban import settings as k_settings
 
 bp = Blueprint('kenban', __name__,
