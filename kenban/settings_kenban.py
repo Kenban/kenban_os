@@ -1,7 +1,7 @@
 import configparser
 import logging
 import uuid
-from UserDict import IterableUserDict
+from collections import UserDict
 import os
 from settings import CONFIG_DIR
 
@@ -32,9 +32,9 @@ DEFAULTS = {
 }
 
 
-class KenbanSettings(IterableUserDict):
+class KenbanSettings(UserDict):
     def __init__(self, *args, **kwargs):
-        IterableUserDict.__init__(self, *args, **kwargs)
+        UserDict.__init__(self, *args, **kwargs)
         self.home = os.getenv('HOME')
         self.conf_file = self.get_configfile()
         if not os.path.isfile(self.conf_file):
@@ -60,7 +60,7 @@ class KenbanSettings(IterableUserDict):
         if isinstance(default, bool):
             config.set(section, field, self.get(field, default) and 'on' or 'off')
         else:
-            config.set(section, field, unicode(self.get(field, default)))
+            config.set(section, field, str(self.get(field, default)))
 
     def load(self):
         """Loads the latest settings from kenban.conf into memory."""

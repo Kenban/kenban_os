@@ -28,7 +28,7 @@ from mimetypes import guess_type, guess_extension
 from os import getenv, listdir, makedirs, mkdir, path, remove, rename, statvfs, stat, walk
 from random import randrange
 from subprocess import check_output
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 from flask import Flask, escape, make_response, render_template, request, send_from_directory, url_for, jsonify
 from flask_cors import CORS

@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
 import os
-import sh
 import sqlite3
-import re
-import utils
-import cec
-from lib import raspberry_pi_helper
-from utils import connect_to_redis
-from pprint import pprint
 from datetime import datetime
+from pprint import pprint
+
+import cec
+import sh
+
+from lib.utils import url_fails
+from lib import raspberry_pi_helper
 
 
 def get_monitor_status():
@@ -93,7 +93,7 @@ def try_connectivity():
     ]
     result = []
     for url in urls:
-        if utils.url_fails(url):
+        if url_fails(url):
             result.append('{}: Error'.format(url))
         else:
             result.append('{}: OK'.format(url))

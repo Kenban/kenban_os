@@ -1,28 +1,25 @@
-import certifi
-import db
 import json
+import logging
 import os
-import pytz
 import random
 import re
-import redis
-import requests
 import string
-import sh
-import time
-
 from datetime import datetime, timedelta
 from distutils.util import strtobool
-from netifaces import ifaddresses, gateways, AF_INET, AF_LINK
 from os import getenv, path, utime
 from platform import machine
-from settings import settings, ZmqPublisher
 from subprocess import check_output, call
 from threading import Thread
 from urllib.parse import urlparse
-import logging
+
+import certifi
+import pytz
+import redis
+import requests
+import sh
 
 from assets_helper import update
+from settings import settings, ZmqPublisher
 
 WOTT_PATH = '/opt/wott'
 

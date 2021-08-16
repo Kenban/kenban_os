@@ -102,7 +102,7 @@ class ScreenlySettings(IterableUserDict):
         if isinstance(default, bool):
             config.set(section, field, self.get(field, default) and 'on' or 'off')
         else:
-            config.set(section, field, unicode(self.get(field, default)))
+            config.set(section, field, str(self.get(field, default)))
 
     def load(self):
         """Loads the latest settings from screenly.conf into memory."""
@@ -121,7 +121,7 @@ class ScreenlySettings(IterableUserDict):
 
     def save(self):
         # Write new settings to disk.
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         for section, defaults in DEFAULTS.items():
             config.add_section(section)
             for field, default in list(defaults.items()):
