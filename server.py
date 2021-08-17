@@ -94,10 +94,12 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(3600, cleanup.s(), name='cleanup')
     sender.add_periodic_task(3600, cleanup_usb_assets.s(), name='cleanup_usb_assets')
     sender.add_periodic_task(60 * 5, get_display_power.s(), name='display_power')
+    from kenban.sync import update_schedule
+    sender.add_periodic_task(3600, update_schedule.s(), name='schedule_update')
     hour = randrange(0, 25)
     minute = randrange(0, 61)
     day = randrange(0, 8)
-    sender.add_periodic_task(crontab(hour=hour, minute=minute, day_of_week=day))
+    sender.add_periodic_task(crontab(hour=hour, minute=minute, day_of_week=day), update_schedule.s(True), )
 
 
 @celery.task

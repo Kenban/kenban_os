@@ -1,7 +1,3 @@
-import os
-from datetime import timedelta
-
-from celery import Celery
 from flask import Blueprint, request, render_template
 
 from kenban.settings_kenban import settings as k_settings
@@ -9,16 +5,6 @@ from kenban.settings_kenban import settings as k_settings
 bp = Blueprint('kenban', __name__,
                template_folder=k_settings["templates_folder"])
 
-CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-CELERY_TASK_RESULT_EXPIRES = timedelta(hours=6)
-
-celery = Celery(
-    "kenban",
-    backend=CELERY_RESULT_BACKEND,
-    broker=CELERY_BROKER_URL,
-    result_expires=CELERY_TASK_RESULT_EXPIRES
-)
 
 
 @bp.route('/kenban')

@@ -2,18 +2,33 @@ import asyncio
 import json
 import logging
 import os
+from datetime import timedelta
 
 import requests
 import websockets
+from celery import Celery
 from requests.exceptions import ConnectionError
 
-from kenban.schedule import get_event_uuids, get_schedule_slot_uuids, save_event, save_schedule_slot
+from kenban.schedule import get_event_uuids, get_schedule_slot_uuids, save_event, save_schedule_slot, build_assets_table
 from kenban.authentication import get_auth_header
 from kenban.settings_kenban import settings as k_settings
 
 
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_TASK_RESULT_EXPIRES = timedelta(hours=6)
+
+celery = Celery(
+    "kenban",
+    backend=CELERY_RESULT_BACKEND,
+    broker=CELERY_BROKER_URL,
+    result_expires=CELERY_TASK_RESULT_EXPIRES
+)
+
+
 async def subscribe_to_updates():
-    url = "ws://localhost:5000/api/v1/screen/subscribe/a5bc93fcae8011ebad410242ac120004test"
+    """ Open a websocket connection with the server. When the string 'updated' is sent, trigger a sync of assets """
+    url = k_settings["websocket_updates_address"] + k_settings["device_uuid"]
     while True:
         # outer loop restarted every time the connection fails
         try:
@@ -22,7 +37,8 @@ async def subscribe_to_updates():
                 while True:
                     try:
                         msg = await asyncio.wait_for(ws.recv(), timeout=10)
-                        print(msg)
+                        if "updated" in msg:
+                            full_sync()
                     except (asyncio.TimeoutError, websockets.ConnectionClosed):
                         try:
                             pong = await ws.ping()
@@ -32,13 +48,22 @@ async def subscribe_to_updates():
                         except:
                             await asyncio.sleep(9)
                             break  # inner loop
-                    # do stuff with reply object
         except socket.gaierror:
-            print("Websocket error")
+            logging.error("Websocket error")
             continue
         except ConnectionRefusedError:
-            print("Websocket connection refused")
+            logging.error("Websocket connection refused")
             continue
+
+
+def full_sync():
+    get_all_images()
+    get_all_templates()
+    get_schedule()
+    get_all_events()
+    build_assets_table()
+    k_settings["last_update"] = get_server_last_update_time()  # May save error message from the server. This is ok
+    k_settings.save()
 
 
 def get_server_last_update_time():
@@ -165,22 +190,22 @@ def get_all_events():
         save_event(event, update=event_exists)
 
 
-# @celery.task()
-# def update_schedule(force=False):
-#     logging.debug("Checking for update")
-#     local_update_time = k_settings["last_update"]
-#     server_update_time = sync.get_server_last_update_time()
-#     if local_update_time != server_update_time or force:
-#         sync.get_all_images()
-#         sync.get_all_templates()
-#         sync.get_schedule()
-#         sync.get_all_events()
-#         schedule.build_assets_table()
-#
-#         k_settings["last_update"] = server_update_time  # May save an error message returned from the server. This is ok
-#         k_settings.save()
-#
-#
-# @celery.on_after_finalize.connect
-# def setup_periodic_kenban_tasks(sender, **kwargs):
-#     sender.add_periodic_task(10, update_schedule.s(), name='schedule_update')
+@celery.task()
+def update_schedule(force=False):
+    logging.debug("Checking for update")
+    local_update_time = k_settings["last_update"]
+    server_update_time = get_server_last_update_time()
+    if local_update_time != server_update_time or force:
+        get_all_images()
+        get_all_templates()
+        get_schedule()
+        get_all_events()
+        build_assets_table()
+
+        k_settings["last_update"] = server_update_time  # May save an error message returned from the server. This is ok
+        k_settings.save()
+
+
+@celery.on_after_finalize.connect
+def setup_periodic_kenban_tasks(sender, **kwargs):
+    sender.add_periodic_task(10, update_schedule.s(), name='schedule_update')
