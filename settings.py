@@ -4,7 +4,6 @@ import hashlib
 import json
 import logging
 import os
-import zmq
 import configparser
 from os import path, getenv
 from time import sleep
@@ -147,70 +146,12 @@ settings = ScreenlySettings()
 
 
 class ZmqPublisher:
-    INSTANCE = None
-
-    def __init__(self):
-        if self.INSTANCE is not None:
-            raise ValueError("An instance already exists!")
-
-        self.context = zmq.Context()
-
-        self.socket = self.context.socket(zmq.PUB)
-        self.socket.bind('tcp://0.0.0.0:10001')
-        sleep(1)
-
-    @classmethod
-    def get_instance(cls):
-        if cls.INSTANCE is None:
-            cls.INSTANCE = ZmqPublisher()
-        return cls.INSTANCE
-
-    def send_to_ws_server(self, msg):
-        self.socket.send("ws_server {}".format(msg))
-
-    def send_to_viewer(self, msg):
-        self.socket.send_string("viewer {}".format(msg))
+    pass
 
 
 class ZmqConsumer:
-    def __init__(self):
-        self.context = zmq.Context()
-
-        self.socket = self.context.socket(zmq.PUSH)
-        self.socket.setsockopt_string(zmq.LINGER, 0)
-        self.socket.connect('tcp://kb-os-server:5558')
-
-        sleep(1)
-
-    def send(self, msg):
-        self.socket.send_json(msg, flags=zmq.NOBLOCK)
+    pass
 
 
 class ZmqCollector:
-    INSTANCE = None
-
-    def __init__(self):
-        if self.INSTANCE is not None:
-            raise ValueError("An instance already exists!")
-
-        self.context = zmq.Context()
-
-        self.socket = self.context.socket(zmq.PULL)
-        self.socket.bind('tcp://0.0.0.0:5558')
-
-        self.poller = zmq.Poller()
-        self.poller.register(self.socket, zmq.POLLIN)
-
-        sleep(1)
-
-    @classmethod
-    def get_instance(cls):
-        if cls.INSTANCE is None:
-            cls.INSTANCE = ZmqCollector()
-        return cls.INSTANCE
-
-    def recv_json(self, timeout):
-        if self.poller.poll(timeout):
-            return json.loads(self.socket.recv(zmq.NOBLOCK))
-
-        raise ZmqCollectorTimeout
+    pass
