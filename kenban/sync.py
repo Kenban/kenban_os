@@ -5,7 +5,6 @@ import os
 from datetime import timedelta
 
 import requests
-import websockets
 from celery import Celery
 from requests.exceptions import ConnectionError
 
@@ -28,6 +27,7 @@ celery = Celery(
 
 async def subscribe_to_updates():
     """ Open a websocket connection with the server. When the string 'updated' is sent, trigger a sync of assets """
+    import websockets
     url = k_settings["websocket_updates_address"] + k_settings["device_uuid"]
     while True:
         # outer loop restarted every time the connection fails
@@ -209,3 +209,7 @@ def update_schedule(force=False):
 @celery.on_after_finalize.connect
 def setup_periodic_kenban_tasks(sender, **kwargs):
     sender.add_periodic_task(10, update_schedule.s(), name='schedule_update')
+
+
+if __name__ == "__main__":
+    asyncio.run(subscribe_to_updates())

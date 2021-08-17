@@ -1,6 +1,4 @@
-FROM raspbian/stretch
-
-RUN apt-get update && apt-get -y install python3
+FROM kenban/kb-os-base
 
 ADD requirements/requirements.kbsync.txt /tmp/requirements.txt
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
@@ -16,4 +14,4 @@ ENV GIT_SHORT_HASH=$GIT_SHORT_HASH
 ARG GIT_BRANCH
 ENV GIT_BRANCH=$GIT_BRANCH
 
-CMD ["python", "kenban/sync.py"]
+CMD ["python3", "kenban/sync.py"]
