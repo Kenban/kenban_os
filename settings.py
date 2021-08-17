@@ -177,7 +177,7 @@ class ZmqConsumer:
         self.context = zmq.Context()
 
         self.socket = self.context.socket(zmq.PUSH)
-        self.socket.setsockopt(zmq.LINGER, 0)
+        self.socket.setsockopt_string(zmq.LINGER, 0)
         self.socket.connect('tcp://kb-os-server:5558')
 
         sleep(1)

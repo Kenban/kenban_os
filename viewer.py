@@ -126,7 +126,7 @@ class ZmqSubscriber(Thread):
     def run(self):
         socket = self.context.socket(zmq.SUB)
         socket.connect('tcp://kb-os-server:10001')
-        socket.setsockopt(zmq.SUBSCRIBE, 'viewer')
+        socket.setsockopt_string(zmq.SUBSCRIBE, 'viewer')
         while True:
             msg = socket.recv()
             topic, message = msg.split()
