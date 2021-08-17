@@ -94,6 +94,19 @@ services:
     volumes:
       - resin-data:/data:ro
 
+  kb-os-kbsync:
+    image: kenban/kb-os-kbsync
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.kbsync
+    environment:
+      - HOME=/data
+    depends_on:
+      - kb-os-server
+    restart: always
+    volumes:
+      - resin-data:/data:ro
+
 volumes:
     resin-data:
     redis-data:

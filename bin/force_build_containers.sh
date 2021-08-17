@@ -29,7 +29,7 @@ DOCKER_BUILD_ARGS+=("--no-cache")
 
 docker pull balenalib/rpi-raspbian:buster
 
-for container in base server celery redis nginx; do
+for container in base server celery redis nginx kbsync; do
     echo "Building $container"
     docker "${DOCKER_BUILD_ARGS[@]}" \
         --build-arg "GIT_HASH=$GIT_HASH" \
