@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 import websockets
+import socket
 
 from kenban.settings_kenban import settings as k_settings
 from kenban.sync import full_sync
@@ -38,6 +39,4 @@ async def subscribe_to_updates():
 
 
 if __name__ == "__main__":
-    import os
-    print(os.getcwd())
     asyncio.run(subscribe_to_updates())

@@ -20,7 +20,4 @@ if [ -n "${MANAGEMENT_USER+x}" ] && [ -n "${MANAGEMENT_PASSWORD+x}" ]; then
     sed -i -e "s/^user=.*/user=${MANAGEMENT_USER}/" -e "s/^password=.*/password=${MANAGEMENT_PASSWORD}/" /data/.screenly/screenly.conf
 fi
 
-echo "Running migration..."
-python3 ./bin/migrate.py
-
-python3 server.py
+python3 websocket.py

@@ -35,20 +35,6 @@ services:
     volumes:
       - resin-data:/data
 
-  kb-os-websocket:
-    image: kenban/kb-os-websocket
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.websocket
-    depends_on:
-      - kb-os-server
-    environment:
-      - HOME=/data
-      - LISTEN=0.0.0.0
-    restart: always
-    volumes:
-      - resin-data:/data
-
   kb-os-celery:
     image: kenban/kb-os-celery
     build:
@@ -89,7 +75,6 @@ services:
       - HOME=/data
     depends_on:
       - kb-os-server
-      - kb-os-websocket
     restart: always
     volumes:
       - resin-data:/data:ro
@@ -105,7 +90,7 @@ services:
       - kb-os-server
     restart: always
     volumes:
-      - resin-data:/data:ro
+      - resin-data:/data
 
 volumes:
     resin-data:

@@ -22,14 +22,6 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
-  kb-os-websocket:
-    image: kenban/kb-os-websocket:${DOCKER_TAG}
-    volumes:
-      - /home/pi/.screenly:/data/.screenly
-      - /home/pi/screenly_assets:/data/screenly_assets
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-
   kb-os-celery:
     image: kenban/kb-os-celery:${DOCKER_TAG}
     volumes:
@@ -55,10 +47,10 @@ services:
   kb-os-kbsync:
     image: kenban/kb-os-kbsync:${DOCKER_TAG}
     volumes:
-      - /home/pi/.screenly:/data/.screenly:ro
-      - /home/pi/screenly_assets:/data/screenly_assets:ro
-      - /home/pi/screenly/static:/data/screenly/static:ro
-      - /home/pi/kenban_assets:/data/kenban_assets:ro
+      - /home/pi/.screenly:/data/.screenly
+      - /home/pi/screenly_assets:/data/screenly_assets
+      - /home/pi/screenly/static:/data/screenly/static
+      - /home/pi/kenban_assets:/data/kenban_assets
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
