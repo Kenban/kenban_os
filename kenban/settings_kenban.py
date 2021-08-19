@@ -3,7 +3,8 @@ import logging
 import uuid
 from collections import UserDict
 import os
-from settings import CONFIG_DIR
+
+CONFIG_DIR = '.screenly/'
 
 DEFAULTS = {
     'main': {

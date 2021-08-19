@@ -38,4 +38,6 @@ async def subscribe_to_updates():
 
 
 if __name__ == "__main__":
+    import os
+    print(os.getcwd())
     asyncio.run(subscribe_to_updates())
