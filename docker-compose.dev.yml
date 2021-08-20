@@ -1,0 +1,109 @@
+version: "2.2"
+services:
+  kb-os-base:
+    image: kenban/kb-os-base:latest-x86
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.base.dev
+      cache_from:
+        - kenban/kb-os-base:latest-x86
+
+  kb-os-server:
+    image: kenban/kb-os-server:latest-x86
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.server.dev
+      cache_from:
+        - kenban/kb-os-base:latest-x86
+        - kenban/kb-os-server:latest-x86
+    depends_on:
+      - kb-os-base
+    environment:
+      - HOME=/data
+      - LISTEN=0.0.0.0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    restart: always
+    volumes:
+      - resin-data:/data
+
+# We might bring this in in the future
+#  kb-os-viewer:
+#    build:
+#      context: .
+#      dockerfile: docker/Dockerfile.viewer
+#    depends_on:
+#      - kb-os-server
+#    environment:
+#      - HOME=/data
+#      - PORT=80
+#      - NOREFRESH=1
+#      - LISTEN=kb-os-nginx
+#    privileged: true
+#    restart: always
+#    volumes:
+#      - resin-data:/data
+
+  kb-os-websocket:
+    image: kenban/kb-os-websocket:latest-x86
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.websocket.dev
+      cache_from:
+        - kenban/kb-os-base:latest-x86
+        - kenban/kb-os-websocket:latest-x86
+    depends_on:
+      - kb-os-base
+      - kb-os-server
+    environment:
+      - HOME=/data
+      - LISTEN=0.0.0.0
+    restart: always
+    volumes:
+      - resin-data:/data
+
+  kb-os-celery:
+    image: kenban/kb-os-celery:latest-x86
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.celery.dev
+      cache_from:
+        - kenban/kb-os-base:latest-x86
+        - kenban/kb-os-celery:latest-x86
+    depends_on:
+      - kb-os-base
+      - kb-os-server
+      - redis
+    environment:
+      - HOME=/data
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    restart: always
+    volumes:
+      - resin-data:/data
+
+  redis:
+    image: redis:alpine
+
+  kb-os-nginx:
+    image: kenban/kb-os-nginx:latest-x86
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.nginx
+      cache_from:
+        - kenban/kb-os-nginx:latest-x86
+    ports:
+      - 8000:80
+    environment:
+      - HOME=/data
+    depends_on:
+      - kb-os-base
+      - kb-os-server
+      - kb-os-websocket
+    restart: always
+    volumes:
+      - resin-data:/data:ro
+
+volumes:
+    resin-data:
+    redis-data:

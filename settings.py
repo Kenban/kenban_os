@@ -12,7 +12,7 @@ from collections import UserDict
 from lib.auth import WoTTAuth, BasicAuth, NoAuth
 from lib.errors import ZmqCollectorTimeout
 
-CONFIG_DIR = '.screenly/'
+CONFIG_DIR = '.kenban'
 CONFIG_FILE = 'screenly.conf'
 DEFAULTS = {
     'main': {

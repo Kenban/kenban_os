@@ -4,7 +4,7 @@ import uuid
 from collections import UserDict
 import os
 
-CONFIG_DIR = '.screenly/'
+CONFIG_DIR = '.kenban'
 
 DEFAULTS = {
     'main': {

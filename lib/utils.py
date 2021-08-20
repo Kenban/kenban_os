@@ -2,24 +2,16 @@ import json
 import logging
 import os
 import random
-import re
 import string
-from datetime import datetime, timedelta
+from datetime import datetime
 from distutils.util import strtobool
-from os import getenv, path, utime
+from os import getenv, utime
 from platform import machine
-from subprocess import check_output, call
-from threading import Thread
 from urllib.parse import urlparse
 
-import certifi
 import pytz
 import redis
 import requests
-import sh
-
-from lib.assets_helper import update
-from settings import settings, ZmqPublisher
 
 WOTT_PATH = '/opt/wott'
 
@@ -178,32 +170,6 @@ def remove_connection(bus, uuid):
     return True
 
 
-def get_video_duration(file):
-    """
-    Returns the duration of a video file in timedelta.
-    """
-    time = None
-
-    try:
-        run_player = ffprobe('-i', file, _err_to_out=True)
-    except sh.ErrorReturnCode_1:
-        raise Exception('Bad video format')
-
-    for line in run_player.split('\n'):
-        if 'Duration' in line:
-            match = re.search(r'[0-9]+:[0-9]+:[0-9]+\.[0-9]+', line)
-            if match:
-                time_input = match.group()
-                time_split = time_input.split(':')
-                hours = int(time_split[0])
-                minutes = int(time_split[1])
-                seconds = float(time_split[2])
-                time = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-            break
-
-    return time
-
-
 def handler(obj):
     # Set timezone as UTC if it's datetime and format as ISO
     if isinstance(obj, datetime):
@@ -215,94 +181,6 @@ def handler(obj):
 
 def json_dump(obj):
     return json.dumps(obj, default=handler)
-
-
-def url_fails(url):
-    """
-    If it is streaming
-    """
-    if urlparse(url).scheme in ('rtsp', 'rtmp'):
-        run_mplayer = mplayer('-identify', '-frames', '0', '-nosound', url)
-        for line in run_mplayer.split('\n'):
-            if 'Clip info:' in line:
-                return False
-        return True
-
-    """
-    Try HEAD and GET for URL availability check.
-    """
-
-    # Use Certifi module and set to True as default so users stop seeing InsecureRequestWarning in logs
-    if settings['verify_ssl']:
-        verify = certifi.where()
-    else:
-        verify = True
-
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (X11; Linux armv7l) AppleWebKit/538.15 (KHTML, like Gecko) Version/8.0 Safari/538.15'
-    }
-    try:
-        if not validate_url(url):
-            return False
-
-        if requests.head(
-            url,
-            allow_redirects=True,
-            headers=headers,
-            timeout=10,
-            verify=verify
-        ).ok:
-            return False
-
-        if requests.get(
-            url,
-            allow_redirects=True,
-            headers=headers,
-            timeout=10,
-            verify=verify
-        ).ok:
-            return False
-
-    except (requests.ConnectionError, requests.exceptions.Timeout):
-        pass
-
-    return True
-
-
-def download_video_from_youtube(uri, asset_id):
-    home = getenv('HOME')
-    name = check_output(['youtube-dl', '-e', uri])
-    info = json.loads(check_output(['youtube-dl', '-j', uri]))
-    duration = info['duration']
-
-    location = path.join(home, 'screenly_assets', asset_id)
-    thread = YoutubeDownloadThread(location, uri, asset_id)
-    thread.daemon = True
-    thread.start()
-
-    return location, unicode(name.decode('utf-8')), duration
-
-
-class YoutubeDownloadThread(Thread):
-    def __init__(self, location, uri, asset_id):
-        Thread.__init__(self)
-        self.location = location
-        self.uri = uri
-        self.asset_id = asset_id
-
-    def run(self):
-        publisher = ZmqPublisher.get_instance()
-        call(['youtube-dl', '-f', 'mp4', '-o', self.location, self.uri])
-        with db.conn(settings['database']) as conn:
-            update(conn, self.asset_id, {'asset_id': self.asset_id, 'is_processing': 0})
-
-        publisher.send_to_ws_server(self.asset_id)
-
-
-def template_handle_unicode(value):
-    if isinstance(value, str):
-        return value.decode('utf-8')
-    return unicode(value)
 
 
 def is_demo_node():

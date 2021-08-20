@@ -9,7 +9,7 @@ from celery import Celery
 from celery.schedules import crontab
 from flask import Flask, request, render_template
 from flask_cors import CORS
-from gunicorn.app.base import Application
+#from gunicorn.app.base import Application
 
 from kenban.settings_kenban import settings as k_settings
 from lib import assets_helper
@@ -120,14 +120,15 @@ if __name__ == "__main__":
         'threads': 2,
         'timeout': 20
     }
+    app.run()
 
 
-    class GunicornApplication(Application):
-        def init(self, parser, opts, args):
-            return config
+    # class GunicornApplication(Application):
+    #     def init(self, parser, opts, args):
+    #         return config
+    #
+    #     def load(self):
+    #         return app
 
-        def load(self):
-            return app
 
-
-    GunicornApplication().run()
+    #GunicornApplication().run()

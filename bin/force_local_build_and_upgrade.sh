@@ -37,10 +37,6 @@ for container in base server celery redis nginx kbsync; do
         --build-arg "GIT_BRANCH=$GIT_BRANCH" \
         -f "docker/Dockerfile.$container" \
         -t "kenban/kb-os-$container:$DOCKER_TAG" .
-
-    # Push
-    docker push "kenban/kb-os-$container:$DOCKER_TAG"
-    docker push "kenban/kb-os-$container:latest"
 done
 
 echo "Building viewer for different architectures..."
