@@ -144,14 +144,3 @@ class ScreenlySettings(UserDict):
 
 settings = ScreenlySettings()
 
-
-class ZmqPublisher:
-    pass
-
-
-class ZmqConsumer:
-    pass
-
-
-class ZmqCollector:
-    pass

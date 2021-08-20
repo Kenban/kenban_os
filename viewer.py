@@ -7,29 +7,22 @@ from datetime import datetime
 from os import path, getenv, utime, system
 from random import shuffle
 from signal import signal, SIGALRM, SIGUSR1
-from threading import Thread
 from time import sleep
 
 import pydbus
 import requests
 import sh
-import zmq
 from netifaces import gateways
 
 from kenban.authentication import register_new_client, poll_for_authentication
 from lib import assets_helper
 from lib import db
-from lib.diagnostics import get_raspberry_code, get_raspberry_model
 from lib.errors import SigalrmException
 from lib.github import is_up_to_date
-from lib.media_player import VLCMediaPlayer, OMXMediaPlayer
 from lib.utils import get_active_connections, url_fails, is_balena_app, get_node_ip, string_to_bool, connect_to_redis
 from settings import settings, LISTEN, PORT, ZmqConsumer
 
-__author__ = "Screenly, Inc"
-__copyright__ = "Copyright 2012-2020, Screenly, Inc"
 __license__ = "Dual License: GPLv2 and Commercial License"
-
 
 SPLASH_DELAY = 60  # secs
 EMPTY_PL_DELAY = 5  # secs
@@ -44,13 +37,6 @@ browser = None
 loop_is_stopped = False
 browser_bus = None
 r = connect_to_redis()
-
-
-try:
-    media_player = VLCMediaPlayer() if get_raspberry_model(get_raspberry_code()) == 'Model 4B' else OMXMediaPlayer()
-except sh.ErrorReturnCode_1:
-    media_player = OMXMediaPlayer()
-
 
 HOME = None
 db_conn = None
@@ -71,7 +57,6 @@ def sigusr1(signum, frame):
     playing web or image asset is skipped.
     """
     logging.info('USR1 received, skipping.')
-    media_player.stop()
 
 
 def skip_asset(back=False):
@@ -104,39 +89,6 @@ def command_not_found():
 def send_current_asset_id_to_server():
     consumer = ZmqConsumer()
     consumer.send({'current_asset_id': scheduler.current_asset_id})
-
-
-commands = {
-    'next': lambda _: skip_asset(),
-    'previous': lambda _: skip_asset(back=True),
-    'asset': lambda id: navigate_to_asset(id),
-    'reload': lambda _: load_settings(),
-    'stop': lambda _: stop_loop(),
-    'play': lambda _: play_loop(),
-    'unknown': lambda _: command_not_found(),
-    'current_asset_id': lambda _: send_current_asset_id_to_server()
-}
-
-
-class ZmqSubscriber(Thread):
-    def __init__(self):
-        Thread.__init__(self)
-        self.context = zmq.Context()
-
-    def run(self):
-        socket = self.context.socket(zmq.SUB)
-        socket.connect('tcp://kb-os-server:10001')
-        socket.setsockopt_string(zmq.SUBSCRIBE, 'viewer')
-        while True:
-            msg = socket.recv()
-            topic, message = msg.split()
-
-            # If the command consists of 2 parts, then the first is the function, the second is the argument
-            parts = message.split('&')
-            command = parts[0]
-            parameter = parts[1] if len(parts) > 1 else None
-
-            commands.get(command, commands.get('unknown'))(parameter)
 
 
 class Scheduler(object):
@@ -284,24 +236,6 @@ def view_image(uri):
         logging.info(browser.process.stdout)
 
 
-def view_video(uri, duration):
-    logging.debug('Displaying video %s for %s ', uri, duration)
-
-    media_player.set_asset(uri, duration)
-    media_player.play()
-
-    view_image('null')
-
-    try:
-        while media_player.is_playing():
-            watchdog()
-            sleep(1)
-    except sh.ErrorReturnCode_1:
-        logging.info('Resource URI is not correct, remote host is not responding or request was rejected.')
-
-    media_player.stop()
-
-
 def load_settings():
     """
     Load settings and set the log level.
@@ -331,8 +265,6 @@ def asset_loop(scheduler):
             view_image(uri)
         elif 'web' in mime:
             view_webpage(uri)
-        elif 'video' or 'streaming' in mime:
-            view_video(uri, asset['duration'])
         else:
             logging.error('Unknown MimeType %s', mime)
 
@@ -437,9 +369,6 @@ def main():
     else:
         logging.info("Device already paired")
 
-    subscriber = ZmqSubscriber()
-    subscriber.daemon = True
-    subscriber.start()
 
     scheduler = Scheduler()
 

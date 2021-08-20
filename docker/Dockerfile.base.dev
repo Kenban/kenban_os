@@ -12,7 +12,6 @@ RUN apt-get update && \
         libcec-dev  \
         libffi-dev \
         libssl-dev \
-        libzmq3-dev \
         lsb-release \
         mplayer \
         net-tools \
