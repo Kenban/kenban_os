@@ -1,3 +1,13 @@
+
+
+
+# todo rewrite all of this. Use sqlalchemy and make it neater
+
+
+
+
+
+
 import datetime
 import logging
 import os
@@ -5,6 +15,8 @@ import uuid
 
 import pytz
 from dateutil.tz import tzlocal
+from sqlalchemy import create_engine, Table, MetaData, Column, String, Time, DateTime
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 from lib import db, assets_helper
 from settings import settings as s_settings
@@ -23,6 +35,62 @@ create_schedule = lambda keys: 'insert into schedule (' + comma(keys) + ') value
 update_schedule = lambda keys: 'update schedule set ' + quest(keys) + ' where uuid=?'
 create_event = lambda keys: 'insert into event (' + comma(keys) + ') values (' + comma(['?'] * len(keys)) + ')'
 update_event = lambda keys: 'update event set ' + quest(keys) + ' where uuid=?'
+
+
+engine = create_engine('sqlite:///kenban.db')
+Base = declarative_base()
+Session = sessionmaker(engine)
+
+
+class Schedule(Base):
+    __tablename__ = "schedule"
+    uuid = Column(String, primary_key=True)
+    template_uuid = Column(String)
+    foreground_image_uuid = Column(String)
+    display_text = Column(String)
+    time_format = Column(String)
+    start_time = Column(Time)
+    weekday = Column(String)
+
+
+class Event(Base):
+    __tablename__ = "event"
+    uuid = Column(String, primary_key=True)
+    template_uuid = Column(String)
+    foreground_image_uuid = Column(String)
+    display_text = Column(String)
+    time_format = Column(String)
+    start_time = Column(DateTime)
+    end_time = Column(DateTime)
+    weekday = Column(String)
+
+
+def init_kenban_new():
+    # Create images and templates folder if they don't exist
+    if not os.path.isdir(k_settings['images_folder']):
+        os.mkdir(k_settings['images_folder'])
+    # Create config dir if it doesn't exist
+    if not os.path.isdir(k_settings['templates_folder']):
+        os.mkdir(k_settings['templates_folder'])
+
+    # Initialise database
+    Base.metadata.create_all(engine)
+
+
+def get_schedule_slot_uuids():
+    session = Session()
+    return session.query(Schedule.uuid).all()
+
+
+def get_event_uuids():
+    with db.conn(s_settings['database']) as conn:
+        with db.cursor(conn) as c:
+            c.execute('select uuid from event')
+            return [uuid[0] for uuid in c.fetchall()]
+
+
+
+
 
 
 def dict_factory(cursor, row):
@@ -50,6 +118,9 @@ def init_kenban():
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='events'")
             if cursor.fetchone() is None:
                 cursor.execute(create_event_table)
+
+
+
 
 
 def get_schedule_slot_uuids():
