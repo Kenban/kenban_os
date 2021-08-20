@@ -3,6 +3,7 @@ import logging
 
 import websockets
 import socket
+from websockets.exceptions import WebSocketException
 
 from kenban.settings_kenban import settings as k_settings
 from kenban.sync import full_sync
@@ -32,9 +33,15 @@ async def subscribe_to_updates():
                             break  # inner loop
         except socket.gaierror:
             logging.error("Websocket error")
+            await asyncio.sleep(9)
             continue
         except ConnectionRefusedError:
             logging.error("Websocket connection refused")
+            await asyncio.sleep(9)
+            continue
+        except WebSocketException as e:
+            logging.error(e)
+            await asyncio.sleep(9)
             continue
 
 
