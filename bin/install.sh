@@ -134,12 +134,12 @@ sudo pip install "$ANSIBLE_VERSION"
 sudo -u pi ansible localhost \
     -m git \
     -a "repo=$REPOSITORY dest=/home/pi/screenly version=$BRANCH force=no"
-cd /home/pi/screenly/ansible
+cd /home/pi/kenban/ansible
 
 sudo -E ansible-playbook site.yml "${EXTRA_ARGS[@]}"
 
 # Pull down and install containers
-/home/pi/screenly/bin/upgrade_containers.sh
+/home/pi/kenban/bin/upgrade_containers.sh
 
 sudo apt-get autoclean
 sudo apt-get clean

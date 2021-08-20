@@ -11,7 +11,7 @@ from flask import Flask, request, render_template
 from flask_cors import CORS
 #from gunicorn.app.base import Application
 
-from kenban.settings_kenban import settings as k_settings
+from settings import settings
 from lib import assets_helper
 from lib import db
 from lib import queries
@@ -73,7 +73,7 @@ def kenban_display():
     if not template_uuid:
         return "Could not get template_uuid"
 
-    foreground_image = k_settings["local_address"] + "/kenban_img/" + foreground_image_uuid  # Served by nginx
+    foreground_image = settings["local_address"] + "/kenban_img/" + foreground_image_uuid  # Served by nginx
     template_filename = template_uuid
     return render_template(template_filename,
                            display_text=display_text,

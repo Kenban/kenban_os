@@ -1,29 +1,40 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import configparser
 import hashlib
-import json
 import logging
 import os
-import configparser
-from os import path, getenv
-from time import sleep
 from collections import UserDict
+from os import path, getenv
 
 from lib.auth import WoTTAuth, BasicAuth, NoAuth
-from lib.errors import ZmqCollectorTimeout
 
 CONFIG_DIR = '.kenban'
-CONFIG_FILE = 'screenly.conf'
+CONFIG_FILE = 'kenban.conf'
+
 DEFAULTS = {
     'main': {
-        'analytics_opt_out': False,
-        'assetdir': 'screenly_assets',
-        'database': CONFIG_DIR + 'screenly.db',
-        'date_format': 'mm/dd/yyyy',
-        'use_24_hour_clock': False,
-        'use_ssl': False,
-        'auth_backend': '',
-        'websocket_port': '9999'
+        'server_address': 'https://kenban.co.uk',
+        'local_address': 'http://kb-os-nginx',
+        'websocket_updates_address': 'ws://kenban.co.uk/api/v1/screen/subscribe/',
+        'device_uuid': None,
+        'last_update': None,
+        'access_token': None,
+        'refresh_token': None
+    },
+    'api': {
+        'device_register_uri': '/api/v1/device_pairing/new',
+        'device_auth_uri': '/api/v1/device_pairing/authorise',
+        'refresh_access_token_url': '/api/v1/auth/access-token-refresh',
+        'update_url': '/api/v1/screen/last_update',
+        'image_url': '/api/v1/image/',
+        'template_url': '/api/v1/template/',
+        'schedule_url': '/api/v1/schedule/screen/',
+        'event_url': '/api/v1/event/screen/',
+    },
+    'folders': {
+        'images_folder': '/data/kenban_assets/kenban_images/',
+        'templates_folder': '/data/kenban_assets/kenban_templates/',
     },
     'viewer': {
         'audio_output': 'hdmi',
@@ -37,8 +48,20 @@ DEFAULTS = {
         'verify_ssl': True,
         'usb_assets_key': '',
         'default_assets': False
+    },
+    'screenly': {
+        'analytics_opt_out': False,
+        'assetdir': 'screenly_assets',
+        'database': CONFIG_DIR + 'kenban.db',
+        'date_format': 'mm/dd/yyyy',
+        'use_24_hour_clock': False,
+        'use_ssl': False,
+        'auth_backend': '',
+        'websocket_port': '9999'
     }
 }
+
+
 CONFIGURABLE_SETTINGS = DEFAULTS['viewer'].copy()
 CONFIGURABLE_SETTINGS['use_24_hour_clock'] = DEFAULTS['main']['use_24_hour_clock']
 CONFIGURABLE_SETTINGS['date_format'] = DEFAULTS['main']['date_format']
@@ -59,8 +82,8 @@ requests_log.setLevel(logging.WARNING)
 logging.debug('Starting viewer.py')
 
 
-class ScreenlySettings(UserDict):
-    """Screenly OSE's Settings."""
+class KenbanSettings(UserDict):
+    """Kenban OS's Settings."""
 
     def __init__(self, *args, **kwargs):
         UserDict.__init__(self, *args, **kwargs)
@@ -104,7 +127,7 @@ class ScreenlySettings(UserDict):
             config.set(section, field, str(self.get(field, default)))
 
     def load(self):
-        """Loads the latest settings from screenly.conf into memory."""
+        """Loads the latest settings from kenban.conf into memory."""
         logging.debug('Reading config-file...')
         config = configparser.ConfigParser()
         config.read(self.conf_file)
@@ -135,12 +158,6 @@ class ScreenlySettings(UserDict):
     def get_configfile(self):
         return path.join(self.home, CONFIG_DIR, CONFIG_FILE)
 
-    @property
-    def auth(self):
-        backend_name = self['auth_backend']
-        if backend_name in self.auth_backends:
-            return self.auth_backends[self['auth_backend']]
 
-
-settings = ScreenlySettings()
+settings = KenbanSettings()
 

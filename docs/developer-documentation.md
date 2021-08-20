@@ -30,21 +30,21 @@ There are currently three versions of Screenly-OSE..
 _(Most of the following information pertains to the Production version (Uzbl-based) and not the Developer QtWebview/Docker-based version)_
 
 ```
-/home/pi/screenly/
+/home/pi/kenban/
 
 All of the files/folders from the Github repo should be cloned into this directory.
 ```
 
 ```
-/home/pi/.screenly/
+/home/pi/.kenban/
 
 celerybeat-schedule -> stores the last run times of the celery tasks.
 default_assets.yml -> configuration file which contains the default assets that get added to the Assets if enabled.
 device_id -> randomly generated string to identify device.
 initialized -> tells whether hotspot service runs or not.
 latest_screenly_sha -> shows the version of branch in hashed value.
-screenly.conf -> configuration file for web interface settings.
-screenly.db -> database file containing current Assets information.
+kenban.conf -> configuration file for web interface settings.
+kenban.db -> database file containing current Assets information.
 ```
 
 
@@ -63,7 +63,7 @@ wifi-connect.service -> starts the resin/balena wifi-connect program to dynamica
 /etc/nginx/sites-enabled/
 
 screenly_assets.conf -> configuration file for ngrok.io server, deals with public url tunnel / pro migration?
-screenly.conf -> configuration file for nginx web server (default asset settings, web GUI auth, database/asset dir, etc), called by settings.py
+kenban.conf -> configuration file for nginx web server (default asset settings, web GUI auth, database/asset dir, etc), called by settings.py
 ```
 
 ```

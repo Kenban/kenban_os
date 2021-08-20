@@ -19,8 +19,7 @@ from sqlalchemy import create_engine, Table, MetaData, Column, String, Time, Dat
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 from lib import db, assets_helper
-from settings import settings as s_settings
-from kenban.settings_kenban import settings as k_settings
+from settings import settings
 
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -36,7 +35,7 @@ update_schedule = lambda keys: 'update schedule set ' + quest(keys) + ' where uu
 create_event = lambda keys: 'insert into event (' + comma(keys) + ') values (' + comma(['?'] * len(keys)) + ')'
 update_event = lambda keys: 'update event set ' + quest(keys) + ' where uuid=?'
 
-
+db_url = "sqlite:///" + settings["database"]
 engine = create_engine('sqlite:///kenban.db')
 Base = declarative_base()
 Session = sessionmaker(engine)
@@ -67,11 +66,11 @@ class Event(Base):
 
 def init_kenban_new():
     # Create images and templates folder if they don't exist
-    if not os.path.isdir(k_settings['images_folder']):
-        os.mkdir(k_settings['images_folder'])
+    if not os.path.isdir(settings['images_folder']):
+        os.mkdir(settings['images_folder'])
     # Create config dir if it doesn't exist
-    if not os.path.isdir(k_settings['templates_folder']):
-        os.mkdir(k_settings['templates_folder'])
+    if not os.path.isdir(settings['templates_folder']):
+        os.mkdir(settings['templates_folder'])
 
     # Initialise database
     Base.metadata.create_all(engine)
@@ -83,7 +82,7 @@ def get_schedule_slot_uuids():
 
 
 def get_event_uuids():
-    with db.conn(s_settings['database']) as conn:
+    with db.conn(settings['database']) as conn:
         with db.cursor(conn) as c:
             c.execute('select uuid from event')
             return [uuid[0] for uuid in c.fetchall()]
@@ -103,14 +102,14 @@ def dict_factory(cursor, row):
 
 def init_kenban():
     # Create images and templates folder if they don't exist
-    if not os.path.isdir(k_settings['images_folder']):
-        os.mkdir(k_settings['images_folder'])
+    if not os.path.isdir(settings['images_folder']):
+        os.mkdir(settings['images_folder'])
     # Create config dir if it doesn't exist
-    if not os.path.isdir(k_settings['templates_folder']):
-        os.mkdir(k_settings['templates_folder'])
+    if not os.path.isdir(settings['templates_folder']):
+        os.mkdir(settings['templates_folder'])
 
     # Create database tables if they don't exist
-    with db.conn(s_settings['database']) as conn:
+    with db.conn(settings['database']) as conn:
         with db.cursor(conn) as cursor:
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='schedule'")
             if cursor.fetchone() is None:
@@ -124,7 +123,7 @@ def init_kenban():
 
 
 def get_schedule_slot_uuids():
-    with db.conn(s_settings['database']) as conn:
+    with db.conn(settings['database']) as conn:
         with db.cursor(conn) as c:
             c.execute('select uuid from schedule')
             return [uuid[0] for uuid in c.fetchall()]
@@ -138,7 +137,7 @@ def save_schedule_slot(slot, update):
                "time_format": slot["time_format"],
                "start_time": slot["start_time"],
                "weekday": slot["weekday"]}
-    with db.conn(s_settings['database']) as conn:
+    with db.conn(settings['database']) as conn:
         if update:
             with db.commit(conn) as c:
                 c.execute(update_schedule(db_slot.keys()), db_slot.values() + [db_slot["uuid"]])
@@ -147,7 +146,7 @@ def save_schedule_slot(slot, update):
 
 
 def get_event_uuids():
-    with db.conn(s_settings['database']) as conn:
+    with db.conn(settings['database']) as conn:
         with db.cursor(conn) as c:
             c.execute('select uuid from event')
             return [uuid[0] for uuid in c.fetchall()]
@@ -160,7 +159,7 @@ def save_event(event, update):
                 "event_start": event["event_start"],
                 "event_end": event["event_end"],
                 "override": event["override"]}
-    with db.conn(s_settings['database']) as conn:
+    with db.conn(settings['database']) as conn:
         if update:
             with db.commit(conn) as c:
                 c.execute(update_event(db_event.keys()), db_event.values() + [db_event["uuid"]])
@@ -170,7 +169,7 @@ def save_event(event, update):
 
 def build_assets_table():
     """ Use the kenban schedule and event table to build the assets table used by screenly"""
-    with db.conn(s_settings['database']) as conn:
+    with db.conn(settings['database']) as conn:
         conn.row_factory = dict_factory
         with db.cursor(conn) as c:
             c.execute('select * from schedule')
@@ -235,7 +234,7 @@ def build_assets_table():
 
 
 def create_asset_from_schedule_slot(schedule_slot, start, end):
-    base_uri = k_settings['local_address']
+    base_uri = settings['local_address']
     asset_uri = base_uri + "/kenban?foreground_image_uuid={image}&display_text={text}&template_uuid={template}".format(
         image=schedule_slot["foreground_image_uuid"],
         text=schedule_slot["display_text"],
@@ -255,12 +254,12 @@ def create_asset_from_schedule_slot(schedule_slot, start, end):
         "skip_asset_check": 1,
         "start_date": start
     }
-    with db.conn(s_settings['database']) as conn:
+    with db.conn(settings['database']) as conn:
         assets_helper.create(conn, asset)
 
 
 def create_asset_from_event(event, schedule_slot):
-    base_uri = k_settings['local_address']
+    base_uri = settings['local_address']
     asset_uri = base_uri + "/kenban?foreground_image_uuid={image}&display_text={text}&template_uuid={template}".format(
         image=event["foreground_image_uuid"],
         text=event["display_text"],
@@ -281,5 +280,5 @@ def create_asset_from_event(event, schedule_slot):
         "skip_asset_check": 1,
         "start_date": event["event_start"]
     }
-    with db.conn(s_settings['database']) as conn:
+    with db.conn(settings['database']) as conn:
         assets_helper.create(conn, asset)

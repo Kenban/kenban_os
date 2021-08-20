@@ -9,7 +9,7 @@ from requests.exceptions import ConnectionError
 
 from kenban.schedule import get_event_uuids, get_schedule_slot_uuids, save_event, save_schedule_slot, build_assets_table
 from kenban.authentication import get_auth_header
-from kenban.settings_kenban import settings as k_settings
+from settings import settings
 
 
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
@@ -30,16 +30,16 @@ def full_sync():
     get_schedule()
     get_all_events()
     build_assets_table()
-    k_settings["last_update"] = get_server_last_update_time()  # May save error message from the server. This is ok
-    k_settings.save()
+    settings["last_update"] = get_server_last_update_time()  # May save error message from the server. This is ok
+    settings.save()
 
 
 def get_server_last_update_time():
     """ Compares the last updated time with the server. Returns true if an update is needed"""
     logging.debug("Checking for update")
     try:
-        device_uuid = str(k_settings['device_uuid'])
-        url = k_settings['server_address'] + k_settings['update_url'] + "/" + device_uuid
+        device_uuid = str(settings['device_uuid'])
+        url = settings['server_address'] + settings['update_url'] + "/" + device_uuid
         headers = get_auth_header()
         response = requests.get(url=url, headers=headers)
         response.raise_for_status()
@@ -56,7 +56,7 @@ def get_server_last_update_time():
 def get_all_images(overwrite=False):
     logging.debug("Syncing images")
     try:
-        url = k_settings['server_address'] + k_settings['image_url']
+        url = settings['server_address'] + settings['image_url']
         headers = get_auth_header()
         response = requests.get(url=url, headers=headers)
         response.raise_for_status()
@@ -67,16 +67,16 @@ def get_all_images(overwrite=False):
         logging.warning("Could not connect to authorisation server at {0}".format(url))
         return None
     images = json.loads(response.content)
-    if not os.path.exists(k_settings["images_folder"]):
-        os.makedirs(k_settings["images_folder"])
-    existing_file_uuids = os.listdir(k_settings["images_folder"])
+    if not os.path.exists(settings["images_folder"]):
+        os.makedirs(settings["images_folder"])
+    existing_file_uuids = os.listdir(settings["images_folder"])
     logging.debug("Existing images: " + str(existing_file_uuids))
     for image in images:
         if image['uuid'] in existing_file_uuids and not overwrite:
             logging.debug("Already got image " + image['uuid'])
             continue
         img_data = requests.get(image["src"]).content
-        fp = k_settings["images_folder"] + image["uuid"]
+        fp = settings["images_folder"] + image["uuid"]
         with open(fp, 'wb') as output_file:
             output_file.write(img_data)
             logging.info("Saving Image " + image["uuid"])
@@ -85,7 +85,7 @@ def get_all_images(overwrite=False):
 def get_all_templates(overwrite=False):
     logging.debug("Syncing templates")
     try:
-        url = k_settings['server_address'] + k_settings['template_url']
+        url = settings['server_address'] + settings['template_url']
         headers = get_auth_header()
         response = requests.get(url=url, headers=headers)
         response.raise_for_status()
@@ -96,17 +96,17 @@ def get_all_templates(overwrite=False):
         logging.warning("Could not connect to authorisation server at {0}".format(url))
         return None
     template_uuids = json.loads(response.content)
-    if not os.path.exists(k_settings["templates_folder"]):
-        os.makedirs(k_settings["templates_folder"])
-    existing_template_uuids = os.listdir(k_settings["templates_folder"])
+    if not os.path.exists(settings["templates_folder"]):
+        os.makedirs(settings["templates_folder"])
+    existing_template_uuids = os.listdir(settings["templates_folder"])
     logging.debug("Existing templates: " + str(existing_template_uuids))
     for template_uuid in template_uuids:
         if template_uuid in existing_template_uuids and not overwrite:
             logging.debug("Already got template " + template_uuid)
             continue
-        url = k_settings["server_address"] + k_settings["template_url"] + template_uuid
+        url = settings["server_address"] + settings["template_url"] + template_uuid
         template = requests.get(url).content
-        fp = k_settings["templates_folder"] + template_uuid
+        fp = settings["templates_folder"] + template_uuid
         with open(fp, 'wb') as output_file:
             output_file.write(template)
             logging.info("Saved template " + template_uuid)
@@ -115,7 +115,7 @@ def get_all_templates(overwrite=False):
 def get_schedule():
     logging.debug("Getting schedule")
     try:
-        url = k_settings['server_address'] + k_settings['schedule_url'] + k_settings["device_uuid"]
+        url = settings['server_address'] + settings['schedule_url'] + settings["device_uuid"]
         headers = get_auth_header()
         response = requests.get(url=url, headers=headers)
         response.raise_for_status()
@@ -135,7 +135,7 @@ def get_schedule():
 
 def get_all_events():
     try:
-        url = k_settings['server_address'] + k_settings['event_url'] + k_settings["device_uuid"]
+        url = settings['server_address'] + settings['event_url'] + settings["device_uuid"]
         headers = get_auth_header()
         response = requests.get(url=url, headers=headers)
         response.raise_for_status()
@@ -161,7 +161,7 @@ def get_all_events():
 @celery.task()
 def update_schedule(force=False):
     logging.debug("Checking for update")
-    local_update_time = k_settings["last_update"]
+    local_update_time = settings["last_update"]
     server_update_time = get_server_last_update_time()
     if local_update_time != server_update_time or force:
         get_all_images()
@@ -170,8 +170,8 @@ def update_schedule(force=False):
         get_all_events()
         build_assets_table()
 
-        k_settings["last_update"] = server_update_time  # May save an error message returned from the server. This is ok
-        k_settings.save()
+        settings["last_update"] = server_update_time  # May save an error message returned from the server. This is ok
+        settings.save()
 
 
 @celery.on_after_finalize.connect

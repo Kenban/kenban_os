@@ -5,4 +5,4 @@ ModuleName=script
 
 [script]
 ImageDir=/usr/share/plymouth/themes/screenly
-ScriptFile=/usr/share/plymouth/themes/screenly/screenly.script
+ScriptFile=/usr/share/plymouth/themes/kenban/screenly.script

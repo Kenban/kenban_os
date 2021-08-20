@@ -5,13 +5,13 @@ import websockets
 import socket
 from websockets.exceptions import WebSocketException
 
-from kenban.settings_kenban import settings as k_settings
+from settings import settings
 from kenban.sync import full_sync
 
 
 async def subscribe_to_updates():
     """ Open a websocket connection with the server. When the string 'updated' is sent, trigger a sync of assets """
-    url = k_settings["websocket_updates_address"] + k_settings["device_uuid"]
+    url = settings["websocket_updates_address"] + settings["device_uuid"]
     while True:
         # outer loop restarted every time the connection fails
         try:

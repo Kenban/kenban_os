@@ -9,13 +9,13 @@ import jwt
 import requests
 from requests.exceptions import ConnectionError
 
-from kenban.settings_kenban import settings as k_settings
+from settings import settings
 
 PORT = int(getenv('PORT', 8080))
 LISTEN = getenv('LISTEN', '127.0.0.1')
 
 def get_access_token():
-    access_token = k_settings["access_token"]
+    access_token = settings["access_token"]
     decoded_access_token = jwt.decode(access_token, algorithm="HS256", verify=False)
     current_timestamp = mktime(datetime.datetime.now().timetuple())
     if current_timestamp > decoded_access_token["exp"]:
@@ -32,8 +32,8 @@ def get_auth_header():
 def register_new_client():
     """ Sends the client uuid to the server and receives the device code/verification uri in response"""
     try:
-        url = k_settings['server_address'] + k_settings['device_register_uri']
-        device_uuid = str(k_settings['device_uuid'])
+        url = settings['server_address'] + settings['device_register_uri']
+        device_uuid = str(settings['device_uuid'])
         data = json.dumps({u"uuid": device_uuid})
         response = requests.post(url=url,
                                  data=data,
@@ -55,7 +55,7 @@ def poll_for_authentication(device_code):
     logging.info("Entering loop to authorise device...")
     while True:
         logging.info("Polling server for authorisation...")
-        url = k_settings['server_address'] + k_settings['device_auth_uri']
+        url = settings['server_address'] + settings['device_auth_uri']
         data = json.dumps({"device_code": device_code})
         try:
             response = requests.post(url=url, data=data)
@@ -70,9 +70,9 @@ def poll_for_authentication(device_code):
                 continue
         elif response.status_code == 200:
             response_body = json.loads(response.content)
-            k_settings["refresh_token"] = response_body["refresh_token"]
-            k_settings["access_token"] = response_body["access_token"]
-            k_settings.save()
+            settings["refresh_token"] = response_body["refresh_token"]
+            settings["access_token"] = response_body["access_token"]
+            settings.save()
             logging.info("Device paired.")
         logging.info("Initial token successfully received from server.")
         return True
@@ -80,14 +80,14 @@ def poll_for_authentication(device_code):
 
 def refresh_access_token():
     """ Use a refresh token to gain a new access token from the server """
-    refresh_token = k_settings["refresh_token"]
+    refresh_token = settings["refresh_token"]
     if not refresh_token:
         logging.error("No refresh token")
         return None
-    data = json.dumps({"refresh_token": k_settings["refresh_token"]})
-    url = k_settings['server_address'] + k_settings["refresh_access_token_url"]
+    data = json.dumps({"refresh_token": settings["refresh_token"]})
+    url = settings['server_address'] + settings["refresh_access_token_url"]
     response = requests.post(url=url, data=data)
     access_token = json.loads(response.content)["access_token"]
-    k_settings["access_token"] = access_token
-    k_settings.save()
+    settings["access_token"] = access_token
+    settings.save()
     return access_token

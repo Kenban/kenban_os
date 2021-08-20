@@ -1,9 +1,9 @@
 from flask import Blueprint, request, render_template
 
-from kenban.settings_kenban import settings as k_settings
+from settings import settings
 
 bp = Blueprint('kenban', __name__,
-               template_folder=k_settings["templates_folder"])
+               template_folder=settings["templates_folder"])
 
 
 
@@ -21,7 +21,7 @@ def kenban_display():
     if not template_uuid:
         return "Could not get template_uuid"
 
-    foreground_image = k_settings["local_address"] + "/kenban_img/" + foreground_image_uuid  # Served by nginx
+    foreground_image = settings["local_address"] + "/kenban_img/" + foreground_image_uuid  # Served by nginx
     template_filename = template_uuid
     return render_template(template_filename,
                            display_text=display_text,

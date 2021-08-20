@@ -5,7 +5,7 @@
     owner: pi
     group: pi
   with_items:
-    - .screenly
+    - .kenban
     - .config
     - screenly_assets
 
@@ -14,18 +14,18 @@
     owner: pi
     group: pi
     src: default_assets.yml
-    dest: /home/pi/.screenly/default_assets.yml
+    dest: /home/pi/.kenban/default_assets.yml
     force: yes
 
 - name: Remove deprecated parameter "listen"
   lineinfile:
     regexp: '^.*listen.*'
     state: absent
-    dest: /home/pi/.screenly/screenly.conf
+    dest: /home/pi/.kenban/kenban.conf
 
 - name: Install pip dependencies
   pip:
-    requirements: /home/pi/screenly/requirements/requirements.host.txt
+    requirements: /home/pi/kenban/requirements/requirements.host.txt
     extra_args: "--no-cache-dir --upgrade"
 
 - name: Remove screenly_utils.sh

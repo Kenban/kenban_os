@@ -4,13 +4,13 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
-WorkingDirectory=/home/pi/screenly
+WorkingDirectory=/home/pi/kenban
 User=pi
 Type=oneshot
 
-ExecStartPre=/bin/rm -f /home/pi/.screenly/initialized
-ExecStart=/usr/bin/python /home/pi/screenly/start_resin_wifi.py
-ExecStartPost=/usr/bin/touch /home/pi/.screenly/initialized
+ExecStartPre=/bin/rm -f /home/pi/.kenban/initialized
+ExecStart=/usr/bin/python /home/pi/kenban/start_resin_wifi.py
+ExecStartPost=/usr/bin/touch /home/pi/.kenban/initialized
 
 [Install]
 WantedBy=multi-user.target

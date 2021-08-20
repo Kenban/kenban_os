@@ -47,7 +47,7 @@
 - name: Copies plymouth theme
   copy:
     src: "{{ item }}"
-    dest: /usr/share/plymouth/themes/screenly/
+    dest: /usr/share/plymouth/themes/kenban/
   with_items:
     - screenly.plymouth
     - screenly.script

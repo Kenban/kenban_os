@@ -13,7 +13,7 @@ from lib.utils import generate_perfect_paper_password, get_active_connections
 
 def generate_page(ssid, pswd, address):
     home = getenv('HOME')
-    template_path = path.join(home, 'screenly/templates/hotspot.html')
+    template_path = path.join(home, 'kenban/templates/hotspot.html')
     with open(template_path) as f:
         template = Template(f.read())
 

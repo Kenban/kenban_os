@@ -18,7 +18,7 @@ default_duration = 45
 
 [main]
 assetdir = /home/pi/screenly_assets
-database = /home/pi/.screenly/screenly.db
+database = /home/pi/.kenban/kenban.db
 use_ssl = False
 
 """
@@ -38,8 +38,8 @@ show_splash = offf
 
 """
 
-CONFIG_DIR = '/tmp/.screenly/'
-CONFIG_FILE = CONFIG_DIR + 'screenly.conf'
+CONFIG_DIR = '/tmp/.kenban/'
+CONFIG_FILE = CONFIG_DIR + 'kenban.conf'
 
 
 @contextmanager

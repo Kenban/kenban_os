@@ -19,15 +19,15 @@ from lib import assets_helper
 from lib import db
 from lib.errors import SigalrmException
 from lib.github import is_up_to_date
-from lib.utils import get_active_connections, url_fails, is_balena_app, get_node_ip, string_to_bool, connect_to_redis
-from settings import settings, LISTEN, PORT, ZmqConsumer
+from lib.utils import get_active_connections, is_balena_app, get_node_ip, string_to_bool, connect_to_redis
+from settings import settings, LISTEN, PORT
 
 __license__ = "Dual License: GPLv2 and Commercial License"
 
 SPLASH_DELAY = 60  # secs
 EMPTY_PL_DELAY = 5  # secs
 
-INITIALIZED_FILE = '/.screenly/initialized'
+INITIALIZED_FILE = '/.kenban/initialized'
 WATCHDOG_PATH = '/tmp/screenly.watchdog'
 
 LOAD_SCREEN = 'http://{}:{}/{}'.format(LISTEN, PORT, 'static/img/loading.png')
@@ -354,9 +354,9 @@ def main():
     global db_conn, scheduler
     setup()
 
-    from kenban.settings_kenban import settings as k_settings
+    from settings import settings
     # Check to see if device is paired
-    if k_settings["refresh_token"] in [None, "None"]:
+    if settings["refresh_token"] in [None, "None"]:
         logging.info("Starting pairing")
         device_code, verification_uri = register_new_client()
         if device_code is None:
