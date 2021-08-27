@@ -63,8 +63,8 @@ DEFAULTS = {
 
 
 CONFIGURABLE_SETTINGS = DEFAULTS['viewer'].copy()
-CONFIGURABLE_SETTINGS['use_24_hour_clock'] = DEFAULTS['main']['use_24_hour_clock']
-CONFIGURABLE_SETTINGS['date_format'] = DEFAULTS['main']['date_format']
+CONFIGURABLE_SETTINGS['use_24_hour_clock'] = DEFAULTS['screenly']['use_24_hour_clock']
+CONFIGURABLE_SETTINGS['date_format'] = DEFAULTS['screenly']['date_format']
 
 PORT = int(getenv('PORT', 8080))
 LISTEN = getenv('LISTEN', '127.0.0.1')
