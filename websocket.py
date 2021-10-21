@@ -6,7 +6,7 @@ import socket
 from websockets.exceptions import WebSocketException
 
 from settings import settings
-from kenban.sync import full_sync
+from sync import full_sync
 
 
 async def subscribe_to_updates():

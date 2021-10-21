@@ -1,9 +1,10 @@
 from time import sleep
 
 from settings import LISTEN, PORT
-from kenban.authentication import register_new_client, poll_for_authentication
+from authentication import register_new_client, poll_for_authentication
 import logging
 logging.getLogger().setLevel(logging.DEBUG)
+
 
 def pair_device_to_user():
 

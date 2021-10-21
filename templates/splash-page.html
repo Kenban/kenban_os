@@ -23,10 +23,10 @@
         </div>
         <div class="row">
             <div class="col-12 text-center">
-                {% if context.my_ip %}
+                {% if my_ip %}
                     <p>To manage the content on this screen, just point your browser to:</p>
                     <div class="form-actions">
-                        <a href="http://{{ context.my_ip }}">http://{{ context.my_ip }}</a>
+                        <a href="http://{{ my_ip }}">http://{{ my_ip }}</a>
                     </div>
                 {% else %}
                     <p>Unable to retrieve IP.</p>

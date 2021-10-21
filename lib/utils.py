@@ -3,15 +3,19 @@ import logging
 import os
 import random
 import string
+from lib.models import Base, engine
 from datetime import datetime
 from distutils.util import strtobool
 from os import getenv, utime
 from platform import machine
 from urllib.parse import urlparse
 
+
 import pytz
 import redis
 import requests
+
+from settings import settings
 
 WOTT_PATH = '/opt/wott'
 
@@ -24,6 +28,7 @@ try:
     from sh import ffprobe
 except ImportError:
     pass
+
 
 def string_to_bool(string):
     return bool(strtobool(str(string)))
@@ -241,3 +246,11 @@ def get_wott_device_id():
             return metadata['device_id']
     logging.warning("Could not read WoTT Device ID")
     return 'Could not read WoTT Device ID'
+
+
+def get_db_mtime():
+    # get database file last modification time
+    try:
+        return os.path.getmtime(settings['database'])
+    except (OSError, TypeError):
+        return 0

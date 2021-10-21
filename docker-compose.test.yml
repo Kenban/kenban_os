@@ -1,0 +1,27 @@
+version: "2"
+services:
+
+  nginx:
+    image: kenban/kb-os-nginx
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.nginx
+    ports:
+      - 80:80
+    environment:
+      - HOME=/data
+    restart: always
+    volumes:
+      - resin-data:/data:ro
+      - /home/pi/.kenban:/data/.kenban
+      - /home/pi/screenly_assets:/data/screenly_assets
+      - /home/pi/kenban/static:/data/kenban/static
+      - /home/pi/kenban_assets:/data/kenban_assets
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
+  dev:
+    image: python
+
+volumes:
+  resin-data:

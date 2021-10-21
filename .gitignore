@@ -38,3 +38,6 @@ node_modules
 *.retry
 .env
 .balena/balena.yml
+
+# SQLite dbs
+*.db

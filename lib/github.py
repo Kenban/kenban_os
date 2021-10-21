@@ -70,6 +70,7 @@ def fetch_remote_hash():
 
 
 def is_up_to_date():
+    #todo change to kenban
     """
     Primitive update check. Checks local hash against GitHub hash for branch.
     Returns True if the player is up to date.

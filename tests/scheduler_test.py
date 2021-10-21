@@ -1,7 +1,9 @@
 from datetime import datetime
 from datetime import timedelta
-import functools
 import unittest
+
+import lib.utils
+import schedule
 import viewer
 from lib import db
 from lib import assets_helper
@@ -105,13 +107,13 @@ class SchedulerTest(unittest.TestCase):
 
     def test_generate_asset_list_assets_should_be_y_and_x(self):
         assets_helper.create_multiple(viewer.db_conn, [asset_x, asset_y])
-        assets, _ = viewer.generate_asset_list()
+        assets, _ = schedule.generate_asset_list()
         self.assertEqual(assets, [asset_y, asset_x])
 
     def test_generate_asset_list_check_deadline_if_both_active(self):
         # if x and y currently active
         assets_helper.create_multiple(viewer.db_conn, [asset_x, asset_y])
-        _, deadline = viewer.generate_asset_list()
+        _, deadline = schedule.generate_asset_list()
         self.assertEqual(deadline, asset_y['end_date'])
 
     def test_generate_asset_list_check_deadline_if_asset_scheduled(self):
@@ -119,12 +121,12 @@ class SchedulerTest(unittest.TestCase):
         deadline should be asset_tomorrow[start_date]
         """
         assets_helper.create_multiple(viewer.db_conn, [asset_x, asset_tomorrow])
-        _, deadline = viewer.generate_asset_list()
+        _, deadline = schedule.generate_asset_list()
         self.assertEqual(deadline, asset_tomorrow['start_date'])
 
     def test_get_next_asset_should_be_y_and_x(self):
         assets_helper.create_multiple(viewer.db_conn, [asset_x, asset_y])
-        sch = viewer.Scheduler()
+        sch = schedule.Scheduler()
 
         expect_y = sch.get_next_asset()
         expect_x = sch.get_next_asset()
@@ -133,7 +135,7 @@ class SchedulerTest(unittest.TestCase):
 
     def test_keep_same_position_on_playlist_update(self):
         assets_helper.create_multiple(viewer.db_conn, [asset_x, asset_y])
-        sch = viewer.Scheduler()
+        sch = schedule.Scheduler()
 
         sch.get_next_asset()
 
@@ -144,7 +146,7 @@ class SchedulerTest(unittest.TestCase):
     def test_counter_should_increment_after_full_asset_loop(self):
         settings.settings['shuffle_playlist'] = True
         assets_helper.create_multiple(viewer.db_conn, [asset_x, asset_y])
-        sch = viewer.Scheduler()
+        sch = schedule.Scheduler()
 
         self.assertEqual(sch.counter, 0)
 
@@ -158,16 +160,16 @@ class SchedulerTest(unittest.TestCase):
         with open(FAKE_DB_PATH, 'a'):
             os.utime(FAKE_DB_PATH, (0, 0))
 
-        self.assertEqual(0, viewer.Scheduler().get_db_mtime())
+        self.assertEqual(0, lib.utils.get_db_mtime())
 
     def test_playlist_should_be_updated_after_deadline_reached(self):
         assets_helper.create_multiple(viewer.db_conn, [asset_x, asset_y])
-        _, deadline = viewer.generate_asset_list()
+        _, deadline = schedule.generate_asset_list()
 
         fake = FakeDatetime(deadline + timedelta(seconds=1))
         viewer.datetime, assets_helper.get_time = fake, lambda: fake.utcnow()
 
-        sch = viewer.Scheduler()
+        sch = schedule.Scheduler()
         sch.refresh_playlist()
 
         self.assertEqual([asset_x], sch.assets)

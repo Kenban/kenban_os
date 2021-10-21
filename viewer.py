@@ -3,9 +3,8 @@
 
 import logging
 import re
-from datetime import datetime
+import urllib.parse
 from os import path, getenv, utime, system
-from random import shuffle
 from signal import signal, SIGALRM, SIGUSR1
 from time import sleep
 
@@ -14,12 +13,13 @@ import requests
 import sh
 from netifaces import gateways
 
-from kenban.authentication import register_new_client, poll_for_authentication
-from lib import assets_helper
+from authentication import register_new_client, poll_for_authentication
 from lib import db
 from lib.errors import SigalrmException
 from lib.github import is_up_to_date
 from lib.utils import get_active_connections, is_balena_app, get_node_ip, string_to_bool, connect_to_redis
+from schedule import Scheduler
+from lib.models import ScheduleSlot
 from settings import settings, LISTEN, PORT
 
 __license__ = "Dual License: GPLv2 and Commercial License"
@@ -82,118 +82,6 @@ def play_loop():
     loop_is_stopped = False
 
 
-def command_not_found():
-    logging.error("Command not found")
-
-
-def send_current_asset_id_to_server():
-    consumer = ZmqConsumer()
-    consumer.send({'current_asset_id': scheduler.current_asset_id})
-
-
-class Scheduler(object):
-    def __init__(self, *args, **kwargs):
-        logging.debug('Scheduler init')
-        self.assets = []
-        self.counter = 0
-        self.current_asset_id = None
-        self.deadline = None
-        self.extra_asset = None
-        self.index = 0
-        self.reverse = 0
-        self.update_playlist()
-
-    def get_next_asset(self):
-        logging.debug('get_next_asset')
-
-        if self.extra_asset is not None:
-            asset = get_specific_asset(self.extra_asset)
-            if asset and asset['is_processing'] == 0:
-                self.current_asset_id = self.extra_asset
-                self.extra_asset = None
-                return asset
-            logging.error("Asset not found or processed")
-            self.extra_asset = None
-
-        self.refresh_playlist()
-        logging.debug('get_next_asset after refresh')
-        if not self.assets:
-            self.current_asset_id = None
-            return None
-        if self.reverse:
-            idx = (self.index - 2) % len(self.assets)
-            self.index = (self.index - 1) % len(self.assets)
-            self.reverse = False
-        else:
-            idx = self.index
-            self.index = (self.index + 1) % len(self.assets)
-        logging.debug('get_next_asset counter %s returning asset %s of %s', self.counter, idx + 1, len(self.assets))
-        if settings['shuffle_playlist'] and self.index == 0:
-            self.counter += 1
-
-        current_asset = self.assets[idx]
-        self.current_asset_id = current_asset.get('asset_id')
-        return current_asset
-
-    def refresh_playlist(self):
-        logging.debug('refresh_playlist')
-        time_cur = datetime.utcnow()
-        logging.debug('refresh: counter: (%s) deadline (%s) timecur (%s)', self.counter, self.deadline, time_cur)
-        if self.get_db_mtime() > self.last_update_db_mtime:
-            logging.debug('updating playlist due to database modification')
-            self.update_playlist()
-        elif settings['shuffle_playlist'] and self.counter >= 5:
-            self.update_playlist()
-        elif self.deadline and self.deadline <= time_cur:
-            self.update_playlist()
-
-    def update_playlist(self):
-        logging.debug('update_playlist')
-        self.last_update_db_mtime = self.get_db_mtime()
-        (new_assets, new_deadline) = generate_asset_list()
-        if new_assets == self.assets and new_deadline == self.deadline:
-            # If nothing changed, don't disturb the current play-through.
-            return
-
-        self.assets, self.deadline = new_assets, new_deadline
-        self.counter = 0
-        # Try to keep the same position in the play list. E.g. if a new asset is added to the end of the list, we
-        # don't want to start over from the beginning.
-        self.index = self.index % len(self.assets) if self.assets else 0
-        logging.debug('update_playlist done, count %s, counter %s, index %s, deadline %s', len(self.assets), self.counter, self.index, self.deadline)
-
-    def get_db_mtime(self):
-        # get database file last modification time
-        try:
-            return path.getmtime(settings['database'])
-        except (OSError, TypeError):
-            return 0
-
-
-def get_specific_asset(asset_id):
-    logging.info('Getting specific asset')
-    return assets_helper.read(db_conn, asset_id)
-
-
-def generate_asset_list():
-    """Choose deadline via:
-        1. Map assets to deadlines with rule: if asset is active then 'end_date' else 'start_date'
-        2. Get nearest deadline
-    """
-    logging.info('Generating asset-list...')
-    assets = assets_helper.read(db_conn)
-    deadlines = [asset['end_date'] if assets_helper.is_active(asset) else asset['start_date'] for asset in assets]
-
-    playlist = list(filter(assets_helper.is_active, assets))
-    deadline = sorted(deadlines)[0] if len(deadlines) > 0 else None
-    logging.debug('generate_asset_list deadline: %s', deadline)
-
-    if settings['shuffle_playlist']:
-        shuffle(playlist)
-
-    return playlist, deadline
-
-
 def watchdog():
     """Notify the watchdog file to be used with the watchdog-device."""
     if not path.isfile(WATCHDOG_PATH):
@@ -211,7 +99,7 @@ def load_browser():
         sleep(1)
 
 
-def view_webpage(uri):
+def view_webpage(uri: str):
     global current_browser_url
 
     if browser is None or not browser.process.alive:
@@ -220,6 +108,17 @@ def view_webpage(uri):
         browser_bus.loadPage(uri)
         current_browser_url = uri
     logging.info('Current url is {0}'.format(current_browser_url))
+
+
+def build_schedule_slot_uri(schedule_slot: ScheduleSlot) -> str:
+    hostname = f"{settings['local_address']}"
+    parameters = urllib.parse.quote(
+        f"?foreground_image_uuid={schedule_slot.foreground_image_uuid}"
+        f"&template_uuid={schedule_slot.template_uuid}"
+        f"&display_text={schedule_slot.display_text}"
+        f"&time_format={schedule_slot.time_format}")
+    uri = hostname + parameters
+    return uri
 
 
 def view_image(uri):
@@ -245,37 +144,24 @@ def load_settings():
 
 
 def asset_loop(scheduler):
+    # Check for software updates
     disable_update_check = getenv("DISABLE_UPDATE_CHECK", False)
     if not disable_update_check:
         is_up_to_date()
-    asset = scheduler.get_next_asset()
 
-    if asset is None:
+    schedule_slot = scheduler.get_current_slot()
+
+    if schedule_slot is None:
         logging.info('Playlist is empty. Sleeping for %s seconds', EMPTY_PL_DELAY)
+        # todo what do we want to show when there is no asset?
         view_image(LOAD_SCREEN)
         sleep(EMPTY_PL_DELAY)
-
-    elif path.isfile(asset['uri']) or (not url_fails(asset['uri']) or asset['skip_asset_check']):
-        name, mime, uri = asset['name'], asset['mimetype'], asset['uri']
-        logging.info('Showing asset %s (%s)', name, mime)
-        logging.debug('Asset URI %s', uri)
-        watchdog()
-
-        if 'image' in mime:
-            view_image(uri)
-        elif 'web' in mime:
-            view_webpage(uri)
-        else:
-            logging.error('Unknown MimeType %s', mime)
-
-        if 'image' in mime or 'web' in mime:
-            duration = int(asset['duration'])
-            logging.info('Sleeping for %s', duration)
-            sleep(duration)
-
     else:
-        logging.info('Asset %s at %s is not available, skipping.', asset['name'], asset['uri'])
-        sleep(0.5)
+        uri = build_schedule_slot_uri(schedule_slot)
+        view_webpage(uri)
+        refresh_duration = settings['asset_refresh_duration']
+        logging.info(f'Sleeping for {refresh_duration}')
+        sleep(refresh_duration)
 
 
 def setup():
@@ -368,7 +254,6 @@ def main():
         poll_for_authentication(device_code=device_code)
     else:
         logging.info("Device already paired")
-
 
     scheduler = Scheduler()
 
