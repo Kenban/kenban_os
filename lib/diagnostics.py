@@ -8,7 +8,6 @@ from pprint import pprint
 import cec
 import sh
 
-from lib.utils import url_fails
 from lib import raspberry_pi_helper
 
 
