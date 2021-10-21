@@ -23,10 +23,11 @@ class Scheduler(object):
         self.current_slot = None
         self.last_update_db_mtime = None
         self.update_playlist()
+        self.session = Session()
 
     def get_current_schedule_slot(self):
         # todo
-        ScheduleSlot.query.get(1)
+        self.session.query(ScheduleSlot).get(1)
         pass
 
     def refresh_playlist(self):
