@@ -14,7 +14,6 @@ import sh
 from netifaces import gateways
 
 from authentication import register_new_client, poll_for_authentication
-from lib import db
 from lib.errors import SigalrmException
 from lib.github import is_up_to_date
 from lib.utils import get_active_connections, is_balena_app, get_node_ip, string_to_bool, connect_to_redis
@@ -172,7 +171,6 @@ def setup():
     signal(SIGALRM, sigalrm)
 
     load_settings()
-    db_conn = db.conn(settings['database'])
 
     load_browser()
     bus = pydbus.SessionBus()
@@ -275,9 +273,6 @@ def main():
         if loop_is_stopped:
             sleep(0.1)
             continue
-        if not db_conn:
-            load_settings()
-            db_conn = db.conn(settings['database'])
 
         asset_loop(scheduler)
 
