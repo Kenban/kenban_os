@@ -23,11 +23,12 @@ class Scheduler(object):
         self.current_slot = None
         self.last_update_db_mtime = None
         self.update_playlist()
-        self.session = Session()
 
     def get_current_schedule_slot(self):
         # todo
-        self.session.query(ScheduleSlot).get(1)
+        session = Session()
+        session.query(ScheduleSlot).get(1)
+        session.close()
         pass
 
     def refresh_playlist(self):
@@ -39,7 +40,9 @@ class Scheduler(object):
     def update_playlist(self):
         logging.debug('update_playlist')
         self.last_update_db_mtime = get_db_mtime()
-        new_slots = ScheduleSlot.query.all()
+        session = Session()
+        new_slots = session.query(ScheduleSlot).all()
+        session.close()
         if new_slots == self.slots:
             # If nothing changed, do nothing
             return
@@ -72,3 +75,7 @@ class Scheduler(object):
 #         shuffle(playlist)
 #
 #     return playlist, deadline
+
+if __name__ == "__main__":
+    scheduler = Scheduler()
+    scheduler.get_current_schedule_slot()
