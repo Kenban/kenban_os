@@ -27,7 +27,7 @@ __license__ = "Dual License: GPLv2 and Commercial License"
 EMPTY_PL_DELAY = 5  # secs
 
 INITIALIZED_FILE = '/.kenban/initialized'
-WATCHDOG_PATH = '/tmp/kenban.watchdog'
+WATCHDOG_PATH = '/tmp/screenly.watchdog'
 
 LOAD_SCREEN = 'http://{}:{}/{}'.format(LISTEN, PORT, 'static/img/loading.png')
 
@@ -123,7 +123,7 @@ def load_browser():
     logging.info('Loading browser...')
 
     browser = sh.Command('ScreenlyWebview')(_bg=True, _err_to_out=True)
-    while 'Kenban service start' not in str(browser.process.stdout):
+    while 'Screenly service start' not in str(browser.process.stdout):
         sleep(1)
 
 
@@ -212,7 +212,7 @@ def setup():
 
     load_browser()
     bus = pydbus.SessionBus()
-    browser_bus = bus.get('screenly.webview', '/Kenban')
+    browser_bus = bus.get('screenly.webview', '/Screenly')
 
 
 def setup_hotspot():
