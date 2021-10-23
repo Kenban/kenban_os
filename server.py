@@ -87,24 +87,6 @@ def splash_page():
     return template('splash-page.html', my_ip=get_node_ip())
 
 
-@app.before_first_request
-def main():
-    # Create config dir if it doesn't exist
-    if not path.isdir(settings.get_configdir()):
-        os.makedirs(settings.get_configdir())
-    # Create images and templates folder if they don't exist
-    if not os.path.isdir(settings['images_folder']):
-        os.mkdir(settings['images_folder'])
-    # Create config dir if it doesn't exist
-    if not os.path.isdir(settings['templates_folder']):
-        os.mkdir(settings['templates_folder'])
-
-    # Initialise database
-    Base.metadata.create_all(engine)
-
-    app.config['TEMPLATES_AUTO_RELOAD'] = True
-
-
 def template(template_name, **context):
     """Screenly template response generator. Shares the
     same function signature as Flask's render_template() method
@@ -124,6 +106,20 @@ def template(template_name, **context):
 
 
 if __name__ == "__main__":
+    # Create config dir if it doesn't exist
+    if not path.isdir(settings.get_configdir()):
+        os.makedirs(settings.get_configdir())
+    # Create images and templates folder if they don't exist
+    if not os.path.isdir(settings['images_folder']):
+        os.mkdir(settings['images_folder'])
+    # Create config dir if it doesn't exist
+    if not os.path.isdir(settings['templates_folder']):
+        os.mkdir(settings['templates_folder'])
+
+    # Initialise database
+    Base.metadata.create_all(engine)
+
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
     config = {
         'bind': '{}:{}'.format(LISTEN, PORT),
         'threads': 2,
