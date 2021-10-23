@@ -38,7 +38,8 @@ browser_bus = None
 r = connect_to_redis()
 
 HOME = None
-db_conn = None
+
+last_slot = None
 
 
 def sigalrm(signum, frame):
@@ -146,7 +147,7 @@ def build_schedule_slot_uri(schedule_slot: ScheduleSlot) -> str:
         "time_format": schedule_slot.time_format
     }
     url_parameters = urllib.parse.urlencode(url_parameters)
-    uri = hostname + ":" + str(PORT) + "/kenban?" + url_parameters
+    uri = hostname + "/kenban?" + url_parameters
     return uri
 
 
@@ -173,6 +174,7 @@ def load_settings():
 
 
 def display_loop(handler: SlotHandler):
+    global last_slot
     # Check for software updates
     disable_update_check = getenv("DISABLE_UPDATE_CHECK", False)
     if not disable_update_check:
@@ -185,7 +187,10 @@ def display_loop(handler: SlotHandler):
         sleep(EMPTY_PL_DELAY)
     else:
         uri = build_schedule_slot_uri(handler.current_slot)
-        view_webpage(uri)
+        # todo we might still need to refresh, or find a solution to the website not loading sometimes
+        if last_slot != handler.current_slot:
+            view_webpage(uri)
+            last_slot = handler.current_slot
         refresh_duration = int(settings['default_duration'])
         logging.info(f'Sleeping for {refresh_duration}')
         sleep(refresh_duration)
@@ -197,7 +202,7 @@ def display_loop(handler: SlotHandler):
 
 
 def setup():
-    global HOME, db_conn, browser_bus
+    global HOME, browser_bus
     HOME = getenv('HOME', '/home/pi')
 
     signal(SIGUSR1, sigusr1)
@@ -268,7 +273,6 @@ def wait_for_server(retries, wt=1):
 
 
 def main():
-    global db_conn
     setup()
 
     from settings import settings
