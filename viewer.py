@@ -4,7 +4,8 @@
 import logging
 import re
 import urllib.parse
-from os import path, getenv, utime, system
+from datetime import datetime
+from os import path, getenv
 from signal import signal, SIGALRM, SIGUSR1
 from time import sleep
 
@@ -16,9 +17,9 @@ from netifaces import gateways
 from authentication import register_new_client, poll_for_authentication
 from lib.errors import SigalrmException
 from lib.github import is_up_to_date
-from lib.utils import get_active_connections, is_balena_app, get_node_ip, string_to_bool, connect_to_redis
-from schedule import Scheduler
-from lib.models import ScheduleSlot
+from lib.models import ScheduleSlot, Session
+from lib.utils import get_active_connections, is_balena_app, get_node_ip, string_to_bool, connect_to_redis, \
+    get_db_mtime, WEEKDAY_DICT
 from settings import settings, LISTEN, PORT
 
 __license__ = "Dual License: GPLv2 and Commercial License"
@@ -40,8 +41,6 @@ r = connect_to_redis()
 HOME = None
 db_conn = None
 
-scheduler = None
-
 
 def sigalrm(signum, frame):
     """
@@ -58,35 +57,65 @@ def sigusr1(signum, frame):
     logging.info('USR1 received, skipping.')
 
 
-def skip_asset(back=False):
-    if back is True:
-        scheduler.reverse = True
-    system('pkill -SIGUSR1 -f viewer.py')
+class SlotHandler(object):
+    def __init__(self):
+        self.slots = []
+        self.last_update_db_mtime = None
+        self.update_slots_from_db()
+        self.sort_slots()
+        self.current_slot = None
+        self.current_slot_index = None
+        self.next_slot = None
+        self.calculate_current_slot()
 
+    def set_current_slot(self, slot):
+        logging.debug(f"Setting current slot to {slot.uuid}")
+        self.current_slot = slot
+        self.current_slot_index = self.slots.index(slot)
+        # Check if it's the last in the list
+        if len(self.slots) - 1 == self.current_slot_index:
+            self.next_slot = self.slots[0]
+        else:
+            self.next_slot = self.slots[self.current_slot_index + 1]
 
-def navigate_to_asset(asset_id):
-    scheduler.extra_asset = asset_id
-    system('pkill -SIGUSR1 -f viewer.py')
+    def sort_slots(self):
+        """ Order the list of slots chronologically"""
+        self.slots.sort(key=lambda s: s.start_time)
+        self.slots.sort(key=lambda s: WEEKDAY_DICT[s.weekday])
 
+    def tick(self):
+        """ Check if it's time for the next slot in the order, and switch if so"""
+        if WEEKDAY_DICT[self.next_slot.weekday] == datetime.now().weekday() and \
+                datetime.now().time() > self.next_slot.start_time:
+            self.set_current_slot(self.next_slot)
 
-def stop_loop():
-    global db_conn, loop_is_stopped
-    loop_is_stopped = True
-    skip_asset()
-    db_conn = None
+    def calculate_current_slot(self):
+        """ Return the slot that should currently be active according to times """
+        # todo
+        this_weekday = datetime.now().strftime("%A")
+        current_time = datetime.now().time()
+        days_slots = list(filter(lambda s: s.weekday == this_weekday, self.slots))  # Get today's slots
+        eligible_slots = list(filter(lambda s: s.start_time < current_time, days_slots))  # Filter out future slots
+        if len(eligible_slots) == 0:
+            # TODO Create a default slot?
+            logging.warning("Could not find slot for this time")
+            self.set_current_slot(None)
+        else:
+            self.set_current_slot(max(eligible_slots, key=lambda s: s.start_time))
 
-
-def play_loop():
-    global loop_is_stopped
-    loop_is_stopped = False
-
-
-def watchdog():
-    """Notify the watchdog file to be used with the watchdog-device."""
-    if not path.isfile(WATCHDOG_PATH):
-        open(WATCHDOG_PATH, 'w').close()
-    else:
-        utime(WATCHDOG_PATH, None)
+    def update_slots_from_db(self):
+        """ Load the slots from the database into the scheduler """
+        self.last_update_db_mtime = get_db_mtime()
+        session = Session()
+        new_slots = session.query(ScheduleSlot).all()
+        session.close()
+        if new_slots == self.slots:
+            # If nothing changed, do nothing
+            return
+        self.slots = new_slots
+        self.sort_slots()
+        self.calculate_current_slot()
+        logging.debug("New schedule slots loaded into SlotHandler")
 
 
 def load_browser():
@@ -142,25 +171,42 @@ def load_settings():
     logging.getLogger().setLevel(logging.DEBUG if settings['debug_logging'] else logging.INFO)
 
 
-def asset_loop(scheduler):
+def asset_loop(handler: SlotHandler):
     # Check for software updates
     disable_update_check = getenv("DISABLE_UPDATE_CHECK", False)
     if not disable_update_check:
         is_up_to_date()
-
-    schedule_slot = scheduler.get_current_slot()
-
-    if schedule_slot is None:
+    logging.debug(f"Current schedule slot start time: {handler.current_slot.start_time}")
+    if handler.current_slot is None:
         logging.info('Playlist is empty. Sleeping for %s seconds', EMPTY_PL_DELAY)
         # todo what do we want to show when there is no asset?
         view_image(LOAD_SCREEN)
         sleep(EMPTY_PL_DELAY)
     else:
-        uri = build_schedule_slot_uri(schedule_slot)
+        uri = build_schedule_slot_uri(handler.current_slot)
         view_webpage(uri)
-        refresh_duration = settings['asset_refresh_duration']
+        refresh_duration = int(settings['default_duration'])
         logging.info(f'Sleeping for {refresh_duration}')
         sleep(refresh_duration)
+
+    if get_db_mtime() > handler.last_update_db_mtime:
+        handler.update_slots_from_db()
+    handler.tick()
+
+
+# async def display_loop(handler: SlotHandler):
+#     while True:
+#         schedule_slot = handler.current_slot
+#
+#         if schedule_slot is None:
+#             print("No schedule slot")
+#         else:
+#             print(f"Schedule start: {schedule_slot.start_time}")
+#
+#         if get_db_mtime() > handler.last_update_db_mtime:
+#             handler.update_slots_from_db()
+#         handler.tick()
+#         await asyncio.sleep(2)
 
 
 def setup():
@@ -235,7 +281,7 @@ def wait_for_server(retries, wt=1):
 
 
 def main():
-    global db_conn, scheduler
+    global db_conn
     setup()
 
     from settings import settings
@@ -253,8 +299,6 @@ def main():
     else:
         logging.info("Device already paired")
 
-    scheduler = Scheduler()
-
     wait_for_server(5)
 
     if not is_balena_app():
@@ -268,18 +312,23 @@ def main():
     # We don't want to show splash-page if there are active assets but all of them are not available
     view_image(LOAD_SCREEN)
 
+    handler = SlotHandler()
+
     logging.debug('Entering infinite loop.')
     while True:
         if loop_is_stopped:
             sleep(0.1)
             continue
 
-        asset_loop(scheduler)
+        asset_loop(handler)
 
 
 if __name__ == "__main__":
     try:
+        logging.getLogger().setLevel(logging.DEBUG) #todo remove
         main()
     except Exception:
         logging.exception("Viewer crashed.")
         raise
+
+#think i can delete these

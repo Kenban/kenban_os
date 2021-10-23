@@ -19,6 +19,16 @@ from settings import settings
 
 WOTT_PATH = '/opt/wott'
 
+WEEKDAY_DICT = {
+    "Monday": 0,
+    "Tuesday": 1,
+    "Wednesday": 2,
+    "Thursday": 3,
+    "Friday": 4,
+    "Saturday": 5,
+    "Sunday": 6
+}
+
 arch = machine()
 
 # This will only work on the Raspberry Pi,
