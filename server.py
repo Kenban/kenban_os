@@ -64,11 +64,12 @@ def kenban_display():
     if not template_uuid:
         return "Could not get template_uuid"
 
-    foreground_image = settings["local_address"] + "/kenban_img/" + foreground_image_uuid  # Served by nginx
+    image_folder_address = settings["local_address"] + "/kenban_img/"  # Served by nginx
     template_filename = template_uuid
     return render_template(template_filename,
-                    display_text=display_text,
-                    foreground_image=foreground_image)
+                           image_folder_address=image_folder_address,
+                           display_text=display_text,
+                           foreground_image_uuid=foreground_image_uuid)
 
 
 @app.route('/pair')
@@ -124,11 +125,13 @@ if __name__ == "__main__":
         'timeout': 20
     }
 
+
     class GunicornApplication(Application):
         def init(self, parser, opts, args):
             return config
 
         def load(self):
             return app
+
 
     GunicornApplication().run()
