@@ -140,12 +140,14 @@ def view_webpage(uri: str):
 
 def build_schedule_slot_uri(schedule_slot: ScheduleSlot) -> str:
     hostname = f"{settings['local_address']}"
-    parameters = urllib.parse.quote(
-        f"?foreground_image_uuid={schedule_slot.foreground_image_uuid}"
-        f"&template_uuid={schedule_slot.template_uuid}"
-        f"&display_text={schedule_slot.display_text}"
-        f"&time_format={schedule_slot.time_format}")
-    uri = hostname + parameters
+    url_parameters = {
+        "foreground_image_uuid": schedule_slot.foreground_image_uuid,
+        "template_uuid": schedule_slot.template_uuid,
+        "display_text": schedule_slot.display_text,
+        "time_format": schedule_slot.time_format
+    }
+    url_parameters = urllib.parse.urlencode(url_parameters)
+    uri = hostname + "?" + url_parameters
     return uri
 
 
@@ -304,10 +306,10 @@ def main():
     if not is_balena_app():
         setup_hotspot()
 
-    if settings['show_splash']:
-        url = 'http://{0}:{1}/splash-page'.format(LISTEN, PORT)
-        view_webpage(url)
-        sleep(SPLASH_DELAY)
+    # if settings['show_splash']:
+    #     url = 'http://{0}:{1}/splash-page'.format(LISTEN, PORT)
+    #     view_webpage(url)
+    #     sleep(SPLASH_DELAY)
 
     # We don't want to show splash-page if there are active assets but all of them are not available
     view_image(LOAD_SCREEN)
@@ -325,10 +327,10 @@ def main():
 
 if __name__ == "__main__":
     try:
-        logging.getLogger().setLevel(logging.DEBUG) #todo remove
+        logging.getLogger().setLevel(logging.DEBUG)  # todo remove
         main()
     except Exception:
         logging.exception("Viewer crashed.")
         raise
 
-#think i can delete these
+# think i can delete these
