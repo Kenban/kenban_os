@@ -1,4 +1,3 @@
-# This is Sam's attempt at rewriting the screenly server.py file
 import os
 from datetime import timedelta
 from os import path
@@ -8,12 +7,11 @@ import redis
 from celery import Celery
 from flask import Flask, request, render_template
 from flask_cors import CORS
+from gunicorn.app.base import Application
 
 from lib.models import Base, engine
 from lib.utils import get_node_ip
 from settings import PORT, LISTEN, settings
-
-# from gunicorn.app.base import Application
 
 __license__ = "Dual License: GPLv2 and Commercial License"
 
@@ -125,13 +123,12 @@ if __name__ == "__main__":
         'threads': 2,
         'timeout': 20
     }
-    app.run()
 
-    # class GunicornApplication(Application):
-    #     def init(self, parser, opts, args):
-    #         return config
-    #
-    #     def load(self):
-    #         return app
+    class GunicornApplication(Application):
+        def init(self, parser, opts, args):
+            return config
 
-    # GunicornApplication().run()
+        def load(self):
+            return app
+
+    GunicornApplication().run()
