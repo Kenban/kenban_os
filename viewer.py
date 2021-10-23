@@ -24,7 +24,6 @@ from settings import settings, LISTEN, PORT
 
 __license__ = "Dual License: GPLv2 and Commercial License"
 
-SPLASH_DELAY = 60  # secs
 EMPTY_PL_DELAY = 5  # secs
 
 INITIALIZED_FILE = '/.kenban/initialized'
@@ -147,7 +146,7 @@ def build_schedule_slot_uri(schedule_slot: ScheduleSlot) -> str:
         "time_format": schedule_slot.time_format
     }
     url_parameters = urllib.parse.urlencode(url_parameters)
-    uri = hostname + "?" + url_parameters
+    uri = hostname + ":" + str(PORT) + "/kenban?" + url_parameters
     return uri
 
 
@@ -173,7 +172,7 @@ def load_settings():
     logging.getLogger().setLevel(logging.DEBUG if settings['debug_logging'] else logging.INFO)
 
 
-def asset_loop(handler: SlotHandler):
+def display_loop(handler: SlotHandler):
     # Check for software updates
     disable_update_check = getenv("DISABLE_UPDATE_CHECK", False)
     if not disable_update_check:
@@ -195,20 +194,6 @@ def asset_loop(handler: SlotHandler):
         handler.update_slots_from_db()
     handler.tick()
 
-
-# async def display_loop(handler: SlotHandler):
-#     while True:
-#         schedule_slot = handler.current_slot
-#
-#         if schedule_slot is None:
-#             print("No schedule slot")
-#         else:
-#             print(f"Schedule start: {schedule_slot.start_time}")
-#
-#         if get_db_mtime() > handler.last_update_db_mtime:
-#             handler.update_slots_from_db()
-#         handler.tick()
-#         await asyncio.sleep(2)
 
 
 def setup():
@@ -306,12 +291,6 @@ def main():
     if not is_balena_app():
         setup_hotspot()
 
-    # if settings['show_splash']:
-    #     url = 'http://{0}:{1}/splash-page'.format(LISTEN, PORT)
-    #     view_webpage(url)
-    #     sleep(SPLASH_DELAY)
-
-    # We don't want to show splash-page if there are active assets but all of them are not available
     view_image(LOAD_SCREEN)
 
     handler = SlotHandler()
@@ -322,12 +301,11 @@ def main():
             sleep(0.1)
             continue
 
-        asset_loop(handler)
+        display_loop(handler)
 
 
 if __name__ == "__main__":
     try:
-        logging.getLogger().setLevel(logging.DEBUG)  # todo remove
         main()
     except Exception:
         logging.exception("Viewer crashed.")

@@ -66,7 +66,7 @@ def kenban_display():
 
     foreground_image = settings["local_address"] + "/kenban_img/" + foreground_image_uuid  # Served by nginx
     template_filename = template_uuid
-    return template(template_filename,
+    return render_template(template_filename,
                     display_text=display_text,
                     foreground_image=foreground_image)
 
@@ -82,7 +82,7 @@ def pair():
 
 @app.route('/splash-page')
 def splash_page():
-    return template('splash-page.html', my_ip=get_node_ip())
+    return "splash page"
 
 
 def template(template_name, **context):
