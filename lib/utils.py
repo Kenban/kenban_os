@@ -4,7 +4,7 @@ import os
 import random
 import string
 from lib.models import Base, engine
-from datetime import datetime
+from datetime import datetime, time
 from distutils.util import strtobool
 from os import getenv, utime
 from platform import machine
@@ -264,3 +264,23 @@ def get_db_mtime():
         return os.path.getmtime(settings['database'])
     except (OSError, TypeError):
         return 0
+
+
+def time_parser(t) -> time:
+    if type(t) == str:
+        try:
+            t = datetime.strptime(t, "%H:%M").time()
+        except ValueError:
+            pass
+        try:
+            t = datetime.strptime(t, "%H:%M:%S").time()
+        except ValueError:
+            logging.warning("Failed to parse time, setting to 00:00")
+            t = time(0, 0)
+        finally:
+            return t
+    elif type(t) == time:
+        return t
+    else:
+        logging.warning("Failed to parse time, setting to 00:00")
+        return time(0, 0)

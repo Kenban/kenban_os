@@ -1,13 +1,14 @@
 import os
 import json
 import logging
-from datetime import datetime, time
 
 import requests
 from requests.exceptions import ConnectionError
 
 from authentication import get_auth_header
+from lib.db_helper import save_schedule_slot
 from lib.models import Session, ScheduleSlot, Event
+from lib.utils import time_parser
 from settings import settings
 
 
@@ -37,19 +38,8 @@ def sync_schedule_slots():
     schedule_slots = json.loads(response.content)
     with Session() as session:
         for slot in schedule_slots:
-            db_slot = session.query(ScheduleSlot).filter_by(uuid=slot["uuid"]).first()
-            if not db_slot:
-                db_slot = ScheduleSlot()
-                session.add(db_slot)
-            db_slot.uuid = slot["uuid"]
-            db_slot.template_uuid = slot["template_uuid"]
-            db_slot.foreground_image_uuid = slot["foreground_image_uuid"]
-            db_slot.display_text = slot["display_text"]
-            db_slot.time_format = slot["time_format"]
-            db_slot.start_time = time_parser(slot["start_time"])
-            db_slot.weekday = slot["weekday"]
-
-            session.commit()
+            save_schedule_slot(session, slot)
+        session.commit()
 
 
 def sync_events():
@@ -162,21 +152,3 @@ def get_server_last_update_time():
     return server_update_time
 
 
-def time_parser(t) -> time:
-    if type(t) == str:
-        try:
-            t = datetime.strptime(t, "%H:%M").time()
-        except ValueError:
-            pass
-        try:
-            t = datetime.strptime(t, "%H:%M:%S").time()
-        except ValueError:
-            logging.warning("Failed to parse time, setting to 00:00")
-            t = time(0, 0)
-        finally:
-            return t
-    elif type(t) == time:
-        return t
-    else:
-        logging.warning("Failed to parse time, setting to 00:00")
-        return time(0, 0)

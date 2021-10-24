@@ -1,12 +1,14 @@
 import asyncio
+import json
 import logging
 
 import websockets
 import socket
 from websockets.exceptions import WebSocketException
 
+from lib.db_helper import save_schedule_slot
+from lib.models import Session
 from settings import settings
-from sync import full_sync
 
 
 async def subscribe_to_updates():
@@ -20,8 +22,7 @@ async def subscribe_to_updates():
                 while True:
                     try:
                         msg = await asyncio.wait_for(ws.recv(), timeout=10)
-                        if "updated" in msg:
-                            full_sync()
+                        message_handler(msg)
                     except (asyncio.TimeoutError, websockets.ConnectionClosed):
                         try:
                             pong = await ws.ping()
@@ -43,6 +44,19 @@ async def subscribe_to_updates():
             logging.error(e)
             await asyncio.sleep(9)
             continue
+
+
+def message_handler(msg):
+    print(msg)
+    payload = json.loads(msg)
+    data_type = payload["message_type"]
+    if not data_type:
+        return
+
+    if data_type == "schedule_slot":
+        with Session() as session:
+            save_schedule_slot(session, payload)
+            session.commit()
 
 
 if __name__ == "__main__":
