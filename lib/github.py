@@ -19,7 +19,7 @@ def remote_branch_available(branch):
 
     try:
         resp = requests_get(
-            'https://api.github.com/repos/screenly/screenly-ose/branches',
+            'https://api.github.com/repos/Kenban/kenban_os/branches',
             headers={
                 'Accept': 'application/vnd.github.loki-preview+json',
             },
@@ -52,7 +52,7 @@ def fetch_remote_hash():
 
     if not get_cache:
         resp = requests_get(
-            'https://api.github.com/repos/screenly/screenly-ose/git/refs/heads/{}'.format(branch)
+            'https://api.github.com/repos/Kenban/kenban_os/git/refs/heads/{}'.format(branch)
         )
 
         if not resp.ok:
@@ -70,7 +70,6 @@ def fetch_remote_hash():
 
 
 def is_up_to_date():
-    #todo change to kenban
     """
     Primitive update check. Checks local hash against GitHub hash for branch.
     Returns True if the player is up to date.
