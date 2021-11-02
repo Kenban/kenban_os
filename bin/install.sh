@@ -133,7 +133,7 @@ sudo pip install "$ANSIBLE_VERSION"
 
 sudo -u pi ansible localhost \
     -m git \
-    -a "repo=$REPOSITORY dest=/home/pi/screenly version=$BRANCH force=no"
+    -a "repo=$REPOSITORY dest=/home/pi/kenban version=$BRANCH force=no"
 cd /home/pi/kenban/ansible
 
 sudo -E ansible-playbook site.yml "${EXTRA_ARGS[@]}"
