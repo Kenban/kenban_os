@@ -17,7 +17,6 @@ services:
     volumes:
       - /home/pi/.kenban:/data/.kenban
       - /home/pi/kenban_assets:/data/kenban_assets
-      - /home/pi/kenban_assets:/data/kenban_assets
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
