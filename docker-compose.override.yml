@@ -6,7 +6,7 @@ services:
       - MY_IP=${MY_IP}
     volumes:
       - /home/pi/.kenban:/data/.kenban
-      - /home/pi/screenly_assets:/data/screenly_assets
+      - /home/pi/kenban_assets:/data/kenban_assets
       - /home/pi/kenban/static:/data/kenban/static
       - /home/pi/kenban_assets:/data/kenban_assets
       - /etc/timezone:/etc/timezone:ro
@@ -17,7 +17,7 @@ services:
     mem_limit: ${VIEWER_MEMORY_LIMIT_KB}k
     volumes:
       - /home/pi/.kenban:/data/.kenban
-      - /home/pi/screenly_assets:/data/screenly_assets
+      - /home/pi/kenban_assets:/data/kenban_assets
       - /home/pi/kenban_assets:/data/kenban_assets
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -26,7 +26,7 @@ services:
     image: kenban/kb-os-celery:${DOCKER_TAG}
     volumes:
       - /home/pi/.kenban:/data/.kenban
-      - /home/pi/screenly_assets:/data/screenly_assets
+      - /home/pi/kenban_assets:/data/kenban_assets
       - /home/pi/kenban_assets:/data/kenban_assets
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -38,7 +38,7 @@ services:
     image: kenban/kb-os-nginx:${DOCKER_TAG}
     volumes:
       - /home/pi/.kenban:/data/.kenban:ro
-      - /home/pi/screenly_assets:/data/screenly_assets:ro
+      - /home/pi/kenban_assets:/data/kenban_assets:ro
       - /home/pi/kenban/static:/data/kenban/static:ro
       - /home/pi/kenban_assets:/data/kenban_assets:ro
       - /etc/timezone:/etc/timezone:ro
@@ -48,11 +48,11 @@ services:
     image: kenban/kb-os-kbsync:${DOCKER_TAG}
     volumes:
       - /home/pi/.kenban:/data/.kenban
-      - /home/pi/screenly_assets:/data/screenly_assets
+      - /home/pi/kenban_assets:/data/kenban_assets
       - /home/pi/kenban/static:/data/kenban/static
       - /home/pi/kenban_assets:/data/kenban_assets
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
 volumes:
-    screenly-data:
+    kenban-data:

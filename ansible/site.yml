@@ -1,4 +1,4 @@
-- name: Install Screenly
+- name: Install Kenban
   hosts: all
   user: pi
   become: yes
@@ -9,7 +9,7 @@
 
   roles:
     - system
-    - screenly
+    - kenban
     - network
     - splashscreen
     - tools

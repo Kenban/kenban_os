@@ -173,7 +173,7 @@
     update_cache: yes
   when: not cdefs_exist
 
-- name: Install Screenly dependencies
+- name: Install Kenban dependencies
   apt:
     name:
       - rpi-update

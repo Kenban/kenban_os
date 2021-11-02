@@ -16,7 +16,7 @@ ENV GIT_BRANCH=$GIT_BRANCH
 
 CMD celery worker \
   -A server.celery \
-  -B -n worker@screenly \
+  -B -n worker@kenban \
   --loglevel=info \
   --schedule \
   /tmp/celerybeat-schedule

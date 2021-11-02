@@ -9,7 +9,7 @@ from lib import db, queries
 from lib.utils import generate_perfect_paper_password
 
 from server import celery as celeryapp
-from server import append_usb_assets, cleanup, cleanup_usb_assets, remove_usb_assets, upgrade_screenly
+from server import append_usb_assets, cleanup, cleanup_usb_assets, remove_usb_assets, upgrade_kenban
 
 from settings import settings
 
@@ -19,17 +19,17 @@ class CeleryTasksTestCase(unittest.TestCase):
         celeryapp.conf.update(CELERY_ALWAYS_EAGER=True, CELERY_RESULT_BACKEND='', CELERY_BROKER_URL='')
 
 
-class TestUpgradeScreenly(CeleryTasksTestCase):
+class TestUpgradeKenban(CeleryTasksTestCase):
     def setUp(self):
-        super(TestUpgradeScreenly, self).setUp()
-        self.upgrade_screenly_task = upgrade_screenly.apply(args=['test', 'true', 'true'])
-        self.upgrade_screenly_result = self.upgrade_screenly_task.get()
+        super(TestUpgradeKenban, self).setUp()
+        self.upgrade_kenban_task = upgrade_kenban.apply(args=['test', 'true', 'true'])
+        self.upgrade_kenban_result = self.upgrade_kenban_task.get()
 
     def test_state(self):
-        self.assertEqual(self.upgrade_screenly_task.state, 'SUCCESS')
+        self.assertEqual(self.upgrade_kenban_task.state, 'SUCCESS')
 
     def test_result(self):
-        self.assertEqual(self.upgrade_screenly_result, {'status': 'Invalid -b parameter.\n'})
+        self.assertEqual(self.upgrade_kenban_result, {'status': 'Invalid -b parameter.\n'})
 
 
 class TestClenup(CeleryTasksTestCase):
@@ -38,7 +38,7 @@ class TestClenup(CeleryTasksTestCase):
 
     def test_cleanup(self):
         cleanup.apply()
-        tmp_files = filter(lambda x: x.endswith('.tmp'), listdir(path.join(getenv('HOME'), 'screenly_assets')))
+        tmp_files = filter(lambda x: x.endswith('.tmp'), listdir(path.join(getenv('HOME'), 'kenban_assets')))
         self.assertEqual(len(tmp_files), 0)
 
 
@@ -56,7 +56,7 @@ class TestUsbAssets(CeleryTasksTestCase):
         settings['usb_assets_key'] = generate_perfect_paper_password(20, False)
         settings.save()
 
-        key_data = {"screenly": {"key": settings['usb_assets_key']}}
+        key_data = {"kenban": {"key": settings['usb_assets_key']}}
         with open(self.key_file, 'w') as f:
             yaml.dump(key_data, f)
 

@@ -1,6 +1,6 @@
-Welcome to the Screenly OSE
+Welcome to the Kenban OSE
 
-How to get the Log out of Screenly for reporting issues:
+How to get the Log out of Kenban for reporting issues:
 
 SSH into the Pi, if you are not sure what this means, and you are Windows:
 
@@ -12,21 +12,21 @@ SSH into the Pi, if you are not sure what this means, and you are Windows:
 On macOS and Linux, there is no need to download any software. You can use `ssh` directly from your Terminal.
 
 Navigate to the /tmp folder (try `cd /tmp`)
-Open the log file with your favorite editor (`nano` is easy to use) screenly_viewer.log
+Open the log file with your favorite editor (`nano` is easy to use) kenban_viewer.log
 
 In Putty, to copy something simply select it, that its it, it's now magically in your clipboard ready for pasting.
 
 # Console Access
-To access the console while Screenly OSE is Running Simply hit `CTRL + ALT + F1`
+To access the console while Kenban OSE is Running Simply hit `CTRL + ALT + F1`
 
 # Enabling SSH
 
 See [the official documentation](https://www.raspberrypi.org/documentation/remote-access/ssh/)
 
-# Updating Screenly
+# Updating Kenban
 From a Console Run:
 
-`bash <(curl -sL https://www.screenly.io/install-ose.sh)`
+`bash <(curl -sL https://www.kenban.io/install-ose.sh)`
 
 # Accessing the SQLite Database
 
@@ -40,4 +40,4 @@ Its a SQLite Database and can be modified with the sqlite3 CLI. The schema is re
 
 # Wi-Fi Setup
 
-On first boot your OSE player will check if there is any active network connection (such as Ethernet with DHCP). If there isn’t one, then the Pi will create a local wifi network and display the SSID and PW on the screen. Using your phone or computer connect to this network and navigate to the URL displayed on the screen. (Ex: Screenly.io/wifi)  This will take you to the network setup page for your OSE player. If you are not connected to the network that the player is generating then you will be redirected here.
+On first boot your OSE player will check if there is any active network connection (such as Ethernet with DHCP). If there isn’t one, then the Pi will create a local wifi network and display the SSID and PW on the screen. Using your phone or computer connect to this network and navigate to the URL displayed on the screen. (Ex: Kenban.io/wifi)  This will take you to the network setup page for your OSE player. If you are not connected to the network that the player is generating then you will be redirected here.

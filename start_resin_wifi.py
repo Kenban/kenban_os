@@ -11,7 +11,7 @@ from os import getenv, path
 from lib.utils import generate_perfect_paper_password, get_active_connections
 
 
-def generate_page(ssid, pswd, address):
+def generate_page(ssid, pswd):
     home = getenv('HOME')
     template_path = path.join(home, 'kenban/templates/hotspot.html')
     with open(template_path) as f:
@@ -19,8 +19,7 @@ def generate_page(ssid, pswd, address):
 
     context = {
         'network': ssid,
-        'ssid_pswd': pswd,
-        'address': address
+        'ssid_pswd': pswd
     }
 
     with open('/tmp/hotspot.html', 'w') as out_file:
@@ -31,7 +30,7 @@ if __name__ == "__main__":
     bus = pydbus.SystemBus()
 
     pattern_include = re.compile("wlan*")
-    pattern_exclude = re.compile("ScreenlyOSE-*")
+    pattern_exclude = re.compile("Kenban-*")
 
     wireless_connections = get_active_connections(bus)
 
@@ -45,9 +44,9 @@ if __name__ == "__main__":
 
     if not gateways().get('default') and any(pattern_include.match(i) for i in interfaces()):
         if len(wireless_connections) == 0:
-            ssid = 'ScreenlyOSE-{}'.format(generate_perfect_paper_password(pw_length=4, has_symbols=False))
+            ssid = 'Kenban-{}'.format(generate_perfect_paper_password(pw_length=4, has_symbols=False))
             ssid_password = generate_perfect_paper_password(pw_length=8, has_symbols=False)
-            generate_page(ssid, ssid_password, 'screenly.io/wifi')
+            generate_page(ssid, ssid_password)
 
             wifi_connect = sh.sudo('wifi-connect', '-s', ssid, '-p', ssid_password, '-o', '9090', _bg=True)
     else:

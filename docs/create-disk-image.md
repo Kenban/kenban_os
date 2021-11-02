@@ -1,4 +1,4 @@
-# Screenly OSE Disk Image steps
+# Kenban OSE Disk Image steps
 
  * Create a new Debian 9 VM with decent resources
  * Run the following commands:

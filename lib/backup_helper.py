@@ -3,9 +3,9 @@ from datetime import datetime
 from os import path, getenv, remove
 import sh
 
-directories = ['.screenly', 'screenly_assets']
-default_archive_name = "screenly-backup"
-static_dir = "screenly/static"
+directories = ['.kenban', 'kenban_assets']
+default_archive_name = "kenban-backup"
+static_dir = "kenban/static"
 
 
 def create_backup(name=default_archive_name):

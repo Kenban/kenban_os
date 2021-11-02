@@ -7,8 +7,6 @@ import os
 from collections import UserDict
 from os import path, getenv
 
-from lib.auth import WoTTAuth, BasicAuth, NoAuth
-
 CONFIG_DIR = '.kenban'
 CONFIG_FILE = 'kenban.conf'
 
@@ -51,7 +49,7 @@ DEFAULTS = {
     },
     'screenly': {
         'analytics_opt_out': False,
-        'assetdir': 'screenly_assets',
+        'assetdir': 'kenban_assets',
         'database': os.path.join(CONFIG_DIR, 'kenban.db'),
         'date_format': 'mm/dd/yyyy',
         'use_24_hour_clock': False,
@@ -89,13 +87,6 @@ class KenbanSettings(UserDict):
         UserDict.__init__(self, *args, **kwargs)
         self.home = getenv('HOME')
         self.conf_file = self.get_configfile()
-        self.auth_backends_list = [NoAuth(), BasicAuth(self)]
-        if os.path.isdir('/opt/wott'):
-            self.auth_backends_list.append(WoTTAuth(self))
-        self.auth_backends = {}
-        for backend in self.auth_backends_list:
-            DEFAULTS.update(backend.config)
-            self.auth_backends[backend.name] = backend
 
         if not path.isfile(self.conf_file):
             logging.error('Config-file %s missing. Using defaults.', self.conf_file)

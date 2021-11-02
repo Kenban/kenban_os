@@ -49,13 +49,13 @@
     src: "{{ item }}"
     dest: /usr/share/plymouth/themes/kenban/
   with_items:
-    - screenly.plymouth
-    - screenly.script
+    - kenban.plymouth
+    - kenban.script
     - splashscreen.png
   when: ansible_distribution_major_version|int > 7
 
 - name: Set splashscreen
-  command: plymouth-set-default-theme -R screenly
+  command: plymouth-set-default-theme -R kenban
   when: ansible_distribution_major_version|int > 7
 
 - name: Set plymouthd.default

@@ -57,11 +57,11 @@ class TestLoadBrowser(ViewerTestCase):
         self.p_loadb.stop()
 
     def test_load_browser(self):
-        self.m_cmd.return_value.return_value.process.stdout = 'Screenly service start'
+        self.m_cmd.return_value.return_value.process.stdout = 'Kenban service start'
         self.p_cmd.start()
         self.u.load_browser()
         self.p_cmd.stop()
-        self.m_cmd.assert_called_once_with('ScreenlyWebview')
+        self.m_cmd.assert_called_once_with('KenbanWebview')
 
 
 class TestSignalHandlers(ViewerTestCase):

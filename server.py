@@ -87,7 +87,7 @@ def splash_page():
 
 
 def template(template_name, **context):
-    """Screenly template response generator. Shares the
+    """Kenban template response generator. Shares the
     same function signature as Flask's render_template() method
     but also injects some global context."""
 

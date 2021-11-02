@@ -17,7 +17,7 @@ resolution = 1920x1080
 default_duration = 45
 
 [main]
-assetdir = /home/pi/screenly_assets
+assetdir = /home/pi/kenban_assets
 database = /home/pi/.kenban/kenban.db
 use_ssl = False
 
@@ -74,7 +74,7 @@ class SettingsTest(unittest.TestCase):
         shutil.rmtree(CONFIG_DIR)
         os.getenv = self.orig_getenv
 
-    def test_screenly_should_exit_if_no_settings_file_found(self):
+    def test_kenban_should_exit_if_no_settings_file_found(self):
         new_env = os.environ.copy()
         new_env["HOME"] = "/tmp"
         project_dir = os.path.dirname(__file__)
