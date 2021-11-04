@@ -122,7 +122,7 @@ def load_browser():
     global browser
     logging.info('Loading browser...')
 
-    browser = sh.Command('KenbanWebview')(_bg=True, _err_to_out=True)
+    browser = sh.Command('ScreenlyWebview')(_bg=True, _err_to_out=True)
     while 'Kenban service start' not in str(browser.process.stdout):
         sleep(1)
 
@@ -212,7 +212,7 @@ def setup():
 
     load_browser()
     bus = pydbus.SessionBus()
-    browser_bus = bus.get('kenban.webview', '/Kenban')
+    browser_bus = bus.get('screenly.webview', '/Kenban')
 
 
 def setup_hotspot():

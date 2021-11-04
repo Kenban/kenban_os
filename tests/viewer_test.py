@@ -61,7 +61,7 @@ class TestLoadBrowser(ViewerTestCase):
         self.p_cmd.start()
         self.u.load_browser()
         self.p_cmd.stop()
-        self.m_cmd.assert_called_once_with('KenbanWebview')
+        self.m_cmd.assert_called_once_with('ScreenlyWebview')
 
 
 class TestSignalHandlers(ViewerTestCase):

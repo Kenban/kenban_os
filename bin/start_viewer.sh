@@ -9,11 +9,11 @@ chown -f viewer /dev/snd/*
 chown -f viewer /data/.kenban/latest_kenban_sha
 
 # Fixes caching in QTWebEngine
-mkdir -p /data/.local/share/KenbanWebview/QtWebEngine \
-    /data/.cache/KenbanWebview \
+mkdir -p /data/.local/share/ScreenlyWebview/QtWebEngine \
+    /data/.cache/ScreenlyWebview \
     /data/.pki
-chown -Rf viewer /data/.local/share/KenbanWebview
-chown -Rf viewer /data/.cache/KenbanWebview/
+chown -Rf viewer /data/.local/share/ScreenlyWebview
+chown -Rf viewer /data/.cache/ScreenlyWebview/
 chown -Rf viewer /data/.pki
 
 # Temporary workaround for watchdog
