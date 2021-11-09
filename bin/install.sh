@@ -42,15 +42,14 @@ fi
 #sudo sed -i 's/apt.screenlyapp.com/archive.raspbian.org/g' /etc/apt/sources.list
 sudo apt update -y
 sudo apt-get purge -y \
-  python-pyasn1
+  python3-pyasn1
 sudo apt-get install -y --no-install-recommends \
-  git-core \
+  git \
   libffi-dev \
   libssl-dev \
-  python-dev \
-  python-pip \
-  python-setuptools \
-  python-wheel \
+  python3-pip \
+  python3-setuptools \
+  python3-wheel \
   whois
 
 if [ "$NETWORK" == 'y' ]; then
