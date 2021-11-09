@@ -32,7 +32,7 @@
 
 - name: Download upgrade_kenban.sh from github repository
   get_url:
-    url: https://raw.githubusercontent.com/Kenban/kenban-ose/master/bin/install.sh
+    url: https://raw.githubusercontent.com/Kenban/kenban_os/master/bin/install.sh
     dest: /usr/local/sbin/upgrade_kenban.sh
     mode: 0700
     owner: root
@@ -44,14 +44,6 @@
     src: kenban_overrides
     dest: /etc/sudoers.d/kenban_overrides
     mode: 0440
-    owner: root
-    group: root
-
-- name: Copy kenban_usb_assets.sh
-  copy:
-    src: kenban_usb_assets.sh
-    dest: /usr/local/bin/kenban_usb_assets.sh
-    mode: 0755
     owner: root
     group: root
 
