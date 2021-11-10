@@ -69,6 +69,10 @@ class SlotHandler(object):
         self.calculate_current_slot()
 
     def set_current_slot(self, slot):
+        if not slot:
+            logging.debug(f"SlotHandler: No slot found")
+            self.current_slot = None
+            return
         logging.debug(f"Setting current slot to {slot.uuid}")
         self.current_slot = slot
         self.current_slot_index = self.slots.index(slot)
@@ -91,15 +95,12 @@ class SlotHandler(object):
 
     def calculate_current_slot(self):
         """ Return the slot that should currently be active according to times """
-        # todo
         this_weekday = datetime.now().strftime("%A")
         current_time = datetime.now().time()
         days_slots = list(filter(lambda s: s.weekday == this_weekday, self.slots))  # Get today's slots
         eligible_slots = list(filter(lambda s: s.start_time < current_time, days_slots))  # Filter out future slots
         if len(eligible_slots) == 0:
-            # TODO Create a default slot?
             logging.warning("Could not find slot for this time")
-            self.set_current_slot(None)
         else:
             self.set_current_slot(max(eligible_slots, key=lambda s: s.start_time))
 
@@ -140,6 +141,9 @@ def view_webpage(uri: str):
 
 def build_schedule_slot_uri(schedule_slot: ScheduleSlot) -> str:
     hostname = f"{settings['local_address']}"
+    if schedule_slot:
+        uri = hostname + "/splash-page"  # TODO set to default screen
+        return uri
     url_parameters = {
         "foreground_image_uuid": schedule_slot.foreground_image_uuid,
         "template_uuid": schedule_slot.template_uuid,
@@ -288,7 +292,7 @@ def main():
         view_webpage(url)
         poll_for_authentication(device_code=device_code)
     else:
-        logging.info("Device already paired")
+        logging.info(f"Device paired to {settings['refresh_token']}")
 
     wait_for_server(5)
 
