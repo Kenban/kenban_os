@@ -222,6 +222,12 @@
     update_cache: yes
     install_recommends: no
 
+- name: Install Docker-Compose
+  apt:
+    name: docker-compose
+    update_cache: yes
+    install_recommends: no
+
 - name: Ensure group "docker" exists
   ansible.builtin.group:
     name: docker
