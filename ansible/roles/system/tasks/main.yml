@@ -222,6 +222,11 @@
     update_cache: yes
     install_recommends: no
 
+- name: Ensure group "docker" exists
+  ansible.builtin.group:
+    name: docker
+    state: present
+
 - name: Add pi to docker group
   user:
     name: pi
