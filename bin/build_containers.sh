@@ -24,6 +24,7 @@ else
 fi
 
 if [ -n "${CLEAN_BUILD+x}" ]; then
+  echo "Running with no cache"
     DOCKER_BUILD_ARGS+=("--no-cache")
 fi
 

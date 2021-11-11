@@ -23,28 +23,15 @@ else
     DOCKER_BUILD_ARGS=("build")
 fi
 
-#no cache
-DOCKER_BUILD_ARGS+=("--no-cache")
-
+if [ -n "${CLEAN_BUILD+x}" ]; then
+    DOCKER_BUILD_ARGS+=("--no-cache")
+fi
 
 docker pull balenalib/rpi-raspbian:buster
 
-for container in base server celery redis nginx kbsync; do
-    echo "Building $container"
-    docker "${DOCKER_BUILD_ARGS[@]}" \
-        --build-arg "GIT_HASH=$GIT_HASH" \
-        --build-arg "GIT_SHORT_HASH=$GIT_SHORT_HASH" \
-        --build-arg "GIT_BRANCH=$GIT_BRANCH" \
-        -f "docker/Dockerfile.$container" \
-        -t "kenban/kb-os-$container:$DOCKER_TAG" .
 
-    # Push
-    docker push "kenban/kb-os-$container:$DOCKER_TAG"
-    docker push "kenban/kb-os-$container:latest"
-done
-
-echo "Building viewer for different architectures..."
-for pi_version in pi4 pi3; do
+echo "Building viewer..."
+for pi_version in pi4; do
     echo "Building viewer container for $pi_version"
     docker "${DOCKER_BUILD_ARGS[@]}" \
         --build-arg "PI_VERSION=$pi_version" \
@@ -54,7 +41,9 @@ for pi_version in pi4 pi3; do
         -f docker/Dockerfile.viewer \
         -t "kenban/kb-os-viewer:$DOCKER_TAG-$pi_version" .
 
-    # Push
-    docker push "kenban/kb-os-viewer:$DOCKER_TAG-$pi_version"
+    # Push if the push flag is set and not cross compiling
+    if [[ ( -n "${PUSH+x}" && -z "${CROSS_COMPILE+x}" ) ]]; then
+        docker push "kenban/kb-os-viewer:$DOCKER_TAG-$pi_version"
+        docker push "kenban/kb-os-viewer:$DOCKER_TAG-latest"
+    fi
 done
-
