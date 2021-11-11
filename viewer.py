@@ -29,7 +29,7 @@ EMPTY_PL_DELAY = 5  # secs
 INITIALIZED_FILE = '/.kenban/initialized'
 WATCHDOG_PATH = '/tmp/screenly.watchdog'
 
-LOAD_SCREEN = 'http://{}:{}/{}'.format(LISTEN, PORT, 'static/img/loading.png')
+LOAD_SCREEN = f'http://{LISTEN}:{PORT}/img/loading.png'
 
 current_browser_url = None
 browser = None

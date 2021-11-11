@@ -64,7 +64,7 @@ def kenban_display():
     if not template_uuid:
         return "Could not get template_uuid"
 
-    image_folder_address = settings["local_address"] + "/kenban_img/"  # Served by nginx
+    image_folder_address = settings["local_address"] + "/img/"  # Served by nginx
     template_filename = template_uuid
     return render_template(template_filename,
                            image_folder_address=image_folder_address,
@@ -91,6 +91,7 @@ def connection_error():
     return "Error connecting to Kenban server"
 
 
+# TODO Can probably remove this once we nail down which ones we need
 def template(template_name, **context):
     """Kenban template response generator. Shares the
     same function signature as Flask's render_template() method
