@@ -86,6 +86,11 @@ def splash_page():
     return "splash page"
 
 
+@app.route('/connect-error')
+def connection_error():
+    return "Error connecting to Kenban server"
+
+
 def template(template_name, **context):
     """Kenban template response generator. Shares the
     same function signature as Flask's render_template() method
