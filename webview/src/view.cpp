@@ -40,7 +40,7 @@ void View::loadImage(const QString &preUri)
         url.setScheme("http");
         // url.setHost(qgetenv("LISTEN"));
         url.setHost("kb-os-nginx");
-        url.setPath("/kenban_assets/" + fileInfo.fileName());
+        url.setPath("/" + fileInfo.fileName());
 
         src = url.toString();
     }

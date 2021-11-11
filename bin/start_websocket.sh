@@ -3,7 +3,8 @@
 mkdir -p \
     /data/.config \
     /data/.kenban \
-    /data/kenban_assets
+    /data/kenban_templates \
+    /data/kenban_images
 
 cp -n /usr/src/app/ansible/roles/kenban/files/kenban.conf /data/.kenban/kenban.conf
 cp -n /usr/src/app/ansible/roles/kenban/files/default_assets.yml /data/.kenban/default_assets.yml

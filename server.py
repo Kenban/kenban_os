@@ -15,7 +15,7 @@ from settings import PORT, LISTEN, settings
 
 __license__ = "Dual License: GPLv2 and Commercial License"
 
-template_folder = settings["templates_folder"] or '/data/kenban_assets/kenban_templates/'
+template_folder = settings["templates_folder"] or '/data/kenban_templates/'
 app = Flask(__name__, template_folder=template_folder)
 
 CORS(app)

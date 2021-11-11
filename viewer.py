@@ -279,23 +279,42 @@ def wait_for_server(retries, wt=1):
             sleep(wt)
 
 
+def device_pair():
+    logging.info("Starting pairing")
+    while True:
+        device_code, verification_uri = register_new_client()
+        if device_code is None:
+            logging.error("Failed to register new client with server")
+            view_webpage(f"http://{LISTEN}:{PORT}/connect-error")
+            sleep(10)
+            continue
+        else:
+            url = 'http://{0}:{1}/pair?user_code={2}&verification_uri={3}' \
+                .format(LISTEN, PORT, device_code, verification_uri)
+            view_webpage(url)
+            auth_success = poll_for_authentication(device_code=device_code)
+            if auth_success:
+                logging.info("Device paired successfully")
+                return
+            else:
+                logging.error("Authentication polling failed")
+                view_webpage(f"http://{LISTEN}:{PORT}/connect-error")
+                sleep(10)
+                continue
+
+
+
+
+
 def main():
     setup()
 
     from settings import settings
     # Check to see if device is paired
     if settings["refresh_token"] in [None, "None", ""]:
-        logging.info("Starting pairing")
-        device_code, verification_uri = register_new_client()
-        if device_code is None:
-            url = 'http://{0}:{1}/connect-error'.format(LISTEN, PORT)
-        else:
-            url = 'http://{0}:{1}/pair?user_code={2}&verification_uri={3}' \
-                .format(LISTEN, PORT, device_code, verification_uri)
-        view_webpage(url)
-        poll_for_authentication(device_code=device_code)
+        device_pair()
     else:
-        logging.info(f"Device paired to {settings['refresh_token']}")
+        logging.info(f"Device already paired")
 
     wait_for_server(5)
 

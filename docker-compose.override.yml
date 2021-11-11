@@ -6,7 +6,8 @@ services:
       - MY_IP=${MY_IP}
     volumes:
       - /home/pi/.kenban:/data/.kenban
-      - /home/pi/kenban_assets:/data/kenban_assets
+      - /home/pi/kenban_templates:/data/kenban_templates
+      - /home/pi/kenban_images:/data/kenban_images
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
@@ -15,7 +16,8 @@ services:
     mem_limit: ${VIEWER_MEMORY_LIMIT_KB}k
     volumes:
       - /home/pi/.kenban:/data/.kenban
-      - /home/pi/kenban_assets:/data/kenban_assets
+      - /home/pi/kenban_templates:/data/kenban_templates
+      - /home/pi/kenban_images:/data/kenban_images
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
@@ -23,7 +25,8 @@ services:
     image: kenban/kb-os-celery:${DOCKER_TAG}
     volumes:
       - /home/pi/.kenban:/data/.kenban
-      - /home/pi/kenban_assets:/data/kenban_assets
+      - /home/pi/kenban_templates:/data/kenban_templates
+      - /home/pi/kenban_images:/data/kenban_images
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
@@ -34,7 +37,7 @@ services:
     image: kenban/kb-os-nginx:${DOCKER_TAG}
     volumes:
       - /home/pi/.kenban:/data/.kenban:ro
-      - /home/pi/kenban_assets:/data/kenban_assets:ro
+      - /home/pi/kenban_images:/data/kenban_images:ro
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
@@ -42,7 +45,8 @@ services:
     image: kenban/kb-os-kbsync:${DOCKER_TAG}
     volumes:
       - /home/pi/.kenban:/data/.kenban
-      - /home/pi/kenban_assets:/data/kenban_assets
+      - /home/pi/kenban_templates:/data/kenban_templates
+      - /home/pi/kenban_images:/data/kenban_images
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 

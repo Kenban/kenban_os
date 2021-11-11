@@ -33,9 +33,9 @@ def get_auth_header():
 
 def register_new_client():
     """ Sends the client uuid to the server and receives the device code/verification uri in response"""
+    url = settings['server_address'] + settings['device_register_uri']
+    device_uuid = str(settings['device_uuid'])
     try:
-        url = settings['server_address'] + settings['device_register_uri']
-        device_uuid = str(settings['device_uuid'])
         data = json.dumps({u"uuid": device_uuid})
         response = requests.post(url=url,
                                  data=data,
@@ -49,7 +49,7 @@ def register_new_client():
     try:
         response_body = json.loads(response.content)
     except JSONDecodeError:
-        logging.warning(f"Failed to decode JSON response during authorisation polling. Response: {response_body}")
+        logging.warning(f"Failed to decode JSON response during authorisation polling. Response: {response}")
         return None, None
     return response_body["device_code"], response_body["verification_uri"]
 
@@ -59,6 +59,7 @@ def poll_for_authentication(device_code):
     Contacts the authentication server to get a user_code, which is then displayed to the user.
     Polls the authentication server until the user authenticates with the user_code"""
     logging.info("Entering loop to authorise device...")
+    errors = 0
     while True:
         logging.info("Polling server for authorisation...")
         url = settings['server_address'] + settings['device_auth_uri']
@@ -84,10 +85,13 @@ def poll_for_authentication(device_code):
             settings["refresh_token"] = response_body["refresh_token"]
             settings["access_token"] = response_body["access_token"]
             settings.save()
-            logging.info("Device paired.")
+            logging.info("Access tokens received from server")
             return True
         else:
-            # TODO Consider showing an error to the user if this keeps repeating
+            errors += 1
+            if errors > 10:
+                logging.error("Restarting pairing cycle")
+                return False
             logging.error("Invalid server response during pairing.")
             logging.debug(response)
             sleep(10)

@@ -7,16 +7,15 @@
   with_items:
     - .kenban
     - .config
-    - kenban_assets
-    - kenban_assets/kenban_templates
-    - kenban_assets/kenban_images
+    - kenban_templates
+    - kenban_images
 
 - name: Copy Kenban default templates
   copy:
     owner: pi
     group: pi
     src: templates
-    dest: /home/pi/kenban/kenban_assets/kenban_templates
+    dest: /home/pi/kenban/kenban_templates
     force: yes
 
 - name: Copy Kenban default images
@@ -24,7 +23,7 @@
     owner: pi
     group: pi
     src: templates
-    dest: /home/pi/kenban/kenban_assets/kenban_images
+    dest: /home/pi/kenban/kenban_images
     force: yes
 
 

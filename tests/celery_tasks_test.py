@@ -38,7 +38,7 @@ class TestClenup(CeleryTasksTestCase):
 
     def test_cleanup(self):
         cleanup.apply()
-        tmp_files = filter(lambda x: x.endswith('.tmp'), listdir(path.join(getenv('HOME'), 'kenban_assets')))
+        tmp_files = filter(lambda x: x.endswith('.tmp'), listdir(path.join(getenv('HOME'))))
         self.assertEqual(len(tmp_files), 0)
 
 

@@ -31,8 +31,8 @@ DEFAULTS = {
         'event_url': '/api/v1/event/screen/',
     },
     'folders': {
-        'images_folder': '/data/kenban_assets/kenban_images/',
-        'templates_folder': '/data/kenban_assets/kenban_templates/',
+        'images_folder': '/data/kenban_images/',
+        'templates_folder': '/data/kenban_templates/',
     },
     'viewer': {
         'audio_output': 'hdmi',
