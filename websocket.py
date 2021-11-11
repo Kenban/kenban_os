@@ -13,8 +13,12 @@ from settings import settings
 
 async def subscribe_to_updates():
     """ Open a websocket connection with the server. When the string 'updated' is sent, trigger a sync of assets """
-    url = settings["websocket_updates_address"] + settings["device_uuid"]
     while True:
+        # Don't try and open a websocket if we don't have a device uuid yet
+        if settings["device_uuid"] in [None, "None", ""]:
+            await asyncio.sleep(30)
+            continue
+        url = settings["websocket_updates_address"] + settings["device_uuid"]
         # outer loop restarted every time the connection fails
         try:
             async with websockets.connect(url) as ws:

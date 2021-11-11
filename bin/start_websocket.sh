@@ -7,8 +7,6 @@ mkdir -p \
     /data/kenban_images
 
 cp -n /usr/src/app/ansible/roles/kenban/files/kenban.conf /data/.kenban/kenban.conf
-cp -n /usr/src/app/ansible/roles/kenban/files/default_assets.yml /data/.kenban/default_assets.yml
-cp -n /usr/src/app/ansible/roles/kenban/files/kenban.db /data/.kenban/kenban.db
 
 if [ -n "${OVERWRITE_CONFIG}" ]; then
     echo "Requested to overwrite Kenban config file."

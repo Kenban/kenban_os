@@ -31,6 +31,7 @@ INITIALIZED_FILE = '/.kenban/initialized'
 WATCHDOG_PATH = '/tmp/screenly.watchdog'
 
 LOAD_SCREEN = f'http://{LISTEN}:{PORT}/img/loading.png'
+NEW_SETUP_SCREEN = f'http://{LISTEN}:{PORT}/img/new-setup.png'
 
 current_browser_url = None
 browser = None
@@ -145,7 +146,7 @@ def view_webpage(uri: str):
 
 def build_schedule_slot_uri(schedule_slot: ScheduleSlot) -> str:
     hostname = f"{settings['local_address']}"
-    if schedule_slot:
+    if not schedule_slot:
         uri = hostname + "/splash-page"  # TODO set to default screen
         return uri
     url_parameters = {
@@ -200,7 +201,7 @@ def display_loop(handler: SlotHandler):
             view_webpage(uri)
             last_slot = handler.current_slot
         refresh_duration = int(settings['default_duration'])
-        logging.info(f'Sleeping for {refresh_duration}')
+        logging.debug(f'Current slot: {handler.current_slot} Sleeping for {refresh_duration}')
         sleep(refresh_duration)
 
     if get_db_mtime() > handler.last_update_db_mtime:
@@ -314,11 +315,13 @@ def main():
     # Check to see if device is paired
     if settings["refresh_token"] in [None, "None", ""]:
         device_pair()
+        view_image(NEW_SETUP_SCREEN)
+        sleep(10)  # Wait for the server to setup the new screen before continuing
+        sync.full_sync()
     else:
         logging.info(f"Device already paired")
+        view_image(LOAD_SCREEN)
 
-    view_image(LOAD_SCREEN)
-    sync.full_sync()
     handler = SlotHandler()
 
     logging.debug('Entering infinite loop.')
@@ -328,6 +331,7 @@ def main():
             continue
 
         display_loop(handler)
+        sleep(0.1)
 
 
 if __name__ == "__main__":
