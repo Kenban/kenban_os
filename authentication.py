@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging
+import uuid
 from json import JSONDecodeError
 from os import getenv
 from time import mktime
@@ -35,6 +36,10 @@ def register_new_client():
     """ Sends the client uuid to the server and receives the device code/verification uri in response"""
     url = settings['server_address'] + settings['device_register_uri']
     device_uuid = str(settings['device_uuid'])
+    if device_uuid in [None, "", "None"]:
+        device_uuid = uuid.uuid4().hex
+        settings['device_uuid'] = device_uuid
+        settings.save()
     try:
         data = json.dumps({u"uuid": device_uuid})
         response = requests.post(url=url,

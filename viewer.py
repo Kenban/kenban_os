@@ -14,6 +14,7 @@ import requests
 import sh
 from netifaces import gateways
 
+import sync
 from authentication import register_new_client, poll_for_authentication
 from lib.errors import SigalrmException
 from lib.github import is_up_to_date
@@ -303,11 +304,11 @@ def device_pair():
                 continue
 
 
-
-
-
 def main():
     setup()
+    wait_for_server(5)
+    if not is_balena_app():
+        setup_hotspot()
 
     from settings import settings
     # Check to see if device is paired
@@ -316,13 +317,8 @@ def main():
     else:
         logging.info(f"Device already paired")
 
-    wait_for_server(5)
-
-    if not is_balena_app():
-        setup_hotspot()
-
     view_image(LOAD_SCREEN)
-
+    sync.full_sync()
     handler = SlotHandler()
 
     logging.debug('Entering infinite loop.')

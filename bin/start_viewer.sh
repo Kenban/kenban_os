@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Give viewer permission to edit config
+chown -f viewer /data/.kenban/kenban.conf
+
 # Fixes permission on /dev/vchiq
 chgrp -f video /dev/vchiq
 chmod -f g+rwX /dev/vchiq

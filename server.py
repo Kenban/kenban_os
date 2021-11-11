@@ -78,7 +78,7 @@ def pair():
     verification_uri = request.args['verification_uri']
     if not verification_uri:
         verification_uri = "kenban.co.uk/pair"
-    return template('pair.html', pair_code=pair_code, verification_uri=verification_uri)
+    return render_template('pair.html', pair_code=pair_code, verification_uri=verification_uri)
 
 
 @app.route('/splash-page')
