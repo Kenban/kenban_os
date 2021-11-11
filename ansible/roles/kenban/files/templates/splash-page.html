@@ -2,8 +2,8 @@
 <html>
 <head>
     <meta charset="utf-8"/>
-    <title>Welcome to Kenban</title>
-    <link href="{{ url_for('static', filename='css/kenban.css') }}" rel="stylesheet"/>
+    <title>Welcome to Kenban OSE</title>
+
     <style type="text/css">
         html, body {
             height: 100%;
@@ -17,14 +17,20 @@
         <div class="row">
             <div class="col-12">
                 <div class="logo-container page-header text-center">
-                    <img src="/static/img/kenbanlogo.png" class="img-fluid"/>
+                    <img src="img/kenbanlogo.png" class="img-fluid"/>
                 </div>
             </div>
         </div>
         <div class="row">
             <div class="col-12 text-center">
-                <p>This screen is not paired to an account. Visit {{ verification_uri }} and enter this code:</p>
-                <h1>{{ pair_code }}</h1>
+                {% if my_ip %}
+                    <p>To manage the content on this screen, just point your browser to:</p>
+                    <div class="form-actions">
+                        <a href="http://{{ my_ip }}">http://{{ my_ip }}</a>
+                    </div>
+                {% else %}
+                    <p>Unable to retrieve IP.</p>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -6,7 +6,6 @@ services:
       - MY_IP=${MY_IP}
     volumes:
       - /home/pi/.kenban:/data/.kenban
-      - /home/pi/kenban/static:/data/kenban/static
       - /home/pi/kenban_assets:/data/kenban_assets
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -35,7 +34,6 @@ services:
     image: kenban/kb-os-nginx:${DOCKER_TAG}
     volumes:
       - /home/pi/.kenban:/data/.kenban:ro
-      - /home/pi/kenban/static:/data/kenban/static:ro
       - /home/pi/kenban_assets:/data/kenban_assets:ro
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -44,7 +42,6 @@ services:
     image: kenban/kb-os-kbsync:${DOCKER_TAG}
     volumes:
       - /home/pi/.kenban:/data/.kenban
-      - /home/pi/kenban/static:/data/kenban/static
       - /home/pi/kenban_assets:/data/kenban_assets
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
