@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging
+from json import JSONDecodeError
 from os import getenv
 from time import mktime
 from time import sleep
@@ -13,6 +14,7 @@ from settings import settings
 
 PORT = int(getenv('PORT', 8080))
 LISTEN = getenv('LISTEN', '127.0.0.1')
+
 
 def get_access_token():
     access_token = settings["access_token"]
@@ -44,7 +46,11 @@ def register_new_client():
     except ValueError:
         logging.warning("Failed to decode server response during authorisation polling")
         return None, None
-    response_body = json.loads(response.content)
+    try:
+        response_body = json.loads(response.content)
+    except JSONDecodeError:
+        logging.warning(f"Failed to decode JSON response during authorisation polling. Response: {response_body}")
+        return None, None
     return response_body["device_code"], response_body["verification_uri"]
 
 
@@ -64,18 +70,28 @@ def poll_for_authentication(device_code):
             sleep(5)
             continue
         if response.status_code == 400:
+            # This is normal in the device pair flow
             message = json.loads(response.content)["detail"]
             if "authorisation_pending" in message["error"]:
                 sleep(5)
                 continue
         elif response.status_code == 200:
-            response_body = json.loads(response.content)
+            try:
+                response_body = json.loads(response.content)
+            except JSONDecodeError:
+                logging.error("Failed to decode JSON response after apparently successful device pairing")
+                return False
             settings["refresh_token"] = response_body["refresh_token"]
             settings["access_token"] = response_body["access_token"]
             settings.save()
             logging.info("Device paired.")
-        logging.info("Initial token successfully received from server.")
-        return True
+            return True
+        else:
+            # TODO Consider showing an error to the user if this keeps repeating
+            logging.error("Invalid server response during pairing.")
+            logging.debug(response)
+            sleep(10)
+            continue
 
 
 def refresh_access_token():
