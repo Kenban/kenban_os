@@ -183,13 +183,13 @@ def display_loop(handler: SlotHandler):
     disable_update_check = getenv("DISABLE_UPDATE_CHECK", False)
     if not disable_update_check:
         is_up_to_date()
-    logging.debug(f"Current schedule slot start time: {handler.current_slot.start_time}")
     if handler.current_slot is None:
         logging.info('Playlist is empty. Sleeping for %s seconds', EMPTY_PL_DELAY)
         # todo what do we want to show when there is no asset?
         view_image(LOAD_SCREEN)
         sleep(EMPTY_PL_DELAY)
     else:
+        logging.debug(f"Current schedule slot start time: {handler.current_slot.start_time}")
         uri = build_schedule_slot_uri(handler.current_slot)
         # todo we might still need to refresh, or find a solution to the website not loading sometimes
         if last_slot != handler.current_slot:
@@ -281,7 +281,7 @@ def main():
 
     from settings import settings
     # Check to see if device is paired
-    if settings["refresh_token"] in [None, "None"]:
+    if settings["refresh_token"] in [None, "None", ""]:
         logging.info("Starting pairing")
         device_code, verification_uri = register_new_client()
         if device_code is None:

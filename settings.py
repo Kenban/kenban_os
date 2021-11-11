@@ -120,7 +120,7 @@ class KenbanSettings(UserDict):
     def load(self):
         """Loads the latest settings from kenban.conf into memory."""
         logging.debug('Reading config-file...')
-        config = configparser.ConfigParser()
+        config = configparser.ConfigParser(allow_no_value=True)
         config.read(self.conf_file)
 
         for section, defaults in DEFAULTS.items():
