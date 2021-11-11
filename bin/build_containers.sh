@@ -28,7 +28,7 @@ if [ -n "${CLEAN_BUILD+x}" ]; then
     DOCKER_BUILD_ARGS+=("--no-cache")
 fi
 
-docker pull balenalib/rpi-raspbian:bullseye
+docker pull balenalib/rpi-raspbian:buster
 
 for container in base server celery redis nginx kbsync; do
     echo "Building $container"
