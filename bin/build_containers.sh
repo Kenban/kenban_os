@@ -15,6 +15,10 @@ else
     DOCKER_TAG="$GIT_BRANCH"
 fi
 
+if [[ ( -n "${PUSH+x}" && -z "${CROSS_COMPILE+x}" ) ]]; then
+        echo "Will push containers when built"
+fi
+
 if [ -n "${CROSS_COMPILE+x}" ]; then
     echo "Running with cross-compile using docker buildx..."
     DOCKER_BUILD_ARGS=("buildx" "build" "--push" "--platform" "linux/arm/v6,linux/arm/v7")
