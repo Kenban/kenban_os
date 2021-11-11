@@ -136,7 +136,8 @@ def get_active_connections(bus, fields=None):
 
     try:
         nm_proxy = bus.get("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager")
-    except Exception:
+    except:
+        logging.exception("Error getting active connections")
         return None
 
     nm_properties = nm_proxy["org.freedesktop.DBus.Properties"]
