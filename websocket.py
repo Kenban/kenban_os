@@ -44,6 +44,10 @@ async def subscribe_to_updates():
             logging.error("Websocket connection refused")
             await asyncio.sleep(9)
             continue
+        except OSError:
+            logging.error("Websocket connection attempt failed")
+            await asyncio.sleep(9)
+            continue
         except WebSocketException as e:
             logging.error(e)
             await asyncio.sleep(9)
