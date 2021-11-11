@@ -34,7 +34,7 @@ export VIEWER_MEMORY_LIMIT_KB=$(echo "$TOTAL_MEMORY_KB" \* 0.7 | bc)
 # Hard code this to latest for now.
 export DOCKER_TAG="latest"
 
-docker pull balenalib/rpi-raspbian:buster
+docker pull balenalib/rpi-raspbian:bullseye
 
 for container in kbsync; do
     echo "Building $container"

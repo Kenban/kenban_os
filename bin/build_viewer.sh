@@ -27,7 +27,7 @@ if [ -n "${CLEAN_BUILD+x}" ]; then
     DOCKER_BUILD_ARGS+=("--no-cache")
 fi
 
-docker pull balenalib/rpi-raspbian:buster
+docker pull balenalib/rpi-raspbian:bullseye
 
 
 echo "Building viewer..."

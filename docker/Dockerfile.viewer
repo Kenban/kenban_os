@@ -1,4 +1,4 @@
-FROM balenalib/rpi-raspbian:buster
+FROM balenalib/rpi-raspbian:bullseye
 # This list needs to be trimmed back later
 RUN apt-get update && \
     apt-get -y install --no-install-recommends \
@@ -109,7 +109,7 @@ RUN c_rehash
 
 # QT Base from packages does not support eglfs
 ARG PI_VERSION=pi3
-ARG DEBIAN_VERSION=buster
+ARG DEBIAN_VERSION=bullseye
 ARG QT_VERSION=5.15.2
 ARG WEBVIEW_GIT_HASH=349cbe4
 ARG BASE_URL="https://github.com/Screenly/screenly-ose/releases/download/WebView-v0.2"
