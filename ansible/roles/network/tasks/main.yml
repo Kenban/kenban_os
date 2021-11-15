@@ -23,6 +23,7 @@
 - name: Activate NetworkManager
   command: systemctl enable NetworkManager
 
+
 - name: Add wifi manager service
   copy:
     src: "kenban-wifi-manager.service"
