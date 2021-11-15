@@ -1,4 +1,8 @@
-
+- name: Check NOOBS
+  command: cat /boot/config.txt
+  register: config_txt
+  tags:
+    - touches_boot_partition
 
 - name: Make sure we have proper framebuffer depth
   lineinfile:
