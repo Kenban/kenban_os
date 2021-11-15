@@ -3,13 +3,12 @@ import logging
 import os
 import random
 import string
-from lib.models import Base, engine
 from datetime import datetime, time
 from distutils.util import strtobool
 from os import getenv, utime
 from platform import machine
+from time import sleep
 from urllib.parse import urlparse
-
 
 import pytz
 import redis
@@ -155,6 +154,18 @@ def generate_perfect_paper_password(pw_length=10, has_symbols=True):
 
 def connect_to_redis():
     return redis.Redis(host='redis', port=6379, db=0)
+
+
+def wait_for_redis(retries: int, wt=0.1):
+    # Make sure the redis container has started up
+    for _ in range(0, retries):
+        r = connect_to_redis()
+        try:
+            r.ping()
+            break
+        except redis.exceptions.ConnectionError:
+            sleep(wt)
+    logging.error("Failed to wait for redis to start")
 
 
 def is_docker():

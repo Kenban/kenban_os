@@ -1,7 +1,6 @@
 import os
 from datetime import timedelta
 from os import path
-from random import randrange
 
 import redis
 from celery import Celery
@@ -13,6 +12,8 @@ from lib.models import Base, engine
 from settings import PORT, LISTEN, settings
 
 __license__ = "Dual License: GPLv2 and Commercial License"
+
+from sync import full_sync
 
 template_folder = settings["templates_folder"] or '/data/kenban_templates/'
 app = Flask(__name__, template_folder=template_folder)
@@ -34,14 +35,14 @@ celery = Celery(
 )
 
 
-@celery.on_after_configure.connect
-def setup_periodic_tasks(sender, **kwargs):
-    # todo set full sync task up properly
-    # sender.add_periodic_task(3600, full_sync.s(), name='schedule_update')
-    hour = randrange(0, 25)
-    minute = randrange(0, 61)
-    day = randrange(0, 8)
-    # sender.add_periodic_task(crontab(hour=hour, minute=minute, day_of_week=day), update_schedule.s(True), )
+
+# @celery.on_after_configure.connect
+# def setup_periodic_tasks(sender, **kwargs):
+#     # todo set full sync task up properly
+#     hour = randrange(0, 25)
+#     minute = randrange(0, 61)
+#     day = randrange(0, 8)
+#     sender.add_periodic_task(crontab(hour=hour, minute=minute, day_of_week=day), full_sync.s(), )
 
 
 @app.route('/kenban')
@@ -97,25 +98,6 @@ def connection_error():
         error = ""
     server_address = settings['server_address']
     return render_template('error.html', server_address=server_address, error=error)
-
-
-# TODO Can probably remove this once we nail down which ones we need
-def template(template_name, **context):
-    """Kenban template response generator. Shares the
-    same function signature as Flask's render_template() method
-    but also injects some global context."""
-
-    # Add global contexts
-    context['date_format'] = settings['date_format']
-    context['default_duration'] = settings['default_duration']
-    context['default_streaming_duration'] = settings['default_streaming_duration']
-    context['template_settings'] = {
-        'imports': ['from lib.utils import template_handle_unicode'],
-        'default_filters': ['template_handle_unicode'],
-    }
-    context['use_24_hour_clock'] = settings['use_24_hour_clock']
-
-    return render_template(template_name, context=context)
 
 
 if __name__ == "__main__":

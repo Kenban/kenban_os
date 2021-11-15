@@ -68,15 +68,12 @@ if __name__ == "__main__":
             wait_for_redis(50)
             r.set("wifi-status", WIFI_CONNECTED)
             logging.debug("A connection already exists")
-            sleep(10)
+            sleep(60)
             continue
         elif any(pattern_include.match(i) for i in interfaces()):
             wait_for_redis(50)
             start_wifi_connect()
-            # Wait until the connection finishes
-            # while not gateways().get('default') and filter(pattern_include.match, interfaces()):
-            #     logging.info("waiting")
-            #     sleep(.5)
+            logging.info("wifi-connect finished")
             r.set("wifi-status", WIFI_CONNECTED)
 
         else:

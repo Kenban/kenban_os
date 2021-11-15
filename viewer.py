@@ -13,11 +13,11 @@ import requests
 import sh
 
 import sync
-from authentication import register_new_client, poll_for_authentication
+from authentication import register_new_client, poll_for_authentication, get_auth_header
 from lib.errors import SigalrmException
 from lib.models import ScheduleSlot, Session
 from lib.utils import string_to_bool, connect_to_redis, \
-    get_db_mtime, WEEKDAY_DICT
+    get_db_mtime, WEEKDAY_DICT, wait_for_redis
 from network.wifi_manager import WIFI_CONNECTING, WIFI_DISCONNECTED, WIFI_CONNECTED
 from settings import settings, LISTEN, PORT
 
@@ -146,12 +146,13 @@ def view_webpage(uri: str):
 def build_schedule_slot_uri(schedule_slot: ScheduleSlot) -> str:
     hostname = f"{settings['local_address']}"
     if not schedule_slot:
-        uri = hostname + "/splash-page"  # TODO set to default screen
+        uri = hostname + "/splash-page"
+        logging.warning("build_schedule_slot_uri called when there is no active slot")
         return uri
     url_parameters = {
         "foreground_image_uuid": schedule_slot.foreground_image_uuid,
         "template_uuid": schedule_slot.template_uuid,
-        "display_text": schedule_slot.display_text,
+        "display_text": schedule_slot.display_text if schedule_slot.display_text else "",
         "time_format": schedule_slot.time_format
     }
     url_parameters = urllib.parse.urlencode(url_parameters)
@@ -185,13 +186,11 @@ def display_loop(handler: SlotHandler):
     global last_slot
     if handler.current_slot is None:
         logging.info('Playlist is empty. Sleeping for %s seconds', EMPTY_PL_DELAY)
-        # todo what do we want to show when there is no asset?
         view_image(LOAD_SCREEN)
         sleep(EMPTY_PL_DELAY)
     else:
         logging.debug(f"Current schedule slot start time: {handler.current_slot.start_time}")
         uri = build_schedule_slot_uri(handler.current_slot)
-        # todo we might still need to refresh, or find a solution to the website not loading sometimes
         if last_slot != handler.current_slot:
             view_webpage(uri)
             last_slot = handler.current_slot
@@ -236,6 +235,21 @@ def show_hotspot_page():
         wifi_status = get_wifi_status()
 
 
+def confirm_setup_completion():
+    url = settings['server_address'] + settings['setup_complete'] + "/" + settings["device_uuid"]
+    headers = get_auth_header()
+    logging.debug(f"Confirming setup completion to {url}")
+    try:
+        response = requests.post(url=url, headers=headers)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as error:
+        logging.warning("HTTP Error confirming completion:" + str(error))
+        return None
+    except ConnectionError:
+        logging.warning("Could not connect to authorisation server at {0}".format(url))
+        return None
+
+
 def wait_for_server(retries: int, wt=1):
     for _ in range(retries):
         try:
@@ -245,24 +259,15 @@ def wait_for_server(retries: int, wt=1):
             sleep(wt)
 
 
-def wait_for_wifi_status(retries: int, wt=0.5):
-    for _ in range(retries):
-        try:
-            wifi_status = r.get("wifi-status")
-            if wifi_status:
-                break
-        except requests.exceptions.ConnectionError:
-            sleep(wt)
-    logging.error(f"Failed to get wifi-status after {retries} retries")
-
-
 def get_wifi_status():
     try:
-        wifi_status = int(r.get("wifi-status"))
+        if wait_for_redis(50):
+            return int(r.get("wifi-status"))
+        else:
+            return None
     except TypeError:
         logging.error("Failed to parse wifi status")
         return None
-    return wifi_status
 
 
 def device_pair():
@@ -291,26 +296,20 @@ def device_pair():
 
 def main():
     setup()
-    # Show wifi connect screen if no wifi
-    wait_for_wifi_status(50)
 
     wifi_status = get_wifi_status()
-    if not wifi_status:
-        logging.error("Failed to parse wifi status")
-        logging.debug(r.get("wifi-status"))
-        sleep(5)
-        exit()
-
-    while wifi_status != WIFI_CONNECTED:
-        if wifi_status == WIFI_CONNECTING:
-            show_hotspot_page()
-        elif wifi_status == WIFI_DISCONNECTED:
-            logging.warning("wifi-status = Disconnected")
-            sleep(1)
-            # todo if this starts to happen, need to show an error
-        else:
-            logging.critical("Invalid wifi-status from redis: " + str(wifi_status))
-        wifi_status = get_wifi_status()
+    if wifi_status:
+        while wifi_status != WIFI_CONNECTED:
+            if wifi_status == WIFI_CONNECTING:
+                show_hotspot_page()
+            elif wifi_status == WIFI_DISCONNECTED:
+                logging.warning("wifi-status = Disconnected")
+                sleep(1)
+            else:
+                logging.critical("Invalid wifi-status from redis: " + str(wifi_status))
+            wifi_status = get_wifi_status()
+    else:
+        logging.warning("Failed to get wifi status. Continuing anyway")
 
     from settings import settings
     # Check to see if device is paired
@@ -320,6 +319,7 @@ def main():
         view_image(NEW_SETUP_SCREEN)
         sleep(10)  # Wait for the server to setup the new screen before continuing
         sync.full_sync()
+        confirm_setup_completion()
     else:
         logging.info(f"Device already paired")
         view_image(LOAD_SCREEN)
