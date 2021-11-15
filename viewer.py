@@ -8,8 +8,10 @@ from datetime import datetime
 from os import path, getenv
 from signal import signal, SIGALRM, SIGUSR1
 from time import sleep
+from network.wifi_manager import WIFI_CONNECTING, WIFI_DISCONNECTED, WIFI_CONNECTED
 
 import pydbus
+import redis
 import requests
 import sh
 from netifaces import gateways
@@ -19,7 +21,7 @@ from authentication import register_new_client, poll_for_authentication
 from lib.errors import SigalrmException
 from lib.github import is_up_to_date
 from lib.models import ScheduleSlot, Session
-from lib.utils import get_active_connections, is_balena_app, get_node_ip, string_to_bool, connect_to_redis, \
+from lib.utils import get_node_ip, string_to_bool, connect_to_redis, \
     get_db_mtime, WEEKDAY_DICT
 from settings import settings, LISTEN, PORT
 
@@ -224,43 +226,23 @@ def setup():
     browser_bus = bus.get('screenly.webview', '/Screenly')
 
 
-def setup_hotspot():
-    bus = pydbus.SessionBus()
+def show_hotspot_page():
+    ssid = r.get("ssid").decode("utf-8")
+    ssid_password = r.get("ssid-password").decode("utf-8")
+    logging.info("Displaying hotspot page")
+    logging.info(f"SSID = {ssid}")
+    logging.info(f"SSID Password = {ssid_password}")
+    url = f'http://{LISTEN}/hotspot?ssid={ssid}&ssid_password={ssid_password}'
+    wait_for_server(retries=5)
+    view_webpage(url)
 
-    pattern_include = re.compile("wlan*")
-    pattern_exclude = re.compile("Kenban-*")
+    # Stay in a loop until the wifi status changes
+    wifi_status = get_wifi_status()
+    while wifi_status == WIFI_CONNECTING:
+        sleep(1)
+        wifi_status = get_wifi_status()
 
-    wireless_connections = get_active_connections(bus)
 
-    if wireless_connections is None:
-        return
-
-    wireless_connections = [
-        c for c in wireless_connections
-        if pattern_include.search(str(c['Devices'])) and not pattern_exclude.search(str(c['Id']))
-    ]
-
-    # Displays the hotspot page
-    if not path.isfile(HOME + INITIALIZED_FILE) and not gateways().get('default'):
-        if len(wireless_connections) == 0:
-            url = 'http://{0}/hotspot'.format(LISTEN)
-            view_webpage(url)
-
-    # Wait until the network is configured
-    while not path.isfile(HOME + INITIALIZED_FILE) and not gateways().get('default'):
-        if len(wireless_connections) == 0:
-            sleep(1)
-            wireless_connections = [
-                c for c in get_active_connections(bus)
-                if pattern_include.search(str(c['Devices'])) and not pattern_exclude.search(str(c['Id']))
-            ]
-            continue
-        if wireless_connections is None:
-            sleep(1)
-            continue
-        break
-
-    wait_for_node_ip(5)
 
 
 def wait_for_node_ip(seconds):
@@ -272,7 +254,7 @@ def wait_for_node_ip(seconds):
             sleep(1)
 
 
-def wait_for_server(retries, wt=1):
+def wait_for_server(retries: int, wt=1):
     for _ in range(retries):
         try:
             requests.get('http://{0}:{1}'.format(LISTEN, PORT))
@@ -281,13 +263,33 @@ def wait_for_server(retries, wt=1):
             sleep(wt)
 
 
+def wait_for_wifi_status(retries: int, wt=0.5):
+    for _ in range(retries):
+        try:
+            wifi_status = r.get("wifi-status")
+            if wifi_status:
+                break
+        except requests.exceptions.ConnectionError:
+            sleep(wt)
+    logging.error(f"Failed to get wifi-status after {retries} retries")
+
+
+def get_wifi_status():
+    try:
+        wifi_status = int(r.get("wifi-status"))
+    except TypeError:
+        logging.error("Failed to parse wifi status")
+        return None
+    return wifi_status
+
+
 def device_pair():
     logging.info("Starting pairing")
     while True:
         device_code, verification_uri = register_new_client()
         if device_code is None:
             logging.error("Failed to register new client with server")
-            view_webpage(f"http://{LISTEN}:{PORT}/connect-error")
+            view_webpage(f"http://{LISTEN}:{PORT}/connect-error?error=No response when trying to register new device")
             sleep(10)
             continue
         else:
@@ -307,13 +309,31 @@ def device_pair():
 
 def main():
     setup()
-    wait_for_server(5)
-    if not is_balena_app():
-        setup_hotspot()
+    # Show wifi connect screen if no wifi
+    wait_for_wifi_status(50)
+
+    wifi_status = get_wifi_status()
+    if not wifi_status:
+        logging.error("Failed to parse wifi status")
+        logging.debug(r.get("wifi-status"))
+        sleep(5)
+        exit()
+
+    while wifi_status != WIFI_CONNECTED:
+        if wifi_status == WIFI_CONNECTING:
+            show_hotspot_page()
+        elif wifi_status == WIFI_DISCONNECTED:
+            logging.warning("wifi-status = Disconnected")
+            sleep(1)
+            # todo if this starts to happen, need to show an error
+        else:
+            logging.critical("Invalid wifi-status from redis: " + str(wifi_status))
+        wifi_status = get_wifi_status()
 
     from settings import settings
     # Check to see if device is paired
     if settings["refresh_token"] in [None, "None", ""]:
+        wait_for_server(retries=5)
         device_pair()
         view_image(NEW_SETUP_SCREEN)
         sleep(10)  # Wait for the server to setup the new screen before continuing
@@ -340,5 +360,3 @@ if __name__ == "__main__":
     except Exception:
         logging.exception("Viewer crashed.")
         raise
-
-# think i can delete these

@@ -122,48 +122,6 @@ def get_node_mac_address():
     return 'Unable to retrieve MAC address.'
 
 
-def get_active_connections(bus, fields=None):
-    """
-
-    :param bus: pydbus.bus.Bus
-    :param fields: list
-    :return: list
-    """
-    if not fields:
-        fields = ['Id', 'Uuid', 'Type', 'Devices']
-
-    connections = list()
-
-    try:
-        nm_proxy = bus.get("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager")
-    except:
-        logging.exception("Error getting active connections")
-        return None
-
-    nm_properties = nm_proxy["org.freedesktop.DBus.Properties"]
-    active_connections = nm_properties.Get("org.freedesktop.NetworkManager", "ActiveConnections")
-    for active_connection in active_connections:
-        active_connection_proxy = bus.get("org.freedesktop.NetworkManager", active_connection)
-        active_connection_properties = active_connection_proxy["org.freedesktop.DBus.Properties"]
-
-        connection = dict()
-        for field in fields:
-            field_value = active_connection_properties.Get("org.freedesktop.NetworkManager.Connection.Active", field)
-
-            if field == 'Devices':
-                devices = list()
-                for device_path in field_value:
-                    device_proxy = bus.get("org.freedesktop.NetworkManager", device_path)
-                    device_properties = device_proxy["org.freedesktop.DBus.Properties"]
-                    devices.append(device_properties.Get("org.freedesktop.NetworkManager.Device", "Interface"))
-                field_value = devices
-
-            connection.update({field: field_value})
-        connections.append(connection)
-
-    return connections
-
-
 def remove_connection(bus, uuid):
     """
 

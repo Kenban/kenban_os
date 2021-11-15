@@ -84,11 +84,10 @@
     regexp: '^MountFlags='
     line: 'MountFlags=shared'
 
-- name: Copy kenban systemd units
+- name: Create udev-restart service
   copy:
-    src: "{{ item }}"
-    dest: "/etc/systemd/system/{{ item }}"
-  with_items: "{{ kenban_systemd_units }}"
+    src: "udev-restart.service"
+    dest: "/etc/systemd/system/udev-restart.service"
 
 - name: Remove plymouth-quit-wait.service
   file:
@@ -104,23 +103,3 @@
   command: systemctl enable {{ item }} chdir=/etc/systemd/system
   with_items: "{{ kenban_systemd_units }}"
 
-- name: Check if deprecated systemd services exists
-  stat:
-    path: /etc/systemd/system/X.service
-  register: x_service
-
-- set_fact: x_service_exist="{{x_service.stat.exists}}"
-
-- name: Disable deprecated systemd services
-  systemd:
-    name: "{{ item }}"
-    state: stopped
-    enabled: no
-  with_items: "{{ deprecated_kenban_systemd_units }}"
-  when: x_service_exist
-
-- name: Remove deprecated systemd units
-  file:
-    path: "/etc/systemd/system/{{ item }}"
-    state: absent
-  with_items: "{{ deprecated_kenban_systemd_units }}"

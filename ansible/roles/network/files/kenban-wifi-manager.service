@@ -1,0 +1,16 @@
+[Unit]
+Description=Starts Balena Wifi Connect when wifi drops
+Wants=NetworkManager.service
+After=NetworkManager.service
+
+[Service]
+WorkingDirectory=/home/pi/kenban
+User=root
+Type=simple
+Restart=always
+RestartSec=1
+
+ExecStart=/usr/bin/python /home/pi/kenban/network/wifi_manager.py
+
+[Install]
+WantedBy=multi-user.target

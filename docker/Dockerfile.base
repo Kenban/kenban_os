@@ -2,6 +2,7 @@ FROM balenalib/rpi-raspbian:buster
 
 RUN apt-get update && \
     apt-get -y install --no-install-recommends \
+        vim \
         build-essential \
         cec-utils \
         curl \

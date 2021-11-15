@@ -154,4 +154,6 @@ WORKDIR /usr/src/app
 RUN mkdir -p /usr/src/app
 COPY . /usr/src/app/
 
+# Temporary for testing
+#ENTRYPOINT ["tail", "-f", "/dev/null"]
 CMD ["bash", "./bin/start_viewer.sh"]

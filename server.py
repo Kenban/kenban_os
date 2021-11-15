@@ -72,6 +72,13 @@ def kenban_display():
                            foreground_image_uuid=foreground_image_uuid)
 
 
+@app.route('/hotspot')
+def hotspot():
+    ssid = request.args['ssid']
+    ssid_password = request.args['ssid_password']
+    return render_template('hotspot.html', ssid=ssid, ssid_password=ssid_password)
+
+
 @app.route('/pair')
 def pair():
     pair_code = request.args['user_code']
@@ -88,7 +95,11 @@ def splash_page():
 
 @app.route('/connect-error')
 def connection_error():
-    return "Error connecting to Kenban server"
+    error = request.args['user_code']
+    if not error:
+        error = ""
+    server_address = settings['server_address']
+    return "Error connecting to "
 
 
 # TODO Can probably remove this once we nail down which ones we need
