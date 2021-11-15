@@ -15,9 +15,15 @@ if grep -qF "Raspberry Pi 4" /proc/device-tree/model; then
     export DEVICE_TYPE="pi4"
 elif grep -qF "Raspberry Pi 3" /proc/device-tree/model; then
     export DEVICE_TYPE="pi3"
+elif grep -qF "Raspberry Pi 2" /proc/device-tree/model; then
+    export DEVICE_TYPE="pi2"
 else
-    echo "Unknown device"
-
+    # This should not be used as an else statement but
+    # let's leave in there for now.
+    export DEVICE_TYPE="pi1"
 fi
+
+
+sudo -E docker-compose /home/pi/kenban/docker-compose.yml pull
 
 sudo -E docker-compose -f /home/pi/kenban/docker-compose.yml up -d

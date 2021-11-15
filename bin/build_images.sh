@@ -41,7 +41,7 @@ for image in base server celery redis nginx kbsync; do
         --build-arg "GIT_SHORT_HASH=$GIT_SHORT_HASH" \
         --build-arg "GIT_BRANCH=$GIT_BRANCH" \
         -f "docker/Dockerfile.$image" \
-        -t "kenban/$image:$DOCKER_TAG" .
+        -t "kenban/$image-kos:$DOCKER_TAG" .
 
     # Push if the push flag is set and not cross compiling
     if [[ ( -n "${PUSH+x}" && -z "${CROSS_COMPILE+x}" ) ]]; then
@@ -51,7 +51,7 @@ for image in base server celery redis nginx kbsync; do
 done
 
 echo "Building viewer for different architectures..."
-for pi_version in pi4 pi3 pi2 pi1; do
+for pi_version in pi4 pi3; do
     echo "Building viewer image for $pi_version"
     docker "${DOCKER_BUILD_ARGS[@]}" \
         --build-arg "PI_VERSION=$pi_version" \
