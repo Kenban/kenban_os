@@ -39,7 +39,7 @@ void View::loadImage(const QString &preUri)
         QUrl url;
         url.setScheme("http");
         // url.setHost(qgetenv("LISTEN"));
-        url.setHost("kb-os-nginx");
+        url.setHost("nginx");
         url.setPath("/" + fileInfo.fileName());
 
         src = url.toString();

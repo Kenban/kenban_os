@@ -2,32 +2,29 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import re
 import urllib.parse
 from datetime import datetime
-from os import path, getenv
+from os import getenv
 from signal import signal, SIGALRM, SIGUSR1
 from time import sleep
-from network.wifi_manager import WIFI_CONNECTING, WIFI_DISCONNECTED, WIFI_CONNECTED
 
 import pydbus
-import redis
 import requests
 import sh
-from netifaces import gateways
 
 import sync
 from authentication import register_new_client, poll_for_authentication
 from lib.errors import SigalrmException
-from lib.github import is_up_to_date
 from lib.models import ScheduleSlot, Session
-from lib.utils import get_node_ip, string_to_bool, connect_to_redis, \
+from lib.utils import string_to_bool, connect_to_redis, \
     get_db_mtime, WEEKDAY_DICT
+from network.wifi_manager import WIFI_CONNECTING, WIFI_DISCONNECTED, WIFI_CONNECTED
 from settings import settings, LISTEN, PORT
 
 __license__ = "Dual License: GPLv2 and Commercial License"
 
 EMPTY_PL_DELAY = 5  # secs
+SCREEN_TICK_DELAY = 1  # secs
 
 INITIALIZED_FILE = '/.kenban/initialized'
 WATCHDOG_PATH = '/tmp/screenly.watchdog'
@@ -186,10 +183,6 @@ def load_settings():
 
 def display_loop(handler: SlotHandler):
     global last_slot
-    # Check for software updates
-    disable_update_check = getenv("DISABLE_UPDATE_CHECK", False)
-    if not disable_update_check:
-        is_up_to_date()
     if handler.current_slot is None:
         logging.info('Playlist is empty. Sleeping for %s seconds', EMPTY_PL_DELAY)
         # todo what do we want to show when there is no asset?
@@ -209,7 +202,7 @@ def display_loop(handler: SlotHandler):
     if get_db_mtime() > handler.last_update_db_mtime:
         handler.update_slots_from_db()
     handler.tick()
-
+    sleep(SCREEN_TICK_DELAY)
 
 
 def setup():
@@ -241,17 +234,6 @@ def show_hotspot_page():
     while wifi_status == WIFI_CONNECTING:
         sleep(1)
         wifi_status = get_wifi_status()
-
-
-
-
-def wait_for_node_ip(seconds):
-    for _ in range(seconds):
-        try:
-            get_node_ip()
-            break
-        except Exception:
-            sleep(1)
 
 
 def wait_for_server(retries: int, wt=1):

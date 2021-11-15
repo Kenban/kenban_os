@@ -4,7 +4,6 @@
 # -*- sh-basic-offset: 4 -*-
 
 # Export various environment variables
-export MY_IP=$(ip -4 route get 8.8.8.8 | awk {'print $7'} | tr -d '\n')
 TOTAL_MEMORY_KB=$(grep MemTotal /proc/meminfo | awk {'print $2'})
 export VIEWER_MEMORY_LIMIT_KB=$(echo "$TOTAL_MEMORY_KB" \* 0.7 | bc)
 
@@ -24,12 +23,14 @@ else
     export DEVICE_TYPE="pi1"
 fi
 
-sudo -E docker-compose \
+if [ -n "${PULL+x}" ]; then
+    echo "Pulling images from dockerhub"
+    sudo -E docker-compose \
     -f /home/pi/kenban/docker-compose.yml \
-    -f /home/pi/kenban/docker-compose.override.yml \
     pull
+fi
+
 
 sudo -E docker-compose \
     -f /home/pi/kenban/docker-compose.yml \
-    -f /home/pi/kenban/docker-compose.override.yml \
     up -d

@@ -13,7 +13,7 @@ CONFIG_FILE = 'kenban.conf'
 DEFAULTS = {
     'main': {
         'server_address': 'https://kenban.co.uk',
-        'local_address': 'http://kb-os-nginx',
+        'local_address': 'http://nginx',
         'websocket_updates_address': 'ws://kenban.co.uk/api/v1/screen/subscribe/',
         'device_uuid': None,
         'last_update': None,

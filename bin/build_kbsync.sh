@@ -43,7 +43,7 @@ for container in kbsync; do
         --build-arg "GIT_SHORT_HASH=$GIT_SHORT_HASH" \
         --build-arg "GIT_BRANCH=$GIT_BRANCH" \
         -f "docker/Dockerfile.$container" \
-        -t "kenban/kb-os-$container:$DOCKER_TAG" .
+        -t "kenban/$container-kos:$DOCKER_TAG" .
 done
 
 

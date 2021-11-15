@@ -1,4 +1,4 @@
-FROM kenban/kb-os-base
+FROM kenban/base-kos
 
 ADD requirements/requirements.kbsync.txt /tmp/requirements.txt
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt

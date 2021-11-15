@@ -39,11 +39,11 @@ for pi_version in pi4; do
         --build-arg "GIT_SHORT_HASH=$GIT_SHORT_HASH" \
         --build-arg "GIT_BRANCH=$GIT_BRANCH" \
         -f docker/Dockerfile.viewer \
-        -t "kenban/kb-os-viewer:$DOCKER_TAG-$pi_version" .
+        -t "kenban/viewer-kos:$DOCKER_TAG-$pi_version" .
 
     # Push if the push flag is set and not cross compiling
     if [[ ( -n "${PUSH+x}" && -z "${CROSS_COMPILE+x}" ) ]]; then
-        docker push "kenban/kb-os-viewer:$DOCKER_TAG-$pi_version"
-        docker push "kenban/kb-os-viewer:$DOCKER_TAG-latest"
+        docker push "kenban/viewer-kos:$DOCKER_TAG-$pi_version"
+        docker push "kenban/viewer-kos:$DOCKER_TAG-latest"
     fi
 done

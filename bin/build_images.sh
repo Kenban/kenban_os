@@ -16,7 +16,7 @@ else
 fi
 
 if [[ ( -n "${PUSH+x}" && -z "${CROSS_COMPILE+x}" ) ]]; then
-        echo "Will push containers when built"
+        echo "Will push images when built"
 fi
 
 if [ -n "${CROSS_COMPILE+x}" ]; then
@@ -34,37 +34,37 @@ fi
 
 docker pull balenalib/rpi-raspbian:buster
 
-for container in base server celery redis nginx kbsync; do
-    echo "Building $container"
+for image in base server celery redis nginx kbsync; do
+    echo "Building $image"
     docker "${DOCKER_BUILD_ARGS[@]}" \
         --build-arg "GIT_HASH=$GIT_HASH" \
         --build-arg "GIT_SHORT_HASH=$GIT_SHORT_HASH" \
         --build-arg "GIT_BRANCH=$GIT_BRANCH" \
-        -f "docker/Dockerfile.$container" \
-        -t "kenban/kb-os-$container:$DOCKER_TAG" .
+        -f "docker/Dockerfile.$image" \
+        -t "kenban/$image:$DOCKER_TAG" .
 
     # Push if the push flag is set and not cross compiling
     if [[ ( -n "${PUSH+x}" && -z "${CROSS_COMPILE+x}" ) ]]; then
-        docker push "kenban/kb-os-$container:$DOCKER_TAG"
-        docker push "kenban/kb-os-$container:latest"
+        docker push "kenban/$image-kos:$DOCKER_TAG"
+        docker push "kenban/$image-kos:latest"
     fi
 done
 
 echo "Building viewer for different architectures..."
 for pi_version in pi4 pi3 pi2 pi1; do
-    echo "Building viewer container for $pi_version"
+    echo "Building viewer image for $pi_version"
     docker "${DOCKER_BUILD_ARGS[@]}" \
         --build-arg "PI_VERSION=$pi_version" \
         --build-arg "GIT_HASH=$GIT_HASH" \
         --build-arg "GIT_SHORT_HASH=$GIT_SHORT_HASH" \
         --build-arg "GIT_BRANCH=$GIT_BRANCH" \
         -f docker/Dockerfile.viewer \
-        -t "kenban/kb-os-viewer:$DOCKER_TAG-$pi_version" .
+        -t "kenban/viewer-kos:$DOCKER_TAG-$pi_version" .
 
     # Push if the push flag is set and not cross compiling
     if [[ ( -n "${PUSH+x}" && -z "${CROSS_COMPILE+x}" ) ]]; then
-        docker push "kenban/kb-os-viewer:$DOCKER_TAG-$pi_version"
-        docker push "kenban/kb-os-viewer:$DOCKER_TAG-latest"
+        docker push "kenban/viewer-kos:$DOCKER_TAG-$pi_version"
+        docker push "kenban/viewer-kos:$DOCKER_TAG-latest"
     fi
 done
 

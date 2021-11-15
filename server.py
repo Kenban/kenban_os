@@ -10,7 +10,6 @@ from flask_cors import CORS
 from gunicorn.app.base import Application
 
 from lib.models import Base, engine
-from lib.utils import get_node_ip
 from settings import PORT, LISTEN, settings
 
 __license__ = "Dual License: GPLv2 and Commercial License"
@@ -34,11 +33,6 @@ celery = Celery(
     result_expires=CELERY_TASK_RESULT_EXPIRES
 )
 
-try:
-    my_ip = get_node_ip()
-except Exception:
-    pass
-
 
 @celery.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
@@ -57,10 +51,12 @@ def kenban_display():
     foreground_image_uuid = request.args.get('foreground_image_uuid')
     template_uuid = request.args.get('template_uuid')
 
+    banner_message = r.get("display-banner")
+
     if not display_text:
-        return "Could not get display_text"
+        display_text = ""
     if not foreground_image_uuid:
-        return "Could not get foreground_image_uuid"
+        foreground_image_uuid = ""
     if not template_uuid:
         return "Could not get template_uuid"
 
@@ -69,7 +65,8 @@ def kenban_display():
     return render_template(template_filename,
                            image_folder_address=image_folder_address,
                            display_text=display_text,
-                           foreground_image_uuid=foreground_image_uuid)
+                           foreground_image_uuid=foreground_image_uuid,
+                           banner_message=banner_message)
 
 
 @app.route('/hotspot')
@@ -95,11 +92,11 @@ def splash_page():
 
 @app.route('/connect-error')
 def connection_error():
-    error = request.args['user_code']
+    error = request.args['error']
     if not error:
         error = ""
     server_address = settings['server_address']
-    return "Error connecting to "
+    return render_template('error.html', server_address=server_address, error=error)
 
 
 # TODO Can probably remove this once we nail down which ones we need

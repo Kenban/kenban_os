@@ -74,33 +74,6 @@ def validate_url(string):
     return bool(checker.scheme in ('http', 'https', 'rtsp', 'rtmp') and checker.netloc)
 
 
-def get_node_ip():
-    """
-    Returns the node's IP address.
-    We're using an API call to the supervisor for this on Balena
-    and an environment variable set by `install.sh` for other environments.
-    The reason for this is because we can't retrieve the host IP from within Docker.
-    """
-
-    if is_balena_app():
-        balena_supervisor_address = os.getenv('BALENA_SUPERVISOR_ADDRESS')
-        balena_supervisor_api_key = os.getenv('BALENA_SUPERVISOR_API_KEY')
-        headers = {'Content-Type': 'application/json'}
-
-        r = requests.get('{}/v1/device?apikey={}'.format(
-            balena_supervisor_address,
-            balena_supervisor_api_key
-        ), headers=headers)
-
-        if r.ok:
-            return r.json()['ip_address']
-        return 'Unknown'
-    elif os.getenv('MY_IP'):
-        return os.getenv('MY_IP')
-
-    return 'Unable to retrieve IP.'
-
-
 def get_node_mac_address():
     """
     Returns the MAC address.
@@ -182,6 +155,7 @@ def generate_perfect_paper_password(pw_length=10, has_symbols=True):
 
 def connect_to_redis():
     return redis.Redis(host='redis', port=6379, db=0)
+
 
 def is_docker():
     return os.path.isfile('/.dockerenv')

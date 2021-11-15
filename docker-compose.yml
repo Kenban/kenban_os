@@ -1,7 +1,7 @@
 version: "2"
 services:
-  kb-os-server:
-    image: kenban/kb-os-server
+  server:
+    image: kenban/server-kos
     build:
       context: .
       dockerfile: docker/Dockerfile.server
@@ -14,34 +14,41 @@ services:
       - "/dev/vchiq:/dev/vchiq"
     restart: always
     volumes:
-      - resin-data:/data
+      - kenban-data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     labels:
       io.balena.features.supervisor-api: '1'
 
-  kb-os-viewer:
-    image: kenban/kb-os-viewer
+  viewer:
+    image: kenban/viewer-kos
     build:
       context: .
       dockerfile: docker/Dockerfile.viewer
+    mem_limit: ${VIEWER_MEMORY_LIMIT_KB}k
+    shm_size: '1gb'
     depends_on:
-      - kb-os-server
+      - server
     environment:
+      - WEBVIEW_DEBUG=true
       - HOME=/data
       - PORT=80
       - NOREFRESH=1
-      - LISTEN=kb-os-nginx
+      - LISTEN=nginx
     privileged: true
     restart: always
     volumes:
-      - resin-data:/data
+      - kenban-data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
 
-  kb-os-celery:
-    image: kenban/kb-os-celery
+  celery:
+    image: kenban/celery-kos
     build:
       context: .
       dockerfile: docker/Dockerfile.celery
     depends_on:
-      - kb-os-server
+      - server
       - redis
     environment:
       - HOME=/data
@@ -51,10 +58,12 @@ services:
       - "/dev/vchiq:/dev/vchiq"
     restart: always
     volumes:
-      - resin-data:/data
+      - kenban-data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
 
   redis:
-    image: kenban/kb-os-redis
+    image: kenban/redis-kos
     build:
       context: .
       dockerfile: docker/Dockerfile.redis
@@ -64,32 +73,36 @@ services:
     volumes:
       - redis-data:/var/lib/redis
 
-  kb-os-nginx:
-    image: kenban/kb-os-nginx
+  nginx:
+    image: kenban/nginx-kos
     build:
       context: .
       dockerfile: docker/Dockerfile.nginx
     environment:
       - HOME=/data
     depends_on:
-      - kb-os-server
+      - server
     restart: always
     volumes:
-      - resin-data:/data:ro
+      - kenban-data:/data:ro
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
 
-  kb-os-kbsync:
-    image: kenban/kb-os-kbsync
+  kbsync:
+    image: kenban/kbsync-kos
     build:
       context: .
       dockerfile: docker/Dockerfile.kbsync
     environment:
       - HOME=/data
     depends_on:
-      - kb-os-server
+      - server
     restart: always
     volumes:
-      - resin-data:/data
+      - kenban-data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
 
 volumes:
-    resin-data:
+    kenban-data:
     redis-data:
