@@ -3,7 +3,6 @@
   user: pi
   become: yes
   vars:
-    manage_network: "{{ lookup('env', 'MANAGE_NETWORK') }}"
     docker_tag: "{{ lookup('env', 'DOCKER_TAG') }}"
     device_type: "{{ lookup('env', 'DEVICE_TYPE') }}"
 
@@ -12,4 +11,3 @@
     - kenban
     - network
     - splashscreen
-    - tools

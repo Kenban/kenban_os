@@ -5,7 +5,6 @@
 
 WEB_UPGRADE=false
 BRANCH_VERSION=
-MANAGE_NETWORK=
 UPGRADE_SYSTEM=
 
 if [ -f .env ]; then
@@ -20,9 +19,7 @@ clear
 export DOCKER_TAG="latest"
 BRANCH="master"
 
-echo && read -p "Do you want Kenban OS to manage your network? This is recommended for most users because this adds features to manage your network. (Y/n)" -n 1 -r -s NETWORK && echo
-
-echo && read -p "Would you like to perform a full system upgrade as well? (y/N)" -n 1 -r -s UPGRADE && echo
+echo && read -p "Would you like to perform a full system upgrade? (y/N)" -n 1 -r -s UPGRADE && echo
 if [ "$UPGRADE" != 'y' ]; then
   EXTRA_ARGS=("--skip-tags" "system-upgrade")
 fi
@@ -51,13 +48,6 @@ sudo apt-get install -y --no-install-recommends \
   python3-setuptools \
   python3-wheel \
   whois
-
-if [ "$NETWORK" == 'y' ]; then
-  export MANAGE_NETWORK=true
-  sudo apt-get install -y network-manager
-else
-  export MANAGE_NETWORK=false
-fi
 
 # Install Ansible from requirements file.
 if [ "$BRANCH" = "master" ]; then
