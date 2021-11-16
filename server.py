@@ -34,8 +34,6 @@ celery = Celery(
     result_expires=CELERY_TASK_RESULT_EXPIRES
 )
 
-
-
 # @celery.on_after_configure.connect
 # def setup_periodic_tasks(sender, **kwargs):
 #     # todo set full sync task up properly
@@ -48,16 +46,14 @@ celery = Celery(
 @app.route('/kenban')
 def kenban_display():
     """ The main display to show. Creates the display from url params"""
-    display_text = request.args.get('display_text')
-    foreground_image_uuid = request.args.get('foreground_image_uuid')
     template_uuid = request.args.get('template_uuid')
+    display_text = request.args.get('display_text', default="")
+    foreground_image_uuid = request.args.get('foreground_image_uuid', default="")
+    event_text = request.args.get('event_text', default="")
+    event_image_uuid = request.args.get('event_image_uuid', default="")
 
     banner_message = r.get("display-banner")
 
-    if not display_text:
-        display_text = ""
-    if not foreground_image_uuid:
-        foreground_image_uuid = ""
     if not template_uuid:
         return "Could not get template_uuid"
 
@@ -67,6 +63,8 @@ def kenban_display():
                            image_folder_address=image_folder_address,
                            display_text=display_text,
                            foreground_image_uuid=foreground_image_uuid,
+                           event_text=event_text,
+                           event_image_uuid=event_image_uuid,
                            banner_message=banner_message)
 
 

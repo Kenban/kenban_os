@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, String, Time, DateTime
+from sqlalchemy import create_engine, Column, String, Time, DateTime, Boolean
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from settings import settings
@@ -23,10 +23,8 @@ class ScheduleSlot(Base):
 class Event(Base):
     __tablename__ = "event"
     uuid = Column(String, primary_key=True)
-    template_uuid = Column(String)
     foreground_image_uuid = Column(String)
     display_text = Column(String)
-    time_format = Column(String)
-    start_time = Column(DateTime)
-    end_time = Column(DateTime)
-    weekday = Column(String)
+    event_start = Column(DateTime)
+    event_end = Column(DateTime)
+    override = Column(Boolean)

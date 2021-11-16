@@ -3,10 +3,11 @@
 
 import logging
 import urllib.parse
-from datetime import datetime
+from datetime import datetime, timedelta
 from os import getenv
 from signal import signal, SIGALRM, SIGUSR1
 from time import sleep
+from typing import List
 
 import pydbus
 import requests
@@ -15,7 +16,7 @@ import sh
 import sync
 from authentication import register_new_client, poll_for_authentication, get_auth_header
 from lib.errors import SigalrmException
-from lib.models import ScheduleSlot, Session
+from lib.models import ScheduleSlot, Session, Event
 from lib.utils import string_to_bool, connect_to_redis, \
     get_db_mtime, WEEKDAY_DICT, wait_for_redis
 from network.wifi_manager import WIFI_CONNECTING, WIFI_DISCONNECTED, WIFI_CONNECTED
@@ -60,14 +61,20 @@ def sigusr1(signum, frame):
 
 class SlotHandler(object):
     def __init__(self):
-        self.slots = []
         self.last_update_db_mtime = None
-        self.update_slots_from_db()
-        self.sort_slots()
+        self.slots: List[ScheduleSlot] = []
         self.current_slot = None
         self.current_slot_index = None
         self.next_slot = None
+        self.events: List[Event] = []
+        self.event_active = False
+        self.active_events: List[Event] = []
+        self.daily_events: List[Event] = []
+        self.daily_events_date = None  # To check if events have been collected today
+        self.update_assets_from_db()
         self.calculate_current_slot()
+        self.calculate_daily_events()
+        self.calculate_current_events()
 
     def set_current_slot(self, slot):
         if not slot:
@@ -90,12 +97,17 @@ class SlotHandler(object):
 
     def tick(self):
         """ Check if it's time for the next slot in the order, and switch if so"""
+        logging.debug("viewer tick")
         if not self.next_slot:
             logging.info("No next slot set")
-            return
         if WEEKDAY_DICT[self.next_slot.weekday] == datetime.now().weekday() and \
                 datetime.now().time() > self.next_slot.start_time:
             self.set_current_slot(self.next_slot)
+
+        if self.daily_events_date != datetime.now().date():
+            self.calculate_daily_events()
+
+        self.calculate_current_events()
 
     def calculate_current_slot(self):
         """ Return the slot that should currently be active according to times """
@@ -108,19 +120,52 @@ class SlotHandler(object):
         else:
             self.set_current_slot(max(eligible_slots, key=lambda s: s.start_time))
 
-    def update_slots_from_db(self):
+    def calculate_daily_events(self):
+        """ Get events that will occur today (to avoid sorting through all events every tick) """
+        logging.debug("calculating daily events all events:")  # todo
+        logging.debug(self.events)  # todo
+        today = datetime.now()
+        # Add a couple hours buffer either way, it wont hurt and it will stop unexpected dst shenanigans
+        day_start = datetime(year=today.year, month=today.month, day=today.day) - timedelta(2)
+        day_end = datetime(year=today.year, month=today.month, day=today.day, hour=23) + timedelta(3)
+        self.daily_events = [e for e in self.events
+                        if (e.event_start < day_start > e.event_end)  # Starts before the day but ends during/after day
+                        or (day_start < e.event_start < day_end)]  # Starts during the day
+        self.daily_events_date = today.date()
+        logging.debug("daily events:")  # todo
+        logging.debug(self.daily_events)  # todo
+
+    def calculate_current_events(self):
+        logging.debug("calculating current events all events:")  # todo
+        logging.debug(self.events)  # todo
+        self.active_events = [e for e in self.daily_events if e.event_start < datetime.now() < e.event_end]
+        logging.debug("current events:")  # todo
+        logging.debug(self.active_events)  # todo
+        if len(self.active_events) > 0:
+            self.event_active = True
+        else:
+            self.event_active = False
+
+    def update_assets_from_db(self):
         """ Load the slots from the database into the scheduler """
         self.last_update_db_mtime = get_db_mtime()
         session = Session()
         new_slots = session.query(ScheduleSlot).all()
+        new_events = session.query(Event).all()
         session.close()
-        if new_slots == self.slots:
+        if new_slots == self.slots and new_events == self.events:
             # If nothing changed, do nothing
             return
         self.slots = new_slots
         self.sort_slots()
         self.calculate_current_slot()
-        logging.debug("New schedule slots loaded into SlotHandler")
+        logging.debug("loading all events from db, new events:")  # todo
+        logging.debug(new_events)  # todo
+        for e in new_events:
+            if e.event_end < datetime.now():
+                new_events.remove(e)
+        self.events = new_events
+        logging.debug("New assets loaded into SlotHandler")
 
 
 def load_browser():
@@ -143,18 +188,23 @@ def view_webpage(uri: str):
     logging.info('Current url is {0}'.format(current_browser_url))
 
 
-def build_schedule_slot_uri(schedule_slot: ScheduleSlot) -> str:
+def build_schedule_slot_uri(schedule_slot: ScheduleSlot, event=None) -> str:
+    logging.debug(event)#todo
     hostname = f"{settings['local_address']}"
     if not schedule_slot:
         uri = hostname + "/splash-page"
-        logging.warning("build_schedule_slot_uri called when there is no active slot")
+        logging.warning("build_schedule_slot_uri called with no active slot")
         return uri
     url_parameters = {
         "foreground_image_uuid": schedule_slot.foreground_image_uuid,
         "template_uuid": schedule_slot.template_uuid,
         "display_text": schedule_slot.display_text if schedule_slot.display_text else "",
-        "time_format": schedule_slot.time_format
+        "time_format": schedule_slot.time_format,
     }
+    if event:
+        url_parameters["event_text"] = event.display_text if event.display_text else ""
+        url_parameters["event_image_uuid"] = event.foreground_image_uuid
+
     url_parameters = urllib.parse.urlencode(url_parameters)
     uri = hostname + "/kenban?" + url_parameters
     return uri
@@ -190,7 +240,10 @@ def display_loop(handler: SlotHandler):
         sleep(EMPTY_PL_DELAY)
     else:
         logging.debug(f"Current schedule slot start time: {handler.current_slot.start_time}")
-        uri = build_schedule_slot_uri(handler.current_slot)
+        event = None
+        if handler.event_active:
+            event = handler.active_events[0]  # Just get the first event for now, maybe change this later
+        uri = build_schedule_slot_uri(handler.current_slot, event)
         if last_slot != handler.current_slot:
             view_webpage(uri)
             last_slot = handler.current_slot
@@ -199,7 +252,7 @@ def display_loop(handler: SlotHandler):
         sleep(refresh_duration)
 
     if get_db_mtime() > handler.last_update_db_mtime:
-        handler.update_slots_from_db()
+        handler.update_assets_from_db()
     handler.tick()
     sleep(SCREEN_TICK_DELAY)
 

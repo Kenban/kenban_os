@@ -4,11 +4,11 @@ import logging
 
 import requests
 from requests.exceptions import ConnectionError
+from dateutil.parser import parse
 
 from authentication import get_auth_header
 from lib.db_helper import save_schedule_slot
-from lib.models import Session, ScheduleSlot, Event
-from lib.utils import time_parser
+from lib.models import Session, Event
 from settings import settings
 
 
@@ -68,8 +68,8 @@ def sync_events():
             db_event.uuid = event["uuid"]
             db_event.foreground_image_uuid = event["foreground_image_uuid"]
             db_event.display_text = event["display_text"]
-            db_event.event_start = event["event_start"]
-            db_event.event_end = event["event_end"]
+            db_event.event_start = parse(event["event_start"])
+            db_event.event_end = parse(event["event_end"])
             db_event.override = event["override"]
             session.commit()
 

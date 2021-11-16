@@ -6,6 +6,7 @@ import websockets
 import socket
 from websockets.exceptions import WebSocketException
 
+import sync
 from lib.db_helper import save_schedule_slot
 from lib.models import Session
 from settings import settings
@@ -16,7 +17,7 @@ async def subscribe_to_updates():
     while True:
         # Don't try and open a websocket if we don't have a device uuid yet
         if settings["device_uuid"] in [None, "None", ""]:
-            await asyncio.sleep(30)
+            await asyncio.sleep(5)
             continue
         url = settings["websocket_updates_address"] + settings["device_uuid"]
         # outer loop restarted every time the connection fails
@@ -68,4 +69,5 @@ def message_handler(msg):
 
 
 if __name__ == "__main__":
+    sync.full_sync()
     asyncio.run(subscribe_to_updates())

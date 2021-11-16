@@ -30,7 +30,7 @@ services:
     depends_on:
       - server
     environment:
-      - WEBVIEW_DEBUG=true
+      #- WEBVIEW_DEBUG=true
       - HOME=/data
       - PORT=80
       - NOREFRESH=1
@@ -104,5 +104,5 @@ services:
       - /etc/localtime:/etc/localtime:ro
 
 volumes:
-    kenban-data:
-    redis-data:
+  kenban-data:
+  redis-data:
