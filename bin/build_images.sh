@@ -34,7 +34,7 @@ fi
 
 docker pull balenalib/rpi-raspbian:buster
 
-for image in base server celery redis nginx kbsync; do
+for image in base server celery redis nginx websocket; do
     echo "Building $image"
     docker "${DOCKER_BUILD_ARGS[@]}" \
         --build-arg "GIT_HASH=$GIT_HASH" \

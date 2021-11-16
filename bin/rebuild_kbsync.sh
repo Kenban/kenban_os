@@ -27,25 +27,25 @@ if [ -n "${CLEAN_BUILD+x}" ]; then
     DOCKER_BUILD_ARGS+=("--no-cache")
 fi
 
-echo "Removing kenban_kbsync_1"
-docker stop kenban_kbsync_1
-docker rm kenban_kbsync_1
+echo "Removing kenban_websocket_1"
+docker stop kenban_websocket_1
+docker rm kenban_websocket_1
 #docker image rm kenban/server-kos:$DOCKER_TAG
 
 docker pull balenalib/rpi-raspbian:buster
 
-echo "Building kbsync"
+echo "Building websocket"
 docker "${DOCKER_BUILD_ARGS[@]}" \
     --build-arg "GIT_HASH=$GIT_HASH" \
     --build-arg "GIT_SHORT_HASH=$GIT_SHORT_HASH" \
     --build-arg "GIT_BRANCH=$GIT_BRANCH" \
-    -f "docker/Dockerfile.kbsync" \
-    -t "kenban/kbsync-kos:$DOCKER_TAG" .
+    -f "docker/Dockerfile.websocket" \
+    -t "kenban/websocket-kos:$DOCKER_TAG" .
 
 # Push if the push flag is set and not cross compiling
 if [[ ( -n "${PUSH+x}" && -z "${CROSS_COMPILE+x}" ) ]]; then
-    docker push "kenban/kbsync-kos:$DOCKER_TAG"
-    docker push "kenban/kbsync-kos:latest"
+    docker push "kenban/websocket-kos:$DOCKER_TAG"
+    docker push "kenban/websocket-kos:latest"
 fi
 
 bash ./bin/upgrade_containers.sh

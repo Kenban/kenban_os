@@ -88,11 +88,11 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
-  kbsync:
-    image: kenban/kbsync-kos
+  websocket:
+    image: kenban/websocket-kos
     build:
       context: .
-      dockerfile: docker/Dockerfile.kbsync
+      dockerfile: docker/Dockerfile.websocket
     environment:
       - HOME=/data
     depends_on:

@@ -1,9 +1,13 @@
 import os
 import json
 import logging
+from datetime import timedelta
+from random import randrange
 
 import requests
+from celery.schedules import crontab
 from requests.exceptions import ConnectionError
+from celery import Celery
 from dateutil.parser import parse
 
 from authentication import get_auth_header
@@ -12,6 +16,29 @@ from lib.models import Session, Event
 from settings import settings
 
 
+HOME = os.getenv('HOME', '/home/pi')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_TASK_RESULT_EXPIRES = timedelta(hours=6)
+
+celery = Celery(
+    "websocket",
+    backend=CELERY_RESULT_BACKEND,
+    broker=CELERY_BROKER_URL,
+    result_expires=CELERY_TASK_RESULT_EXPIRES
+)
+
+
+@celery.on_after_configure.connect
+def setup_periodic_tasks(sender, **kwargs):
+    # todo set full sync task up properly
+    hour = randrange(0, 25)
+    minute = randrange(0, 61)
+    day = randrange(0, 8)
+    sender.add_periodic_task(crontab(hour=hour, minute=minute, day_of_week=day), full_sync.s(), )
+
+
+@celery.task
 def full_sync():
     sync_images()
     sync_templates()

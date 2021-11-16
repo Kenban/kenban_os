@@ -1,11 +1,8 @@
 import os
-from datetime import timedelta
 from os import path
 
 import redis
-from celery import Celery
 from flask import Flask, request, render_template
-from flask_cors import CORS
 from gunicorn.app.base import Application
 
 from lib.models import Base, engine
@@ -13,34 +10,10 @@ from settings import PORT, LISTEN, settings
 
 __license__ = "Dual License: GPLv2 and Commercial License"
 
-from sync import full_sync
-
 template_folder = settings["templates_folder"] or '/data/kenban_templates/'
 app = Flask(__name__, template_folder=template_folder)
 
-CORS(app)
-
 r = redis.Redis(host='redis', port=6379, db=0)
-
-HOME = os.getenv('HOME', '/home/pi')
-CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-CELERY_TASK_RESULT_EXPIRES = timedelta(hours=6)
-
-celery = Celery(
-    app.name,
-    backend=CELERY_RESULT_BACKEND,
-    broker=CELERY_BROKER_URL,
-    result_expires=CELERY_TASK_RESULT_EXPIRES
-)
-
-# @celery.on_after_configure.connect
-# def setup_periodic_tasks(sender, **kwargs):
-#     # todo set full sync task up properly
-#     hour = randrange(0, 25)
-#     minute = randrange(0, 61)
-#     day = randrange(0, 8)
-#     sender.add_periodic_task(crontab(hour=hour, minute=minute, day_of_week=day), full_sync.s(), )
 
 
 @app.route('/kenban')
