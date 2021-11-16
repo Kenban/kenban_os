@@ -27,23 +27,28 @@ if [ -n "${CLEAN_BUILD+x}" ]; then
     DOCKER_BUILD_ARGS+=("--no-cache")
 fi
 
+echo "Removing kenban_server_1"
+docker stop kenban_server_1
+docker rm kenban_server_1
+docker image rm kenban/server-kos:$DOCKER_TAG
+
 docker pull balenalib/rpi-raspbian:buster
 
+echo "Building server"
+docker "${DOCKER_BUILD_ARGS[@]}" \
+    --build-arg "GIT_HASH=$GIT_HASH" \
+    --build-arg "GIT_SHORT_HASH=$GIT_SHORT_HASH" \
+    --build-arg "GIT_BRANCH=$GIT_BRANCH" \
+    -f "docker/Dockerfile.server" \
+    -t "kenban/server-kos:$DOCKER_TAG" .
 
-echo "Building viewer..."
-for pi_version in pi4; do
-    echo "Building viewer container for $pi_version"
-    docker "${DOCKER_BUILD_ARGS[@]}" \
-        --build-arg "PI_VERSION=$pi_version" \
-        --build-arg "GIT_HASH=$GIT_HASH" \
-        --build-arg "GIT_SHORT_HASH=$GIT_SHORT_HASH" \
-        --build-arg "GIT_BRANCH=$GIT_BRANCH" \
-        -f docker/Dockerfile.viewer \
-        -t "kenban/viewer-kos:$DOCKER_TAG-$pi_version" .
+# Push if the push flag is set and not cross compiling
+if [[ ( -n "${PUSH+x}" && -z "${CROSS_COMPILE+x}" ) ]]; then
+    docker push "kenban/server-kos:$DOCKER_TAG"
+    docker push "kenban/server-kos:latest"
+fi
 
-    # Push if the push flag is set and not cross compiling
-    if [[ ( -n "${PUSH+x}" && -z "${CROSS_COMPILE+x}" ) ]]; then
-        docker push "kenban/viewer-kos:$DOCKER_TAG-$pi_version"
-        docker push "kenban/viewer-kos:$DOCKER_TAG-latest"
-    fi
-done
+bash ./bin/upgrade_containers.sh
+
+
+
