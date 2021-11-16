@@ -122,8 +122,6 @@ class SlotHandler(object):
 
     def calculate_daily_events(self):
         """ Get events that will occur today (to avoid sorting through all events every tick) """
-        logging.debug("calculating daily events all events:")  # todo
-        logging.debug(self.events)  # todo
         today = datetime.now()
         # Add a couple hours buffer either way, it wont hurt and it will stop unexpected dst shenanigans
         day_start = datetime(year=today.year, month=today.month, day=today.day) - timedelta(2)
@@ -132,15 +130,9 @@ class SlotHandler(object):
                         if (e.event_start < day_start > e.event_end)  # Starts before the day but ends during/after day
                         or (day_start < e.event_start < day_end)]  # Starts during the day
         self.daily_events_date = today.date()
-        logging.debug("daily events:")  # todo
-        logging.debug(self.daily_events)  # todo
 
     def calculate_current_events(self):
-        logging.debug("calculating current events all events:")  # todo
-        logging.debug(self.events)  # todo
         self.active_events = [e for e in self.daily_events if e.event_start < datetime.now() < e.event_end]
-        logging.debug("current events:")  # todo
-        logging.debug(self.active_events)  # todo
         if len(self.active_events) > 0:
             self.event_active = True
         else:
@@ -159,8 +151,6 @@ class SlotHandler(object):
         self.slots = new_slots
         self.sort_slots()
         self.calculate_current_slot()
-        logging.debug("loading all events from db, new events:")  # todo
-        logging.debug(new_events)  # todo
         for e in new_events:
             if e.event_end < datetime.now():
                 new_events.remove(e)
@@ -189,7 +179,6 @@ def view_webpage(uri: str):
 
 
 def build_schedule_slot_uri(schedule_slot: ScheduleSlot, event=None) -> str:
-    logging.debug(event)#todo
     hostname = f"{settings['local_address']}"
     if not schedule_slot:
         uri = hostname + "/splash-page"
@@ -307,20 +296,22 @@ def wait_for_server(retries: int, wt=1):
     for _ in range(retries):
         try:
             requests.get('http://{0}:{1}'.format(LISTEN, PORT))
-            break
+            return True
         except requests.exceptions.ConnectionError:
             sleep(wt)
+    return False
 
 
-def get_wifi_status():
-    try:
-        if wait_for_redis(50):
-            return int(r.get("wifi-status"))
-        else:
-            return None
-    except TypeError:
-        logging.error("Failed to parse wifi status")
-        return None
+def get_wifi_status(retries=50, wt=0.1):
+    wait_for_redis(200, 0.1)
+    for _ in range(0, retries):
+        try:
+            wifi_status = r.get("wifi-status")
+            if wifi_status:
+                return int(wifi_status)
+        except TypeError:
+            sleep(wt)
+    logging.error("Failed to wait for redis to start")
 
 
 def device_pair():

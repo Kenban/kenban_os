@@ -153,16 +153,16 @@ def generate_perfect_paper_password(pw_length=10, has_symbols=True):
 
 
 def connect_to_redis():
-    return redis.Redis(host='redis', port=6379, db=0)
+    return redis.Redis('redis')
 
 
 def wait_for_redis(retries: int, wt=0.1):
     # Make sure the redis container has started up
+    r = connect_to_redis()
     for _ in range(0, retries):
-        r = connect_to_redis()
         try:
             r.ping()
-            break
+            return
         except redis.exceptions.ConnectionError:
             sleep(wt)
     logging.error("Failed to wait for redis to start")
