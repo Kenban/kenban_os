@@ -14,6 +14,7 @@ WIFI_CONNECTING = 2
 
 r = redis.Redis("127.0.0.1", port=6379)
 
+
 def generate_password(pw_length=10):
     characters = 'ABCDEFGHJKLMNPRSTUVWXYZ'
     return "".join(random.SystemRandom().choice(characters) for _ in range(pw_length))
@@ -44,14 +45,15 @@ def start_wifi_connect():
     popen.wait()
 
 
-def wait_for_redis(retries: int, wt=0.5):
+def wait_for_redis(retries: int, wt=0.1):
     # Make sure the redis container has started up
     for _ in range(0, retries):
         try:
             r.ping()
             break
-        except:
+        except redis.exceptions.ConnectionError:
             sleep(wt)
+    logging.error("Failed to wait for redis to start")
 
 
 if __name__ == "__main__":
@@ -80,8 +82,3 @@ if __name__ == "__main__":
             wait_for_redis(50)
             r.set("wifi-status", WIFI_DISCONNECTED)
             logging.warning("Could not find wireless connection")
-
-        #wifi_connect = sh.sudo('wifi-connect', '-s', ssid, '-p', ssid_password, '-o', '9090', _bg=True)
-
-
-
