@@ -25,7 +25,7 @@ from settings import settings, LISTEN, PORT
 __license__ = "Dual License: GPLv2 and Commercial License"
 
 EMPTY_PL_DELAY = 5  # secs
-SCREEN_TICK_DELAY = 1  # secs
+SCREEN_TICK_DELAY = 0.1  # secs
 
 INITIALIZED_FILE = '/.kenban/initialized'
 WATCHDOG_PATH = '/tmp/screenly.watchdog'
@@ -97,7 +97,6 @@ class SlotHandler(object):
 
     def tick(self):
         """ Check if it's time for the next slot in the order, and switch if so"""
-        logging.debug("viewer tick")
         if not self.next_slot:
             logging.info("No next slot set")
         if WEEKDAY_DICT[self.next_slot.weekday] == datetime.now().weekday() and \
@@ -127,8 +126,8 @@ class SlotHandler(object):
         day_start = datetime(year=today.year, month=today.month, day=today.day) - timedelta(2)
         day_end = datetime(year=today.year, month=today.month, day=today.day, hour=23) + timedelta(3)
         self.daily_events = [e for e in self.events
-                        if (e.event_start < day_start > e.event_end)  # Starts before the day but ends during/after day
-                        or (day_start < e.event_start < day_end)]  # Starts during the day
+                             if (e.event_start < day_start > e.event_end)  # Starts before day, ends during/after day
+                             or (day_start < e.event_start < day_end)]  # Starts during day
         self.daily_events_date = today.date()
 
     def calculate_current_events(self):
@@ -140,6 +139,7 @@ class SlotHandler(object):
 
     def update_assets_from_db(self):
         """ Load the slots from the database into the scheduler """
+        logging.debug("Loading assets into slot handler")
         self.last_update_db_mtime = get_db_mtime()
         session = Session()
         new_slots = session.query(ScheduleSlot).all()
@@ -147,6 +147,7 @@ class SlotHandler(object):
         session.close()
         if new_slots == self.slots and new_events == self.events:
             # If nothing changed, do nothing
+            logging.debug("No change in assets")
             return
         self.slots = new_slots
         self.sort_slots()
@@ -155,7 +156,7 @@ class SlotHandler(object):
             if e.event_end < datetime.now():
                 new_events.remove(e)
         self.events = new_events
-        logging.debug("New assets loaded into SlotHandler")
+        self.calculate_daily_events()
 
 
 def load_browser():
