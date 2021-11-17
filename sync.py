@@ -40,6 +40,7 @@ def setup_periodic_tasks(sender, **kwargs):
 
 @celery.task
 def full_sync():
+    logging.info("Performing full sync with kenban server")
     sync_images()
     sync_templates()
     sync_schedule_slots()
@@ -51,18 +52,9 @@ def full_sync():
 def sync_schedule_slots():
     """Get all of the user's schedule slots from the Kenban server and save them to local database"""
     url = settings['server_address'] + settings['schedule_url'] + settings["device_uuid"]
-    headers = get_auth_header()
-    logging.debug(f"Getting schedule from {url}")
-    try:
-        response = requests.get(url=url, headers=headers)
-        response.raise_for_status()
-    except requests.exceptions.HTTPError as error:
-        logging.warning("HTTP Error while requesting schedule:" + str(error))
+    schedule_slots = get_request(url)
+    if not schedule_slots:
         return None
-    except ConnectionError:
-        logging.warning("Could not connect to authorisation server at {0}".format(url))
-        return None
-    schedule_slots = json.loads(response.content)
     with Session() as session:
         for slot in schedule_slots:
             save_schedule_slot(session, slot)
@@ -71,20 +63,8 @@ def sync_schedule_slots():
 
 def sync_events():
     url = settings['server_address'] + settings['event_url'] + settings["device_uuid"]
-    headers = get_auth_header()
-    try:
-        response = requests.get(url=url, headers=headers)
-        response.raise_for_status()
-    except requests.exceptions.HTTPError as error:
-        logging.warning("HTTP Error while requesting events:" + str(error))
-        return None
-    except ConnectionError:
-        logging.warning("Could not connect to authorisation server at {0}".format(url))
-        return None
-    try:
-        events = json.loads(response.content)
-    except ValueError as e:
-        logging.error(e)
+    events = get_request(url)
+    if not events:
         return None
     with Session() as session:
         for event in events:
@@ -102,19 +82,10 @@ def sync_events():
 
 
 def sync_images(overwrite=False):
-    logging.debug("Syncing images")
     url = settings['server_address'] + settings['image_url']
-    headers = get_auth_header()
-    try:
-        response = requests.get(url=url, headers=headers)
-        response.raise_for_status()
-    except requests.exceptions.HTTPError as error:
-        logging.warning("HTTP Error while requesting images:" + str(error))
+    images = get_request(url)
+    if not images:
         return None
-    except ConnectionError:
-        logging.warning("Could not connect to authorisation server at {0}".format(url))
-        return None
-    images = json.loads(response.content)
     if not os.path.exists(settings["images_folder"]):
         os.makedirs(settings["images_folder"])
     existing_file_uuids = os.listdir(settings["images_folder"])
@@ -131,19 +102,10 @@ def sync_images(overwrite=False):
 
 
 def sync_templates(overwrite=False):
-    logging.debug("Syncing templates")
     url = settings['server_address'] + settings['template_url']
-    headers = get_auth_header()
-    try:
-        response = requests.get(url=url, headers=headers)
-        response.raise_for_status()
-    except requests.exceptions.HTTPError as error:
-        logging.warning("HTTP Error while requesting templates:" + str(error))
+    template_uuids = get_request(url)
+    if not template_uuids:
         return None
-    except ConnectionError:
-        logging.warning("Could not connect to authorisation server at {0}".format(url))
-        return None
-    template_uuids = json.loads(response.content)
     if not os.path.exists(settings["templates_folder"]):
         os.makedirs(settings["templates_folder"])
     existing_template_uuids = os.listdir(settings["templates_folder"])
@@ -160,22 +122,44 @@ def sync_templates(overwrite=False):
             logging.info("Saved template " + template_uuid)
 
 
+def get_image(image_uuid):
+    url = settings['server_address'] + settings['image_url'] + image_uuid
+    image = get_request(url)
+    if not image:
+        return None
+    if not os.path.exists(settings["images_folder"]):
+        os.makedirs(settings["images_folder"])
+    img_data = requests.get(image["src"]).content
+    fp = settings["images_folder"] + image["uuid"]
+    with open(fp, 'wb') as output_file:
+        output_file.write(img_data)
+        logging.info("Saving Image " + image["uuid"])
+
+
 def get_server_last_update_time():
     """ Gets the last time the user edited the screen schedule on the Kenban server."""
     logging.debug("Checking for update")
     device_uuid = str(settings['device_uuid'])
     url = settings['server_address'] + settings['update_url'] + "/" + device_uuid
-    try:
-        headers = get_auth_header()
-        response = requests.get(url=url, headers=headers)
-        response.raise_for_status()
-    except requests.exceptions.HTTPError as error:
-        logging.warning("HTTP Error while requesting update time:" + str(error))
-        return None
-    except ConnectionError:
-        logging.warning("Could not connect to authorisation server at {0}".format(url))
-        return None
-    server_update_time = json.loads(response.content)
+    server_update_time = get_request(url)
     return server_update_time
 
 
+def get_request(url):
+    logging.debug(f"Making request to {url}")
+    headers = get_auth_header()
+    try:
+        response = requests.get(url=url, headers=headers)
+        response.raise_for_status()
+        logging.debug(f"Response: {response.content}")
+    except requests.exceptions.HTTPError as error:
+        logging.warning(f"HTTP Error while reaching {url}: {error}")
+        return None
+    except ConnectionError:
+        logging.warning(f"Could not connect to authorisation server at {url}")
+        return None
+    try:
+        return json.loads(response.content)
+    except ValueError as e:
+        logging.error(e)
+        return None

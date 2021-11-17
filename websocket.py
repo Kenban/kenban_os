@@ -7,7 +7,7 @@ import socket
 from websockets.exceptions import WebSocketException
 
 import sync
-from lib.db_helper import save_schedule_slot
+from lib.db_helper import save_schedule_slot, save_event
 from lib.models import Session
 from settings import settings
 
@@ -56,18 +56,27 @@ async def subscribe_to_updates():
 
 
 def message_handler(msg):
-    print(msg)
+    logging.debug(f"Received websocket message: {msg}")
     payload = json.loads(msg)
-    data_type = payload["message_type"]
-    if not data_type:
+    message_type = payload["message_type"]
+    if not message_type:
         return
-
-    if data_type == "schedule_slot":
+    if message_type == "schedule_slot":
         with Session() as session:
             save_schedule_slot(session, payload)
             session.commit()
+    if message_type == "event":
+        with Session() as session:
+            save_event(session, payload)
+            session.commit()
+    if message_type == "image":
+        image_uuid = payload["image_uuid"]
+        sync.get_image(image_uuid)
 
 
 if __name__ == "__main__":
+    settings.load()
+    logging.getLogger().setLevel(logging.DEBUG if settings['debug_logging'] else logging.INFO)
+
     sync.full_sync()
     asyncio.run(subscribe_to_updates())
