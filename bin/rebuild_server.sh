@@ -30,7 +30,7 @@ fi
 echo "Removing kenban_server_1"
 docker stop kenban_server_1
 docker rm kenban_server_1
-docker image rm kenban/server-kos:$DOCKER_TAG
+#docker image rm kenban/server-kos:$DOCKER_TAG
 
 docker pull balenalib/rpi-raspbian:buster
 
