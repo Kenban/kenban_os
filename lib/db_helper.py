@@ -6,7 +6,7 @@ from lib.models import Session, ScheduleSlot, Event
 from lib.utils import time_parser
 
 
-def save_schedule_slot(session: Session, slot: ScheduleSlot):
+def create_or_update_schedule_slot(session: Session, slot: ScheduleSlot):
     logging.debug("Saving schedule slot")
     db_slot = session.query(ScheduleSlot).filter_by(uuid=slot["uuid"]).first()
     if not db_slot:
@@ -21,11 +21,11 @@ def save_schedule_slot(session: Session, slot: ScheduleSlot):
     db_slot.weekday = slot["weekday"]
 
 
-def save_event(session: Session, event: Event):
+def create_or_update_event(session: Session, event: Event):
     logging.debug("Saving event")
     db_event = session.query(Event).filter_by(uuid=event["uuid"]).first()
     if not db_event:
-        db_event = ScheduleSlot()
+        db_event = Event()
         session.add(db_event)
     db_event.uuid = event["uuid"]
     db_event.foreground_image_uuid = event["foreground_image_uuid"]

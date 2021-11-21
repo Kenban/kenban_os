@@ -7,7 +7,7 @@ import socket
 from websockets.exceptions import WebSocketException
 
 import sync
-from lib.db_helper import save_schedule_slot, save_event
+from lib.db_helper import create_or_update_schedule_slot, create_or_update_event
 from lib.models import Session
 from settings import settings
 
@@ -63,11 +63,11 @@ def message_handler(msg):
         return
     if message_type == "schedule_slot":
         with Session() as session:
-            save_schedule_slot(session, payload)
+            create_or_update_schedule_slot(session, payload)
             session.commit()
     if message_type == "event":
         with Session() as session:
-            save_event(session, payload)
+            create_or_update_event(session, payload)
             session.commit()
     if message_type == "image":
         image_uuid = payload["image_uuid"]

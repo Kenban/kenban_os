@@ -11,7 +11,7 @@ from celery import Celery
 from dateutil.parser import parse
 
 from authentication import get_auth_header
-from lib.db_helper import save_schedule_slot
+from lib.db_helper import create_or_update_schedule_slot, create_or_update_event
 from lib.models import Session, Event
 from settings import settings
 
@@ -57,7 +57,7 @@ def sync_schedule_slots():
         return None
     with Session() as session:
         for slot in schedule_slots:
-            save_schedule_slot(session, slot)
+            create_or_update_schedule_slot(session, slot)
         session.commit()
 
 
@@ -68,17 +68,8 @@ def sync_events():
         return None
     with Session() as session:
         for event in events:
-            db_event = session.query(Event).filter_by(uuid=event["uuid"]).first()
-            if not db_event:
-                db_event = Event()
-                session.add(db_event)
-            db_event.uuid = event["uuid"]
-            db_event.foreground_image_uuid = event["foreground_image_uuid"]
-            db_event.display_text = event["display_text"]
-            db_event.event_start = parse(event["event_start"])
-            db_event.event_end = parse(event["event_end"])
-            db_event.override = event["override"]
-            session.commit()
+            create_or_update_event(session, event)
+        session.commit()
 
 
 def sync_images(overwrite=False):

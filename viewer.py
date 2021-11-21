@@ -41,8 +41,6 @@ r = connect_to_redis()
 
 HOME = None
 
-last_slot = None
-
 
 def sigalrm(signum, frame):
     """
@@ -173,7 +171,7 @@ def view_webpage(uri: str):
 
     if browser is None or not browser.process.alive:
         load_browser()
-    if current_browser_url is not uri:
+    if current_browser_url != uri:
         browser_bus.loadPage(uri)
         current_browser_url = uri
     logging.info('Current url is {0}'.format(current_browser_url))
@@ -223,7 +221,7 @@ def load_settings():
 
 
 def display_loop(handler: SlotHandler):
-    global last_slot
+    current_browser_url
     if handler.current_slot is None:
         logging.info('Playlist is empty. Sleeping for %s seconds', EMPTY_PL_DELAY)
         view_image(LOAD_SCREEN)
@@ -234,12 +232,7 @@ def display_loop(handler: SlotHandler):
         if handler.event_active:
             event = handler.active_events[0]  # Just get the first event for now, maybe change this later
         uri = build_schedule_slot_uri(handler.current_slot, event)
-        if last_slot != handler.current_slot:
-            view_webpage(uri)
-            last_slot = handler.current_slot
-        refresh_duration = int(settings['default_duration'])
-        logging.debug(f'Current slot: {handler.current_slot} Sleeping for {refresh_duration}')
-        sleep(refresh_duration)
+        view_webpage(uri)
 
     if get_db_mtime() > handler.last_update_db_mtime:
         handler.update_assets_from_db()
