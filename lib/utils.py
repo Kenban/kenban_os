@@ -8,7 +8,6 @@ from distutils.util import strtobool
 from os import getenv, utime
 from platform import machine
 from time import sleep
-from urllib.parse import urlparse
 
 import pytz
 import redis
@@ -39,8 +38,8 @@ except ImportError:
     pass
 
 
-def string_to_bool(string):
-    return bool(strtobool(str(string)))
+def string_to_bool(s):
+    return bool(strtobool(str(s)))
 
 
 def touch(path):
