@@ -14,7 +14,7 @@ import pytz
 import redis
 import requests
 
-from settings import settings
+from settings import settings, LISTEN, PORT
 
 WOTT_PATH = '/opt/wott'
 
@@ -53,45 +53,6 @@ def is_ci():
     Returns True when run on Travis.
     """
     return string_to_bool(os.getenv('CI', False))
-
-
-def validate_url(string):
-    """Simple URL verification.
-    >>> validate_url("hello")
-    False
-    >>> validate_url("ftp://example.com")
-    False
-    >>> validate_url("http://")
-    False
-    >>> validate_url("http://wireload.net/logo.png")
-    True
-    >>> validate_url("https://wireload.net/logo.png")
-    True
-    """
-
-    checker = urlparse(string)
-    return bool(checker.scheme in ('http', 'https', 'rtsp', 'rtmp') and checker.netloc)
-
-
-def get_node_mac_address():
-    """
-    Returns the MAC address.
-    """
-    if is_balena_app():
-        balena_supervisor_address = os.getenv('BALENA_SUPERVISOR_ADDRESS')
-        balena_supervisor_api_key = os.getenv('BALENA_SUPERVISOR_API_KEY')
-        headers = {'Content-Type': 'application/json'}
-
-        r = requests.get('{}/v1/device?apikey={}'.format(
-            balena_supervisor_address,
-            balena_supervisor_api_key
-        ), headers=headers)
-
-        if r.ok:
-            return r.json()['mac_address']
-        return 'Unknown'
-
-    return 'Unable to retrieve MAC address.'
 
 
 def remove_connection(bus, uuid):
@@ -228,3 +189,26 @@ def time_parser(t) -> time:
     else:
         logging.warning("Failed to parse time, setting to 00:00")
         return time(0, 0)
+
+
+def wait_for_server(retries: int, wt=1):
+    for _ in range(retries):
+        try:
+            requests.get('http://{0}:{1}'.format(LISTEN, PORT))
+            return True
+        except requests.exceptions.ConnectionError:
+            sleep(wt)
+    return False
+
+
+def get_wifi_status(retries=50, wt=0.1):
+    wait_for_redis(200, 0.1)
+    r = connect_to_redis()
+    for _ in range(0, retries):
+        try:
+            wifi_status = r.get("wifi-status")
+            if wifi_status:
+                return int(wifi_status)
+        except TypeError:
+            sleep(wt)
+    logging.error("Failed to wait for redis to start")
