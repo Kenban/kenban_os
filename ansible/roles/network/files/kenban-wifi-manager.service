@@ -4,7 +4,7 @@ Wants=NetworkManager.service
 After=NetworkManager.service
 
 [Service]
-WorkingDirectory=/home/pi/kenban
+WorkingDirectory=/home/pi/kenban/network
 User=root
 Type=simple
 Restart=always

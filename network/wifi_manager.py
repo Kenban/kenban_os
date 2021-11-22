@@ -32,12 +32,14 @@ def generate_random_word_password(no_of_words=1, min_length=8):
 
 
 def start_wifi_connect():
-    logging.info("Starting wifi-connect")
+    logging.info("Creating hotspot with wifi-connect application")
     ssid = 'Kenban-{}'.format(generate_password(pw_length=4))
     ssid_password = generate_random_word_password(no_of_words=1, min_length=8)
 
     r.set("ssid", ssid)
     r.set("ssid-password", ssid_password)
+    logging.debug(f"ssid {ssid}")
+    logging.debug(f"password: {ssid_password}")
 
     args = ("./wifi-connect", "-s", ssid, "-p", ssid_password)
     popen = subprocess.Popen(args, stdout=subprocess.PIPE)
@@ -50,7 +52,7 @@ def wait_for_redis(retries: int, wt=0.1):
     for _ in range(0, retries):
         try:
             r.ping()
-            break
+            return
         except redis.exceptions.ConnectionError:
             sleep(wt)
     logging.error("Failed to wait for redis to start")
@@ -58,27 +60,30 @@ def wait_for_redis(retries: int, wt=0.1):
 
 if __name__ == "__main__":
 
-    logging.basicConfig(level=logging.DEBUG)
-    logger = logging.getLogger()
-    handler = logging.FileHandler('debug.log')
-    logger.addHandler(handler)
+    logging.basicConfig(filename='debug.log',
+                        filemode='w',
+                        format='%(asctime)s %(levelname)-8s %(message)s',
+                        level=logging.DEBUG,
+                        datefmt='%Y-%m-%d %H:%M:%S')
 
-    pattern_include = re.compile("wlan*")
+    sleep(10)  # fixme This is here to allow the network to start up or we will create a hotspot every time. This isn't ideal
 
     while True:
         if gateways().get('default'):
-            wait_for_redis(50)
+            # If there is a default connection, sleep
+            wait_for_redis(500)
             r.set("wifi-status", WIFI_CONNECTED)
             logging.debug("A connection already exists")
             sleep(60)
             continue
-        elif any(pattern_include.match(i) for i in interfaces()):
-            wait_for_redis(50)
+        elif any(re.compile("wlan*").match(i) for i in interfaces()):
+            # Check for a wireless interface and start wifi connect if so
+            wait_for_redis(500)
             start_wifi_connect()
             logging.info("wifi-connect finished")
             r.set("wifi-status", WIFI_CONNECTED)
 
         else:
-            wait_for_redis(50)
+            wait_for_redis(500)
             r.set("wifi-status", WIFI_DISCONNECTED)
             logging.warning("Could not find wireless connection")
