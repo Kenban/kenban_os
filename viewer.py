@@ -31,8 +31,6 @@ WATCHDOG_PATH = '/tmp/screenly.watchdog'
 LOAD_SCREEN = f'http://{LISTEN}:{PORT}/img/loading.png'
 NEW_SETUP_SCREEN = f'http://{LISTEN}:{PORT}/img/new-setup.png'
 
-r = connect_to_redis()
-
 HOME = None
 
 
@@ -53,6 +51,8 @@ def sigusr1():
 
 def build_schedule_slot_uri(schedule_slot: ScheduleSlot, event=None) -> str:
     hostname = f"{settings['local_address']}"
+
+    # Add the info for the schedule slot
     if not schedule_slot:
         uri = hostname + "/splash-page"
         logging.warning("build_schedule_slot_uri called with no active slot")
@@ -63,9 +63,18 @@ def build_schedule_slot_uri(schedule_slot: ScheduleSlot, event=None) -> str:
         "display_text": schedule_slot.display_text if schedule_slot.display_text else "",
         "time_format": schedule_slot.time_format,
     }
+    # Add the info for any event
     if event:
         url_parameters["event_text"] = event.display_text if event.display_text else ""
         url_parameters["event_image_uuid"] = event.foreground_image_uuid
+
+    # Add any other info
+    r = connect_to_redis()
+    logging.info("new_setup:")
+    if schedule_slot.display_text == "" and r.exists("new_setup"):
+        url_parameters["display_text"] = "Visit kenban.co.uk to add a schedule your new device"
+    if r.exists("banner"):
+        url_parameters["banner"] = r.get("banner")
 
     url_parameters = urllib.parse.urlencode(url_parameters)
     uri = hostname + "/kenban?" + url_parameters
@@ -103,6 +112,7 @@ def setup():
 
 
 def show_hotspot_page(browser_handler: BrowserHandler):
+    r = connect_to_redis()
     ssid = r.get("ssid").decode("utf-8")
     ssid_password = r.get("ssid-password").decode("utf-8")
     logging.info("Displaying hotspot page")
@@ -140,8 +150,7 @@ def device_pair(browser_handler: BrowserHandler):
         device_code, verification_uri = register_new_client()
         if device_code is None:
             logging.error("Failed to register new client with server")
-            browser_handler.view_webpage(
-                f"http://{LISTEN}:{PORT}/connect-error?error=No response when trying to register new device")
+            show_error_page(browser_handler, "Error trying to contact Kenban server to register device")
             sleep(10)
             continue
         else:
@@ -151,15 +160,23 @@ def device_pair(browser_handler: BrowserHandler):
             auth_success = poll_for_authentication(device_code=device_code)
             if auth_success:
                 logging.info("Device paired successfully")
+                r = connect_to_redis()
+                r.set("new_setup", "True", ex=3600)
                 return
             else:
                 logging.error("Authentication polling failed")
-                browser_handler.view_webpage(f"http://{LISTEN}:{PORT}/connect-error")
+                show_error_page(browser_handler, "Authentication polling failed")
                 sleep(10)
                 continue
 
 
+def show_error_page(browser_handler, error_message):
+    error_message = urllib.parse.urlencode(error_message)
+    browser_handler.view_webpage(f"http://{LISTEN}:{PORT}/error?message=" + error_message)
+
+
 def main():
+    from settings import settings
     setup()
     browser_handler = BrowserHandler()
 
@@ -175,17 +192,22 @@ def main():
                 logging.critical("Invalid wifi-status from redis: " + str(wifi_status))
             wifi_status = get_wifi_status()
     else:
-        logging.warning("Failed to get wifi status. Continuing anyway")
+        if settings["refresh_token"] in [None, "None", ""]:
+            # If device is paired, continue anyway
+            r = connect_to_redis()
+            r.set("wifi-error", True)
+            logging.warning("Continuing without wifi setup")
+        else:
+            # If device isn't paired, we can't continue
+            show_error_page(browser_handler, "Unable to start wifi manager. Please try restarting your device")
 
-    from settings import settings
-    # Check to see if device is paired
     if settings["refresh_token"] in [None, "None", ""]:
         wait_for_server(retries=5)
         device_pair(browser_handler)
         browser_handler.view_image(NEW_SETUP_SCREEN)
         sleep(10)  # Wait for the server to setup the new screen before continuing
         sync.full_sync()
-        confirm_setup_completion()
+        #confirm_setup_completion()
     else:
         logging.info(f"Device already paired")
         browser_handler.view_image(LOAD_SCREEN)
