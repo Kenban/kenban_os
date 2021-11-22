@@ -6,14 +6,13 @@ from flask import Flask, request, render_template
 from gunicorn.app.base import Application
 
 from lib.models import Base, engine
+from lib.utils import connect_to_redis
 from settings import PORT, LISTEN, settings
 
 __license__ = "Dual License: GPLv2 and Commercial License"
 
 template_folder = settings["templates_folder"] or '/data/kenban_templates/'
 app = Flask(__name__, template_folder=template_folder)
-
-r = redis.Redis(host='redis', port=6379, db=0)
 
 
 @app.route('/kenban')
@@ -25,7 +24,7 @@ def kenban_display():
     event_text = request.args.get('event_text', default="")
     event_image_uuid = request.args.get('event_image_uuid', default="")
 
-    banner_message = r.get("display-banner")
+    banner_message = request.args.get('banner_message', default="")
 
     if not template_uuid:
         return "Could not get template_uuid"
@@ -62,13 +61,12 @@ def splash_page():
     return "splash page"
 
 
-@app.route('/connect-error')
+@app.route('/error')
 def connection_error():
-    error = request.args['error']
-    if not error:
-        error = ""
-    server_address = settings['server_address']
-    return render_template('error.html', server_address=server_address, error=error)
+    message = request.args['message']
+    if not message:
+        message = "Error"
+    return render_template('error.html', message=message)
 
 
 if __name__ == "__main__":
