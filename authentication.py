@@ -89,6 +89,7 @@ def poll_for_authentication(device_code):
                 return False
             settings["refresh_token"] = response_body["refresh_token"]
             settings["access_token"] = response_body["access_token"]
+            settings["screen_name"] = response_body["screen_name"]
             settings.save()
             logging.info("Access tokens received from server")
             return True

@@ -92,7 +92,7 @@ def is_up_to_date():
         device_id = get_device_id
 
     if retrieved_update:
-        if not settings['analytics_opt_out'] and not is_ci():
+        if True:#not settings['analytics_opt_out'] and not is_ci():
             mp = Mixpanel('d18d9143e39ffdb2a4ee9dcc5ed16c56')
             try:
                 mp.track(device_id, 'Version', {

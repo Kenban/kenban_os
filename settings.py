@@ -14,11 +14,11 @@ DEFAULTS = {
     'main': {
         'server_address': 'https://kenban.co.uk',
         'local_address': 'http://nginx',
-        'websocket_updates_address': 'ws://kenban.co.uk/api/v1/screen/subscribe/',
+        'websocket_updates_address': 'ws://kenban.co.uk/ws/v1/updates/screen_schedule/',
         'device_uuid': None,
         'last_update': None,
         'access_token': None,
-        'refresh_token': None
+        'refresh_token': None,
     },
     'api': {
         'device_register_uri': '/api/v1/device_pairing/new',
@@ -33,36 +33,16 @@ DEFAULTS = {
     'folders': {
         'images_folder': '/data/kenban_images/',
         'templates_folder': '/data/kenban_templates/',
+        'database': os.path.join(CONFIG_DIR, 'kenban.db'),
     },
     'viewer': {
-        'audio_output': 'hdmi',
         'debug_logging': False,
-        'default_duration': '10',
-        'default_streaming_duration': '300',
-        'player_name': '',
         'resolution': '1920x1080',
-        'show_splash': False,
-        'shuffle_playlist': False,
-        'verify_ssl': True,
-        'usb_assets_key': '',
-        'default_assets': False
     },
-    'screenly': {
-        'analytics_opt_out': False,
-        'assetdir': 'kenban_assets',
-        'database': os.path.join(CONFIG_DIR, 'kenban.db'),
-        'date_format': 'mm/dd/yyyy',
-        'use_24_hour_clock': False,
-        'use_ssl': False,
-        'auth_backend': '',
-        'websocket_port': '9999'
-    }
 }
 
 
 CONFIGURABLE_SETTINGS = DEFAULTS['viewer'].copy()
-CONFIGURABLE_SETTINGS['use_24_hour_clock'] = DEFAULTS['screenly']['use_24_hour_clock']
-CONFIGURABLE_SETTINGS['date_format'] = DEFAULTS['screenly']['date_format']
 
 PORT = int(getenv('PORT', 8080))
 LISTEN = getenv('LISTEN', '127.0.0.1')
@@ -103,12 +83,10 @@ class KenbanSettings(UserDict):
                 self[field] = config.getint(section, field)
             else:
                 self[field] = config.get(section, field)
-                if field == 'password' and self[field] != '' and len(self[field]) != 64:   # likely not a hashed password.
-                    self[field] = hashlib.sha256(self[field]).hexdigest()   # hash the original password.
         except configparser.Error as e:
-            logging.debug("Could not parse setting '%s.%s': %s. Using default value: '%s'." % (section, field, str(e), default))
+            logging.debug(f"Could not parse setting '{section}.{field}': {str(e)}. Using default value: '{default}'.")
             self[field] = default
-        if field in ['database', 'assetdir']:
+        if field in ['database']:
             self[field] = str(path.join(self.home, self[field]))
 
     def _set(self, config, section, field, default):
