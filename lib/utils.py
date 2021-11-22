@@ -15,8 +15,6 @@ import requests
 
 from settings import settings, LISTEN, PORT
 
-WOTT_PATH = '/opt/wott'
-
 WEEKDAY_DICT = {
     "Monday": 0,
     "Tuesday": 1,
@@ -28,6 +26,8 @@ WEEKDAY_DICT = {
 }
 
 arch = machine()
+
+redis_pool = redis.ConnectionPool(host='redis')
 
 # This will only work on the Raspberry Pi,
 # so let's wrap it in a try/except so that
@@ -113,7 +113,7 @@ def generate_perfect_paper_password(pw_length=10, has_symbols=True):
 
 
 def connect_to_redis():
-    return redis.Redis('redis')
+    return redis.Redis(connection_pool=redis_pool)
 
 
 def wait_for_redis(retries: int, wt=0.1):
@@ -138,28 +138,6 @@ def is_balena_app():
     :return: bool
     """
     return bool(getenv('RESIN', False)) or bool(getenv('BALENA', False))
-
-
-def is_wott_integrated():
-    """
-    Chacks if wott-agent installed or not
-    :return:
-    """
-    return os.path.isdir(WOTT_PATH)
-
-
-def get_wott_device_id():
-    """
-    :return: WoTT Device id of this device
-    """
-    metadata_path = os.path.join(WOTT_PATH, 'metadata.json')
-    if os.path.isfile(metadata_path):
-        with open(metadata_path) as metadata_file:
-            metadata = json.load(metadata_file)
-        if 'device_id' in metadata:
-            return metadata['device_id']
-    logging.warning("Could not read WoTT Device ID")
-    return 'Could not read WoTT Device ID'
 
 
 def get_db_mtime():
@@ -210,4 +188,4 @@ def get_wifi_status(retries=50, wt=0.1):
                 return int(wifi_status)
         except TypeError:
             sleep(wt)
-    logging.error("Failed to wait for redis to start")
+    logging.error("Failed to get wifi-status")
