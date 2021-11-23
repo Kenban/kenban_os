@@ -32,9 +32,9 @@ celery = Celery(
 @celery.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     # todo set full sync task up properly
-    hour = randrange(0, 25)
-    minute = randrange(0, 61)
-    day = randrange(0, 8)
+    hour = randrange(0, 24)
+    minute = randrange(0, 60)
+    day = randrange(0, 7)
     sender.add_periodic_task(crontab(hour=hour, minute=minute, day_of_week=day), full_sync.s(), )
 
 
