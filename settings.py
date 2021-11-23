@@ -14,11 +14,12 @@ DEFAULTS = {
     'main': {
         'server_address': 'https://kenban.co.uk',
         'local_address': 'http://nginx',
-        'websocket_updates_address': 'ws://kenban.co.uk/ws/v1/updates/screen_schedule/',
+        'websocket_updates_address': 'wss://kenban.co.uk/ws/v1/updates/screen_schedule/',
         'device_uuid': None,
         'last_update': None,
         'access_token': None,
         'refresh_token': None,
+        'screen_name': None,
     },
     'api': {
         'device_register_uri': '/api/v1/device_pairing/new',
