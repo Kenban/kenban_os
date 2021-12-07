@@ -168,7 +168,7 @@ def time_parser(t) -> time:
         return time(0, 0)
 
 
-def wait_for_server(retries: int, wt=1):
+def wait_for_server(retries: int, wt=1) -> bool:
     for _ in range(retries):
         try:
             requests.get('http://{0}:{1}'.format(LISTEN, PORT))
@@ -178,7 +178,7 @@ def wait_for_server(retries: int, wt=1):
     return False
 
 
-def get_wifi_status(retries=50, wt=0.1):
+def get_wifi_status(retries=50, wt=0.1) -> bool:
     wait_for_redis(200, 0.1)
     r = connect_to_redis()
     for _ in range(0, retries):
@@ -191,7 +191,7 @@ def get_wifi_status(retries=50, wt=0.1):
     logging.error("Failed to get wifi-status")
 
 
-def wait_for_wifi_manager(retries=50, wt=0.1):
+def wait_for_wifi_manager(retries=50, wt=0.1) -> bool:
     wait_for_redis(200, 0.1)
     r = connect_to_redis()
     for _ in range(0, retries):
@@ -201,3 +201,23 @@ def wait_for_wifi_manager(retries=50, wt=0.1):
             sleep(wt)
     logging.error("Failed to get wifi-status")
     return False
+
+
+def kenban_server_request(url: string, method: string, data=None, headers=None):
+    logging.info(f"Making {method} request to {url}")
+    try:
+        response = requests.request(url=url, method=method, data=data, headers=headers)
+        response.raise_for_status()
+        logging.debug(f"Response: {response.content}")
+    except requests.exceptions.HTTPError as error:
+        logging.error(f"HTTP Error while reaching {url}: {error}")
+        return None
+    except requests.exceptions.ConnectionError as e:
+        logging.error(f"Could not connect to authorisation server at {url}")
+        logging.error(e)
+        return None
+    try:
+        return json.loads(response.content)
+    except ValueError as e:
+        logging.error(e)
+        return None

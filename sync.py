@@ -1,18 +1,16 @@
 import os
-import json
 import logging
 from datetime import timedelta
 from random import randrange
 
 import requests
 from celery.schedules import crontab
-from requests.exceptions import ConnectionError
 from celery import Celery
-from dateutil.parser import parse
 
 from authentication import get_auth_header
 from lib.db_helper import create_or_update_schedule_slot, create_or_update_event
-from lib.models import Session, Event
+from lib.models import Session
+from lib.utils import kenban_server_request
 from settings import settings
 
 
@@ -52,7 +50,7 @@ def full_sync():
 def sync_schedule_slots():
     """Get all of the user's schedule slots from the Kenban server and save them to local database"""
     url = settings['server_address'] + settings['schedule_url'] + settings["device_uuid"]
-    schedule_slots = get_request(url)
+    schedule_slots = kenban_server_request(url=url, method='GET', headers=get_auth_header())
     if not schedule_slots:
         return None
     with Session() as session:
@@ -63,7 +61,7 @@ def sync_schedule_slots():
 
 def sync_events():
     url = settings['server_address'] + settings['event_url'] + settings["device_uuid"]
-    events = get_request(url)
+    events = kenban_server_request(url=url, method='GET', headers=get_auth_header())
     if not events:
         return None
     with Session() as session:
@@ -74,7 +72,7 @@ def sync_events():
 
 def sync_images(overwrite=False):
     url = settings['server_address'] + settings['image_url']
-    images = get_request(url)
+    images = kenban_server_request(url=url, method='GET', headers=get_auth_header())
     if not images:
         return None
     if not os.path.exists(settings["images_folder"]):
@@ -94,7 +92,7 @@ def sync_images(overwrite=False):
 
 def sync_templates(overwrite=False):
     url = settings['server_address'] + settings['template_url']
-    template_uuids = get_request(url)
+    template_uuids = kenban_server_request(url=url, method='GET', headers=get_auth_header())
     if not template_uuids:
         return None
     if not os.path.exists(settings["templates_folder"]):
@@ -106,7 +104,7 @@ def sync_templates(overwrite=False):
             logging.debug("Already got template " + template_uuid)
             continue
         url = settings["server_address"] + settings["template_url"] + template_uuid
-        template = requests.get(url).content
+        template = kenban_server_request(url=url, method='GET', headers=get_auth_header()).content
         fp = settings["templates_folder"] + template_uuid
         with open(fp, 'wb') as output_file:
             output_file.write(template)
@@ -115,7 +113,7 @@ def sync_templates(overwrite=False):
 
 def get_image(image_uuid):
     url = settings['server_address'] + settings['image_url'] + image_uuid
-    image = get_request(url)
+    image = kenban_server_request(url=url, method='GET', headers=get_auth_header())
     if not image:
         return None
     if not os.path.exists(settings["images_folder"]):
@@ -132,25 +130,5 @@ def get_server_last_update_time():
     logging.debug("Checking for update")
     device_uuid = str(settings['device_uuid'])
     url = settings['server_address'] + settings['update_url'] + "/" + device_uuid
-    server_update_time = get_request(url)
+    server_update_time = kenban_server_request(url=url, method='GET', headers=get_auth_header())
     return server_update_time
-
-
-def get_request(url):
-    logging.debug(f"Making request to {url}")
-    headers = get_auth_header()
-    try:
-        response = requests.get(url=url, headers=headers)
-        response.raise_for_status()
-        logging.debug(f"Response: {response.content}")
-    except requests.exceptions.HTTPError as error:
-        logging.warning(f"HTTP Error while reaching {url}: {error}")
-        return None
-    except ConnectionError:
-        logging.warning(f"Could not connect to authorisation server at {url}")
-        return None
-    try:
-        return json.loads(response.content)
-    except ValueError as e:
-        logging.error(e)
-        return None

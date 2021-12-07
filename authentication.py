@@ -7,10 +7,12 @@ from os import getenv
 from time import mktime
 from time import sleep
 
+
 import jwt
 import requests
 from requests.exceptions import ConnectionError
 
+from lib.utils import kenban_server_request
 from settings import settings
 
 PORT = int(getenv('PORT', 8080))
@@ -106,14 +108,18 @@ def poll_for_authentication(device_code):
 
 def refresh_access_token():
     """ Use a refresh token to gain a new access token from the server """
+    logging.info("Getting new access token from server")
     refresh_token = settings["refresh_token"]
     if not refresh_token:
         logging.error("No refresh token")
         return None
     data = json.dumps({"refresh_token": settings["refresh_token"]})
     url = settings['server_address'] + settings["refresh_access_token_url"]
-    response = requests.post(url=url, data=data)
-    access_token = json.loads(response.content)["access_token"]
+    response = kenban_server_request(url=url, method='POST', data=data)
+    access_token = response["access_token"]
+    if not access_token:
+        logging.error("Failed to get access token from server response")
+        return None
     settings["access_token"] = access_token
     settings.save()
     return access_token

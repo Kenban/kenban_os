@@ -1,9 +1,9 @@
 import asyncio
 import json
 import logging
+import socket
 
 import websockets
-import socket
 from websockets.exceptions import WebSocketException
 
 import sync
@@ -30,7 +30,6 @@ async def subscribe_to_updates():
                 logging.info("Attempting to connect to websocket")
                 try:
                     access_token = get_access_token()
-                    logging.debug(access_token)
                     await ws.send(access_token)
                     auth_response = await asyncio.wait_for(ws.recv(), timeout=10)
                     logging.info(f"Authentication response: {auth_response}")
