@@ -50,7 +50,7 @@ LISTEN = getenv('LISTEN', '127.0.0.1')
 
 # Initiate logging
 logging.basicConfig(level=logging.INFO,
-                    format='%(message)s',
+                    format='%(asctime)s %(levelname)-8s %(message)s',
                     datefmt='%a, %d %b %Y %H:%M:%S')
 
 # Silence urllib info messages ('Starting new HTTP connection')
@@ -130,4 +130,3 @@ class KenbanSettings(UserDict):
 
 
 settings = KenbanSettings()
-

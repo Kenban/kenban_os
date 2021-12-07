@@ -10,6 +10,7 @@ import sync
 from authentication import get_access_token
 from lib.db_helper import create_or_update_schedule_slot, create_or_update_event
 from lib.models import Session
+from lib.utils import connect_to_redis
 from settings import settings
 
 
@@ -29,40 +30,41 @@ async def subscribe_to_updates():
                 logging.info("Attempting to connect to websocket")
                 try:
                     access_token = get_access_token()
+                    logging.debug(access_token)
                     await ws.send(access_token)
                     auth_response = await asyncio.wait_for(ws.recv(), timeout=10)
                     logging.info(f"Authentication response: {auth_response}")
                     if auth_response != "success":
+                        r = connect_to_redis()
+                        r.setbit("websocket-connected", offset=0, value=0)
                         logging.error("Failed to authenticate websocket")
                 except (asyncio.TimeoutError, websockets.ConnectionClosed):
+                    r = connect_to_redis()
+                    r.setbit("websocket-connected", offset=0, value=0)
                     logging.error("Error authenticating websocket")
                 logging.info("Websocket connected")
                 while True:
+                    r = connect_to_redis()
                     try:
+                        r.setbit("websocket-connected", offset=0, value=1)
                         msg = await asyncio.wait_for(ws.recv(), timeout=10)
                         message_handler(msg)
                     except (asyncio.TimeoutError, websockets.ConnectionClosed):
+                        # If we lose the connection, ping the server
                         try:
                             pong = await ws.ping()
                             await asyncio.wait_for(pong, timeout=10)
                             logging.debug('Ping OK, keeping connection alive...')
                             continue
                         except:
+                            # Break to the outer loop if the ping fails and try to reconnection
+                            r.setbit("websocket-connected", offset=0, value=0)
                             await asyncio.sleep(9)
-                            break  # inner loop
-        except socket.gaierror:
+                            break
+        except (socket.gaierror, ConnectionRefusedError, OSError, WebSocketException) as e:
+            r = connect_to_redis()
+            r.setbit("websocket-connected", offset=0, value=0)
             logging.error("Websocket error")
-            await asyncio.sleep(9)
-            continue
-        except ConnectionRefusedError:
-            logging.error("Websocket connection refused")
-            await asyncio.sleep(9)
-            continue
-        except OSError:
-            logging.error("Websocket connection attempt failed")
-            await asyncio.sleep(9)
-            continue
-        except WebSocketException as e:
             logging.error(e)
             await asyncio.sleep(9)
             continue

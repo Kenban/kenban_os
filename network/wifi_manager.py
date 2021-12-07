@@ -8,12 +8,9 @@ from time import sleep
 import redis
 from netifaces import gateways, interfaces
 
-WIFI_DISCONNECTED = 0
-WIFI_CONNECTED = 1
-WIFI_CONNECTING = 2
-
 r = redis.Redis("127.0.0.1", port=6379)
 
+""" Handles the WiFi for the Pi.Runs natively on the Pi and checks for network info. If no  """
 
 def generate_password(pw_length=10):
     characters = 'ABCDEFGHJKLMNPRSTUVWXYZ'
@@ -42,9 +39,11 @@ def start_wifi_connect():
     logging.debug(f"password: {ssid_password}")
 
     args = ("./wifi-connect", "-s", ssid, "-p", ssid_password)
-    popen = subprocess.Popen(args, stdout=subprocess.PIPE)
-    r.set("wifi-status", WIFI_CONNECTING)
-    popen.wait()
+    subprocess.Popen(args, stdout=subprocess.PIPE)
+    while True:
+        if gateways().get('default'):
+            return True
+        sleep(1)
 
 
 def wait_for_redis(retries: int, wt=0.1):
@@ -72,18 +71,22 @@ if __name__ == "__main__":
         if gateways().get('default'):
             # If there is a default connection, sleep
             wait_for_redis(500)
-            r.set("wifi-status", WIFI_CONNECTED)
+            r.setbit("wifi-connected", offset=0, value=1)
             logging.debug("A connection already exists")
-            sleep(60)
+            sleep(10)
             continue
         elif any(re.compile("wlan*").match(i) for i in interfaces()):
             # Check for a wireless interface and start wifi connect if so
             wait_for_redis(500)
+            r.setbit("wifi-connected", offset=0, value=0)
+            r.setbit("wifi-manager-connecting", offset=0, value=1)
             start_wifi_connect()
             logging.info("wifi-connect finished")
-            r.set("wifi-status", WIFI_CONNECTED)
+            r.setbit("wifi-connected", offset=0, value=1)
+            r.setbit("wifi-manager-connecting", offset=0, value=0)
 
         else:
             wait_for_redis(500)
-            r.set("wifi-status", WIFI_DISCONNECTED)
-            logging.warning("Could not find wireless connection")
+            r.setbit("wifi-connected", offset=0, value=0)
+            logging.error("Could not find wireless connection")
+            sleep(1)

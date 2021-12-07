@@ -16,8 +16,7 @@ from lib.errors import SigalrmException
 from lib.models import ScheduleSlot
 from lib.scheduler import Scheduler
 from lib.utils import connect_to_redis, \
-    get_db_mtime, wait_for_server, get_wifi_status
-from network.wifi_manager import WIFI_CONNECTING, WIFI_DISCONNECTED, WIFI_CONNECTED
+    get_db_mtime, wait_for_server, get_wifi_status, wait_for_redis, wait_for_wifi_manager
 from settings import settings, LISTEN, PORT
 
 __license__ = "Dual License: GPLv2 and Commercial License"
@@ -73,12 +72,22 @@ def build_schedule_slot_uri(schedule_slot: ScheduleSlot, event=None) -> str:
     logging.info("new_setup:")
     if schedule_slot.display_text == "" and r.exists("new_setup"):
         url_parameters["display_text"] = "Visit kenban.co.uk to add a schedule your new device"
-    if r.exists("banner"):
-        url_parameters["banner"] = r.get("banner")
+    url_parameters["banner_message"] = create_banner_message()
 
     url_parameters = urllib.parse.urlencode(url_parameters)
     uri = hostname + "/kenban?" + url_parameters
     return uri
+
+
+def create_banner_message():
+    """ Build banner message text based on flags that have been set in redis """
+    r = connect_to_redis()
+    if not r.getbit("wifi-connected", offset=0):
+        return "No internet connection found"
+    elif not r.getbit("websocket-connected", offset=0):
+        return f"Cannot connect to kenban server ({settings['server_address']})"
+    else:
+        return ""
 
 
 def display_loop(browser_handler: BrowserHandler, scheduler: Scheduler):
@@ -123,10 +132,8 @@ def show_hotspot_page(browser_handler: BrowserHandler):
     browser_handler.view_webpage(url)
 
     # Stay in a loop until the wifi status changes
-    wifi_status = get_wifi_status()
-    while wifi_status == WIFI_CONNECTING:
-        sleep(1)
-        wifi_status = get_wifi_status()
+    while not r.getbit("wifi-connected", offset=0):
+        sleep(0.1)
 
 
 def confirm_setup_completion():
@@ -171,8 +178,8 @@ def device_pair(browser_handler: BrowserHandler):
 
 
 def show_error_page(browser_handler, error_message):
-    error_message = urllib.parse.urlencode(error_message)
-    browser_handler.view_webpage(f"http://{LISTEN}:{PORT}/error?message=" + error_message)
+    url_parameters = urllib.parse.urlencode({"message": error_message})
+    browser_handler.view_webpage(f"http://{LISTEN}:{PORT}/error?" + url_parameters)
 
 
 def main():
@@ -180,17 +187,14 @@ def main():
     setup()
     browser_handler = BrowserHandler()
 
-    wifi_status = get_wifi_status()
-    if wifi_status:
-        while wifi_status != WIFI_CONNECTED:
-            if wifi_status == WIFI_CONNECTING:
+    r = connect_to_redis()
+    wm = wait_for_wifi_manager()
+    if wm:
+        while not r.getbit("wifi-connected", 0):
+            if r.getbit("wifi-manager-connecting", 0):
                 show_hotspot_page(browser_handler)
-            elif wifi_status == WIFI_DISCONNECTED:
-                logging.warning("wifi-status = Disconnected")
-                sleep(1)
             else:
-                logging.critical("Invalid wifi-status from redis: " + str(wifi_status))
-            wifi_status = get_wifi_status()
+                sleep(0.1)
     else:
         if settings["refresh_token"] in [None, "None", ""]:
             # If device is paired, continue anyway
@@ -207,7 +211,7 @@ def main():
         browser_handler.view_image(NEW_SETUP_SCREEN)
         sleep(10)  # Wait for the server to setup the new screen before continuing
         sync.full_sync()
-        #confirm_setup_completion()
+        confirm_setup_completion()
     else:
         logging.info(f"Device already paired")
         browser_handler.view_image(LOAD_SCREEN)
