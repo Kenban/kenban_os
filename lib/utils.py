@@ -183,7 +183,7 @@ def get_wifi_status(retries=50, wt=0.1) -> bool:
     r = connect_to_redis()
     for _ in range(0, retries):
         try:
-            wifi_status = r.get("wifi-connected")
+            wifi_status = r.get("internet-connected")
             if wifi_status:
                 return int(wifi_status)
         except TypeError:
@@ -195,7 +195,7 @@ def wait_for_wifi_manager(retries=50, wt=0.1) -> bool:
     wait_for_redis(200, 0.1)
     r = connect_to_redis()
     for _ in range(0, retries):
-        if r.getbit("wifi-connected", 0) or r.getbit("wifi-manager-connecting", 0):
+        if r.getbit("internet-connected", 0) or r.getbit("wifi-manager-connecting", 0):
             return True
         else:
             sleep(wt)

@@ -3,6 +3,7 @@ import logging
 import random
 import re
 import subprocess
+from datetime import datetime
 from time import sleep
 
 import redis
@@ -57,36 +58,58 @@ def wait_for_redis(retries: int, wt=0.1):
     logging.error("Failed to wait for redis to start")
 
 
+def initial_startup():
+    if gateways().get('default'):
+        # If there is a default connection, sleep
+        r.setbit("internet-connected", offset=0, value=1)
+        logging.info("Connected detected on startup")
+        return
+
+    elif any(re.compile("wlan*").match(i) for i in interfaces()):
+        # Check for a wireless interface and start wifi connect if so
+        r.setbit("internet-connected", offset=0, value=0)
+        r.setbit("wifi-manager-connecting", offset=0, value=1)
+        start_wifi_connect()
+        logging.info("wifi-connect finished")
+        r.setbit("internet-connected", offset=0, value=1)
+        r.setbit("wifi-manager-connecting", offset=0, value=0)
+
+    else:
+        r.setbit("internet-connected", offset=0, value=0)
+        logging.error("Could not find wireless connection")
+        sleep(1)
+
+
+def monitoring_loop():
+    last_connected = None
+    while True:
+        if gateways().get('default'):
+            r.setbit("internet-connected", offset=0, value=1)
+            if last_connected:
+                logging.info("Internet reconnected")
+                last_connected = None
+            logging.debug("Connected")
+            sleep(10)
+            continue
+        else:
+            r.setbit("internet-connected", offset=0, value=0)
+            if not last_connected:
+                last_connected = datetime.now()
+                r.set("last-connected", last_connected.timestamp())
+                logging.error("Internet disconnected")
+            sleep(1)
+
+
 if __name__ == "__main__":
 
-    logging.basicConfig(filename='debug.log',
+    logging.basicConfig(filename='wifi_manager.log',
                         filemode='w',
                         format='%(asctime)s %(levelname)-8s %(message)s',
                         level=logging.DEBUG,
                         datefmt='%Y-%m-%d %H:%M:%S')
 
     sleep(10)  # fixme This is here to allow the network to start up or we will create a hotspot every time. This isn't ideal
-
-    while True:
-        if gateways().get('default'):
-            # If there is a default connection, sleep
-            wait_for_redis(500)
-            r.setbit("wifi-connected", offset=0, value=1)
-            logging.debug("A connection already exists")
-            sleep(10)
-            continue
-        elif any(re.compile("wlan*").match(i) for i in interfaces()):
-            # Check for a wireless interface and start wifi connect if so
-            wait_for_redis(500)
-            r.setbit("wifi-connected", offset=0, value=0)
-            r.setbit("wifi-manager-connecting", offset=0, value=1)
-            start_wifi_connect()
-            logging.info("wifi-connect finished")
-            r.setbit("wifi-connected", offset=0, value=1)
-            r.setbit("wifi-manager-connecting", offset=0, value=0)
-
-        else:
-            wait_for_redis(500)
-            r.setbit("wifi-connected", offset=0, value=0)
-            logging.error("Could not find wireless connection")
-            sleep(1)
+    wait_for_redis(500)
+    initial_startup()
+    # Start infinite loop
+    monitoring_loop()

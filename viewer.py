@@ -3,10 +3,12 @@
 
 import logging
 import urllib.parse
+from datetime import datetime
 from os import getenv
 from signal import signal, SIGALRM, SIGUSR1
 from time import sleep
 
+import humanize
 import requests
 
 import sync
@@ -16,7 +18,7 @@ from lib.errors import SigalrmException
 from lib.models import ScheduleSlot
 from lib.scheduler import Scheduler
 from lib.utils import connect_to_redis, \
-    get_db_mtime, wait_for_server, get_wifi_status, wait_for_redis, wait_for_wifi_manager
+    get_db_mtime, wait_for_server, wait_for_wifi_manager
 from settings import settings, LISTEN, PORT
 
 __license__ = "Dual License: GPLv2 and Commercial License"
@@ -80,12 +82,30 @@ def build_schedule_slot_uri(schedule_slot: ScheduleSlot, event=None) -> str:
 
 
 def create_banner_message():
-    """ Build banner message text based on flags that have been set in redis """
+    """ Build banner message text for error messages, based on flags that have been set in redis """
     r = connect_to_redis()
-    if not r.getbit("wifi-connected", offset=0):
+
+    if not r.getbit("internet-connected", offset=0):
+        if r.exists("last-connected"):
+            last_connected = float(r.get("last-connected").decode('utf-8'))
+            last_connected = datetime.fromtimestamp(last_connected)
+            last_connected_text = humanize.naturaltime(last_connected)
+            if "second" in last_connected_text:
+                last_connected_text = "less than a minute ago"
+            return f"No internet connection found. " \
+                   f"Last connected {last_connected_text}. " \
+                   f"Restart device to connect to a new Wi-Fi Network"
         return "No internet connection found"
+
     elif not r.getbit("websocket-connected", offset=0):
-        return f"Cannot connect to kenban server ({settings['server_address']})"
+        if r.exists("websocket-dc-timestamp"):
+            last_ws_connected = float(r.get("websocket-dc-timestamp").decode('utf-8'))
+            last_ws_connected = datetime.fromtimestamp(last_ws_connected)
+            last_ws_connected_text = humanize.naturaltime(last_ws_connected)
+            if "second" in last_ws_connected_text:
+                last_ws_connected_text = "less than a minute ago"
+            return f"Unable to reach Kenban server. Last sync {last_ws_connected_text}"
+        return f"Unable to reach Kenban server."
     else:
         return ""
 
@@ -132,7 +152,7 @@ def show_hotspot_page(browser_handler: BrowserHandler):
     browser_handler.view_webpage(url)
 
     # Stay in a loop until the wifi status changes
-    while not r.getbit("wifi-connected", offset=0):
+    while not r.getbit("internet-connected", offset=0):
         sleep(0.1)
 
 
@@ -190,7 +210,7 @@ def main():
     r = connect_to_redis()
     wm = wait_for_wifi_manager()
     if wm:
-        while not r.getbit("wifi-connected", 0):
+        while not r.getbit("internet-connected", 0):
             if r.getbit("wifi-manager-connecting", 0):
                 show_hotspot_page(browser_handler)
             else:

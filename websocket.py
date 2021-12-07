@@ -2,6 +2,8 @@ import asyncio
 import json
 import logging
 import socket
+from datetime import datetime
+from time import sleep
 
 import websockets
 from websockets.exceptions import WebSocketException
@@ -15,58 +17,63 @@ from settings import settings
 
 
 async def subscribe_to_updates():
-    """ Open a websocket connection with the server. When the string 'updated' is sent, trigger a sync of assets """
+    """ Open a websocket connection with the server """
     while True:
-        # Don't try and open a websocket if we don't have a device uuid yet
-        if settings["device_uuid"] in [None, "None", ""]:
-            logging.warning("Unable to start websocket: No device UUID")
-            await asyncio.sleep(5)
-            continue
         url = settings["websocket_updates_address"] + settings["device_uuid"]
-        # outer loop restarted every time the connection fails
+        logging.info(f"Websocket attempting to connect to {url}")
         try:
             async with websockets.connect(url) as ws:
-                # Send the access token to authenticate
-                logging.info("Attempting to connect to websocket")
-                try:
-                    access_token = get_access_token()
-                    await ws.send(access_token)
-                    auth_response = await asyncio.wait_for(ws.recv(), timeout=10)
-                    logging.info(f"Authentication response: {auth_response}")
-                    if auth_response != "success":
-                        r = connect_to_redis()
-                        r.setbit("websocket-connected", offset=0, value=0)
-                        logging.error("Failed to authenticate websocket")
-                except (asyncio.TimeoutError, websockets.ConnectionClosed):
-                    r = connect_to_redis()
-                    r.setbit("websocket-connected", offset=0, value=0)
-                    logging.error("Error authenticating websocket")
-                logging.info("Websocket connected")
-                while True:
-                    r = connect_to_redis()
-                    try:
-                        r.setbit("websocket-connected", offset=0, value=1)
-                        msg = await asyncio.wait_for(ws.recv(), timeout=10)
-                        message_handler(msg)
-                    except (asyncio.TimeoutError, websockets.ConnectionClosed):
-                        # If we lose the connection, ping the server
-                        try:
-                            pong = await ws.ping()
-                            await asyncio.wait_for(pong, timeout=10)
-                            logging.debug('Ping OK, keeping connection alive...')
-                            continue
-                        except:
-                            # Break to the outer loop if the ping fails and try to reconnection
-                            r.setbit("websocket-connected", offset=0, value=0)
-                            await asyncio.sleep(9)
-                            break
+                await authenticate_websocket(ws)
+                await websocket_loop(ws)
         except (socket.gaierror, ConnectionRefusedError, OSError, WebSocketException) as e:
+            # Log error and wait before trying to reconnect
             r = connect_to_redis()
             r.setbit("websocket-connected", offset=0, value=0)
-            logging.error("Websocket error")
-            logging.error(e)
+            if not r.exists("websocket-dc-timestamp"):
+                last_ws_connection = datetime.now()
+                r.set("websocket-dc-timestamp", last_ws_connection.timestamp())
+                logging.error("Websocket disconnected")
+            logging.exception(e)
             await asyncio.sleep(9)
             continue
+
+
+async def websocket_loop(ws):
+    logging.info("Keeping websocket open")
+    while True:
+        try:
+            r = connect_to_redis()
+            r.setbit("websocket-connected", offset=0, value=1)
+            if r.exists("websocket-dc-timestamp"):
+                logging.info("Websocket reconnected")
+                r.delete("websocket-dc-timestamp")
+            msg = await asyncio.wait_for(ws.recv(), timeout=None)
+            message_handler(msg)
+        except Exception:
+            r = connect_to_redis()
+            r.setbit("websocket-connected", offset=0, value=0)
+            logging.exception("Websocket error")
+            await asyncio.sleep(9)
+            return  # Close this loop
+
+
+async def authenticate_websocket(ws):
+    # Send the access token to authenticate
+    logging.info("Attempting to authenticate websocket")
+    try:
+        access_token = get_access_token()
+        await ws.send(access_token)
+        auth_response = await asyncio.wait_for(ws.recv(), timeout=10)
+        logging.info(f"Authentication response: {auth_response}")
+        if auth_response != "success":
+            r = connect_to_redis()
+            r.setbit("websocket-connected", offset=0, value=0)
+            logging.error("Failed to authenticate websocket")
+    except (asyncio.TimeoutError, websockets.ConnectionClosed):
+        r = connect_to_redis()
+        r.setbit("websocket-connected", offset=0, value=0)
+        logging.exception("Error authenticating websocket")
+    logging.info("Websocket authenticated")
 
 
 def message_handler(msg):
@@ -88,9 +95,23 @@ def message_handler(msg):
         sync.get_image(image_uuid)
 
 
+def wait_for_device_uuid(retries: int, wt=1) -> bool:
+    for _ in range(retries):
+        if settings["device_uuid"] in [None, "None", ""]:
+            logging.warning("Waiting websocket: No device UUID")
+            sleep(wt)
+            continue
+        else:
+            return True
+    return False
+
+
 if __name__ == "__main__":
     settings.load()
     logging.getLogger().setLevel(logging.DEBUG if settings['debug_logging'] else logging.INFO)
 
-    #sync.full_sync()
+    # sync.full_sync()
+
+    # Don't try and open a websocket if we don't have a device uuid yet
+    wait_for_device_uuid(retries=100)
     asyncio.run(subscribe_to_updates())
