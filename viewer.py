@@ -4,8 +4,6 @@
 import logging
 import urllib.parse
 from datetime import datetime
-from os import getenv
-from signal import signal, SIGALRM, SIGUSR1
 from time import sleep
 
 import humanize
@@ -14,7 +12,6 @@ import requests
 import sync
 from authentication import register_new_client, poll_for_authentication, get_auth_header
 from lib.browser_handler import BrowserHandler
-from lib.errors import SigalrmException
 from lib.models import ScheduleSlot
 from lib.scheduler import Scheduler
 from lib.utils import connect_to_redis, \
@@ -25,29 +22,8 @@ __license__ = "Dual License: GPLv2 and Commercial License"
 
 EMPTY_PL_DELAY = 5  # secs
 SCREEN_TICK_DELAY = 0.1  # secs
-
-INITIALIZED_FILE = '/.kenban/initialized'
-WATCHDOG_PATH = '/tmp/screenly.watchdog'
-
 LOAD_SCREEN = f'http://{LISTEN}:{PORT}/img/loading.png'
 NEW_SETUP_SCREEN = f'http://{LISTEN}:{PORT}/img/new-setup.png'
-
-HOME = None
-
-
-def sigalrm():
-    """
-    Signal just throw an SigalrmException
-    """
-    raise SigalrmException("SigalrmException")
-
-
-def sigusr1():
-    """
-    The signal interrupts sleep() calls, so the currently
-    playing web or image asset is skipped.
-    """
-    logging.info('USR1 received, skipping.')
 
 
 def build_schedule_slot_uri(schedule_slot: ScheduleSlot, event=None) -> str:
@@ -130,12 +106,6 @@ def display_loop(browser_handler: BrowserHandler, scheduler: Scheduler):
 
 
 def setup():
-    global HOME
-    HOME = getenv('HOME', '/home/pi')
-
-    signal(SIGUSR1, sigusr1)
-    signal(SIGALRM, sigalrm)
-
     settings.load()
     logging.getLogger().setLevel(logging.DEBUG if settings['debug_logging'] else logging.INFO)
 

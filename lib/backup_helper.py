@@ -1,7 +1,6 @@
 import tarfile
 from datetime import datetime
 from os import path, getenv, remove
-import sh
 
 directories = ['.kenban', 'kenban_assets']
 default_archive_name = "kenban-backup"

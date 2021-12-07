@@ -45,18 +45,6 @@ def get_uptime():
     return uptime_seconds
 
 
-def get_playlist():
-    kenban_db = os.path.join(os.getenv('HOME'), '.kenban/kenban.db')
-    playlist = []
-    if os.path.isfile(kenban_db):
-        conn = sqlite3.connect(kenban_db)
-        c = conn.cursor()
-        for row in c.execute('SELECT * FROM assets;'):
-            playlist.append(row)
-        c.close
-    return playlist
-
-
 def get_load_avg():
     """
     Returns load average rounded to two digits.
@@ -82,6 +70,7 @@ def get_git_short_hash():
 
 def get_git_hash():
     return os.getenv('GIT_HASH')
+
 
 def try_connectivity():
     urls = [
@@ -154,7 +143,6 @@ def compile_report():
     report['uptime'] = get_uptime()
     report['monitor'] = get_monitor_status()
     report['display_power'] = get_display_power()
-    report['playlist'] = get_playlist()
     report['git_hash'] = get_git_hash()
     report['connectivity'] = try_connectivity()
     report['loadavg'] = get_load_avg()
