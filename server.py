@@ -1,28 +1,22 @@
-import logging
 import os
 from os import path
 
 from flask import Flask, request, render_template
-from werkzeug.exceptions import HTTPException
 
 from lib.models import Base, engine
-from settings import PORT, LISTEN, settings
+from settings import settings
 
 __license__ = "Dual License: GPLv2 and Commercial License"
 
-# Create config dir if it doesn't exist
+# Create dirs if they doesn't exist
 if not path.isdir(settings.get_configdir()):
     os.makedirs(settings.get_configdir())
-# Create images and templates folder if they don't exist
 if not os.path.isdir(settings['images_folder']):
     os.mkdir(settings['images_folder'])
-# Create config dir if it doesn't exist
 if not os.path.isdir(settings['templates_folder']):
     os.mkdir(settings['templates_folder'])
 
-# Initialise database
 Base.metadata.create_all(engine)
-
 
 template_folder = settings["templates_folder"] or '/data/kenban_templates/'
 app = Flask(__name__, template_folder=template_folder)
@@ -82,9 +76,4 @@ def connection_error():
         message = "Error"
     return render_template('error.html', message=message)
 
-
-@app.errorhandler(HTTPException)
-def handle_exception(e):
-    logging.warning(e.get_response())
-    return render_template('error.html', message="Error")
 
