@@ -18,13 +18,11 @@ def generate_password(pw_length=10):
     return "".join(random.SystemRandom().choice(characters) for _ in range(pw_length))
 
 
-def generate_random_word_password(no_of_words=1, min_length=8):
-    lines = open('/usr/share/dict/words').read().splitlines()
+def generate_random_word_password(no_of_words=3):
+    lines = open('wordlist.txt').read().splitlines()
     words = []
     for x in range(0, no_of_words):
         word = random.choice(lines)
-        while '\'' in word or len(word) < min_length:  # Don't use a word with an apostrophe
-            word = random.choice(lines)
         words.append(word)
     return "-".join(words)
 
@@ -32,7 +30,7 @@ def generate_random_word_password(no_of_words=1, min_length=8):
 def start_wifi_connect():
     logging.info("Creating hotspot with wifi-connect application")
     ssid = 'Kenban-{}'.format(generate_password(pw_length=4))
-    ssid_password = generate_random_word_password(no_of_words=1, min_length=8)
+    ssid_password = generate_random_word_password(no_of_words=3)
 
     r.set("ssid", ssid)
     r.set("ssid-password", ssid_password)
