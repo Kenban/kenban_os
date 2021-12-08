@@ -1,18 +1,32 @@
+import logging
 import os
 from os import path
 
-import redis
 from flask import Flask, request, render_template
-from gunicorn.app.base import Application
+from werkzeug.exceptions import HTTPException
 
 from lib.models import Base, engine
-from lib.utils import connect_to_redis
 from settings import PORT, LISTEN, settings
 
 __license__ = "Dual License: GPLv2 and Commercial License"
 
+# Create config dir if it doesn't exist
+if not path.isdir(settings.get_configdir()):
+    os.makedirs(settings.get_configdir())
+# Create images and templates folder if they don't exist
+if not os.path.isdir(settings['images_folder']):
+    os.mkdir(settings['images_folder'])
+# Create config dir if it doesn't exist
+if not os.path.isdir(settings['templates_folder']):
+    os.mkdir(settings['templates_folder'])
+
+# Initialise database
+Base.metadata.create_all(engine)
+
+
 template_folder = settings["templates_folder"] or '/data/kenban_templates/'
 app = Flask(__name__, template_folder=template_folder)
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 
 @app.route('/kenban')
@@ -69,34 +83,8 @@ def connection_error():
     return render_template('error.html', message=message)
 
 
-if __name__ == "__main__":
-    # Create config dir if it doesn't exist
-    if not path.isdir(settings.get_configdir()):
-        os.makedirs(settings.get_configdir())
-    # Create images and templates folder if they don't exist
-    if not os.path.isdir(settings['images_folder']):
-        os.mkdir(settings['images_folder'])
-    # Create config dir if it doesn't exist
-    if not os.path.isdir(settings['templates_folder']):
-        os.mkdir(settings['templates_folder'])
+@app.errorhandler(HTTPException)
+def handle_exception(e):
+    logging.warning(e.get_response())
+    return render_template('error.html', message="Error")
 
-    # Initialise database
-    Base.metadata.create_all(engine)
-
-    app.config['TEMPLATES_AUTO_RELOAD'] = True
-    config = {
-        'bind': '{}:{}'.format(LISTEN, PORT),
-        'threads': 2,
-        'timeout': 20
-    }
-
-
-    class GunicornApplication(Application):
-        def init(self, parser, opts, args):
-            return config
-
-        def load(self):
-            return app
-
-
-    GunicornApplication().run()

@@ -16,4 +16,4 @@ if [ -n "${OVERWRITE_CONFIG}" ]; then
     cp /usr/src/app/ansible/roles/kenban/files/kenban.conf "/data/.kenban/kenban.conf"
 fi
 
-python3 server.py
+gunicorn --workers=1 -b 127.0.0.1:8080 server:app
