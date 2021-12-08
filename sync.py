@@ -104,7 +104,7 @@ def sync_templates(overwrite=False):
             logging.debug("Already got template " + template_uuid)
             continue
         url = settings["server_address"] + settings["template_url"] + template_uuid
-        template = kenban_server_request(url=url, method='GET', headers=get_auth_header()).content
+        template = kenban_server_request(url=url, method='GET', headers=get_auth_header(), decode_json=False)
         fp = settings["templates_folder"] + template_uuid
         with open(fp, 'wb') as output_file:
             output_file.write(template)

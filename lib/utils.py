@@ -113,21 +113,23 @@ def wait_for_wifi_manager(retries=50, wt=0.1) -> bool:
     return False
 
 
-def kenban_server_request(url: string, method: string, data=None, headers=None):
-    logging.info(f"Making {method} request to {url}")
+def kenban_server_request(url: string, method: string, data=None, headers=None, decode_json=True):
+    logging.debug(f"Making {method} request to {url}")
     try:
         response = requests.request(url=url, method=method, data=data, headers=headers)
         response.raise_for_status()
         logging.debug(f"Response: {response.content}")
-    except requests.exceptions.HTTPError as error:
-        logging.error(f"HTTP Error while reaching {url}: {error}")
+    except requests.exceptions.HTTPError:
+        logging.exception(f"HTTP Error while reaching {url}")
         return None
-    except requests.exceptions.ConnectionError as e:
-        logging.error(f"Could not connect to authorisation server at {url}")
-        logging.error(e)
+    except requests.exceptions.ConnectionError:
+        logging.exception(f"Could not connect to authorisation server at {url}")
         return None
-    try:
-        return json.loads(response.content)
-    except ValueError as e:
-        logging.error(e)
-        return None
+    if decode_json:
+        try:
+            return json.loads(response.content)
+        except ValueError:
+            logging.exception(f"Error decoding JSON returned from {url}")
+            return None
+    else:
+        return response.content
