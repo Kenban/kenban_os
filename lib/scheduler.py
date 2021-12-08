@@ -46,7 +46,7 @@ class Scheduler(object):
         """ Check if it's time for the next slot in the order, and switch if so"""
         if not self.next_slot:
             logging.info("No next slot set")
-        if WEEKDAY_DICT[self.next_slot.weekday] == datetime.now().weekday() and \
+        elif WEEKDAY_DICT[self.next_slot.weekday] == datetime.now().weekday() and \
                 datetime.now().time() > self.next_slot.start_time:
             self.set_current_slot(self.next_slot)
 
