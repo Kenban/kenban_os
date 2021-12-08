@@ -13,7 +13,7 @@ ARG GIT_BRANCH
 ENV GIT_BRANCH=$GIT_BRANCH
 
 COPY docker/nginx/nginx.conf /etc/nginx/sites-enabled/kb-os.conf
-COPY docker/nginx/404.html /var/www/html/404.html
+COPY docker/nginx/nginx-error-page.html /var/www/errors/all-errors.html
 RUN rm -f /etc/nginx/sites-enabled/default
 
 CMD ["nginx", "-g", "daemon off;"]
