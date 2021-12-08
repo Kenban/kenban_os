@@ -13,7 +13,6 @@ from lib.models import Session
 from lib.utils import kenban_server_request
 from settings import settings
 
-
 HOME = os.getenv('HOME', '/home/pi')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
@@ -29,18 +28,18 @@ celery = Celery(
 
 @celery.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    # todo set full sync task up properly
-    hour = randrange(0, 24)
-    minute = randrange(0, 60)
-    day = randrange(0, 7)
-    sender.add_periodic_task(crontab(hour=hour, minute=minute, day_of_week=day), full_sync.s(), )
+    # Do a weekly re-download of everything
+    sender.add_periodic_task(crontab(day_of_week=randrange(0, 7),
+                                     hour=randrange(0, 24),
+                                     minute=randrange(0, 60),
+                                     ), full_sync.s(overwrite=True), )
 
 
 @celery.task
-def full_sync():
+def full_sync(overwrite=False):
     logging.info("Performing full sync with kenban server")
-    sync_images()
-    sync_templates()
+    sync_images(overwrite=True)
+    sync_templates(overwrite=True)
     sync_schedule_slots()
     sync_events()
     settings["last_update"] = get_server_last_update_time()  # May save error message from the server. This is ok

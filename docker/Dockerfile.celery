@@ -15,7 +15,7 @@ ARG GIT_BRANCH
 ENV GIT_BRANCH=$GIT_BRANCH
 
 CMD celery worker \
-  -A server.celery \
+  -A sync.celery \
   -B -n worker@kenban \
   --loglevel=info \
   --schedule \
