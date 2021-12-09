@@ -82,6 +82,11 @@ def create_banner_message():
                 last_ws_connected_text = "less than a minute ago"
             return f"Unable to reach Kenban server. Last sync {last_ws_connected_text}"
         return f"Unable to reach Kenban server."
+    elif r.exists("rebooted"):
+        if settings["screen_name"] not in [None, "", "None"]:
+            return f"Screen name = {settings['screen_name']}"
+        else:
+            return ""
     else:
         return ""
 
@@ -179,13 +184,14 @@ def main():
 
     r = connect_to_redis()
     wm = wait_for_wifi_manager()
+    # Check to see if we have internet and if wifi manager is starting a hotspot
     if wm:
         while not r.getbit("internet-connected", 0):
             if r.getbit("wifi-manager-connecting", 0):
                 show_hotspot_page(browser_handler)
             else:
                 sleep(0.1)
-    else:
+    else:  # Wifi manager has failed to start
         if settings["refresh_token"] in [None, "None", ""]:
             # If device is paired, continue anyway
             r = connect_to_redis()
@@ -204,11 +210,10 @@ def main():
         confirm_setup_completion()
     else:
         logging.info(f"Device already paired")
-        browser_handler.view_image(LOAD_SCREEN)
 
     scheduler = Scheduler()
-
     logging.debug('Entering infinite loop.')
+    r.set("rebooted", 1, ex=15)
     while True:
         display_loop(browser_handler=browser_handler, scheduler=scheduler)
 
