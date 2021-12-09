@@ -10,7 +10,7 @@ from celery import Celery
 from authentication import get_auth_header
 from lib.db_helper import create_or_update_schedule_slot, create_or_update_event
 from lib.models import Session
-from lib.utils import kenban_server_request
+from lib.utils import kenban_server_request, connect_to_redis
 from settings import settings
 
 HOME = os.getenv('HOME', '/home/pi')
@@ -44,6 +44,8 @@ def full_sync(overwrite=False):
     sync_events()
     settings["last_update"] = get_server_last_update_time()  # May save error message from the server. This is ok
     settings.save()
+    r = connect_to_redis()
+    r.set("refresh-browser", True)
 
 
 def sync_schedule_slots():
@@ -108,6 +110,19 @@ def sync_templates(overwrite=False):
         with open(fp, 'wb') as output_file:
             output_file.write(template)
             logging.info("Saved template " + template_uuid)
+            
+
+def get_template(template_uuid):
+    url = settings["server_address"] + settings["template_url"] + template_uuid
+    template = kenban_server_request(url=url, method='GET', headers=get_auth_header(), decode_json=False)
+    if not template:
+        return None
+    if not os.path.exists(settings["templates_folder"]):
+        os.makedirs(settings["templates_folder"])
+    fp = settings["templates_folder"] + template_uuid
+    with open(fp, 'wb') as output_file:
+        output_file.write(template)
+        logging.info("Saved template " + template_uuid)
 
 
 def get_image(image_uuid):
@@ -131,3 +146,13 @@ def get_server_last_update_time():
     url = settings['server_address'] + settings['update_url'] + "/" + device_uuid
     server_update_time = kenban_server_request(url=url, method='GET', headers=get_auth_header())
     return server_update_time
+
+
+def ensure_images_and_templates_in_local_storage(payload):
+    existing_image_uuids = os.listdir(settings["images_folder"])
+    existing_template_uuids = os.listdir(settings["templates_folder"])
+
+    if "foreground_image_uuid" in payload and payload["foreground_image_uuid"] not in existing_image_uuids:
+        get_image(payload["foreground_image_uuid"])
+    if "template_uuid" in payload and payload["template_uuid"] not in existing_template_uuids:
+        get_template(payload["template_uuid"])

@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import os
 import socket
 from datetime import datetime
 from time import sleep
@@ -84,15 +85,20 @@ def message_handler(msg):
         return
     if message_type == "schedule_slot":
         with Session() as session:
+            sync.ensure_images_and_templates_in_local_storage(payload)
             create_or_update_schedule_slot(session, payload)
             session.commit()
     if message_type == "event":
         with Session() as session:
+            sync.ensure_images_and_templates_in_local_storage(payload)
             create_or_update_event(session, payload)
             session.commit()
     if message_type == "image":
         image_uuid = payload["image_uuid"]
         sync.get_image(image_uuid)
+        r = connect_to_redis()
+        # Browser always refreshes if event/slot changes, because this alters the url. Need to force one for images
+        r.set("refresh-browser", True)
 
 
 def wait_for_device_uuid(retries: int, wt=1) -> bool:

@@ -5,7 +5,7 @@ from time import sleep
 import pydbus
 import sh
 
-from lib.utils import string_to_bool
+from lib.utils import string_to_bool, connect_to_redis
 
 
 class BrowserHandler(object):
@@ -24,9 +24,14 @@ class BrowserHandler(object):
             sleep(1)
 
     def view_webpage(self, uri: str):
+        r = connect_to_redis()
         if self.browser is None or not self.browser.process.alive:
             self.load_browser()
         if self.current_browser_url != uri:
+            self._browser_bus.loadPage(uri)
+            self.current_browser_url = uri
+        elif r.exists("refresh-browser"):
+            r.delete("refresh-browser")
             self._browser_bus.loadPage(uri)
             self.current_browser_url = uri
         logging.info('Current url is {0}'.format(self.current_browser_url))
