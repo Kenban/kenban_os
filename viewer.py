@@ -195,7 +195,6 @@ def main():
         if settings["refresh_token"] in [None, "None", ""]:
             # If device is paired, continue anyway
             r = connect_to_redis()
-            r.set("wifi-error", True)
             logging.warning("Continuing without wifi setup")
         else:
             # If device isn't paired, we can't continue
