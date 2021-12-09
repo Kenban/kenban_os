@@ -98,7 +98,7 @@ def message_handler(msg):
         sync.get_image(image_uuid)
         r = connect_to_redis()
         # Browser always refreshes if event/slot changes, because this alters the url. Need to force one for images
-        r.set("refresh-browser", True)
+        r.set("refresh-browser", 1)
 
 
 def wait_for_device_uuid(retries: int, wt=1) -> bool:
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     settings.load()
     logging.getLogger().setLevel(logging.DEBUG if settings['debug_logging'] else logging.INFO)
 
-    # sync.full_sync()
+    sync.full_sync()
 
     # Don't try and open a websocket if we don't have a device uuid yet
     wait_for_device_uuid(retries=100)

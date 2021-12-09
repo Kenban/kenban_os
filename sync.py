@@ -38,14 +38,14 @@ def setup_periodic_tasks(sender, **kwargs):
 @celery.task
 def full_sync(overwrite=False):
     logging.info("Performing full sync with kenban server")
-    sync_images(overwrite=True)
-    sync_templates(overwrite=True)
+    sync_images(overwrite=overwrite)
+    sync_templates(overwrite=overwrite)
     sync_schedule_slots()
     sync_events()
     settings["last_update"] = get_server_last_update_time()  # May save error message from the server. This is ok
     settings.save()
     r = connect_to_redis()
-    r.set("refresh-browser", True)
+    r.set("refresh-browser", 1)
 
 
 def sync_schedule_slots():
@@ -126,17 +126,15 @@ def get_template(template_uuid):
 
 
 def get_image(image_uuid):
-    url = settings['server_address'] + settings['image_url'] + image_uuid
-    image = kenban_server_request(url=url, method='GET', headers=get_auth_header())
-    if not image:
-        return None
-    if not os.path.exists(settings["images_folder"]):
-        os.makedirs(settings["images_folder"])
+    kenban_url = settings['server_address'] + settings['image_url'] + "image/" + image_uuid
+    image = kenban_server_request(url=kenban_url, method='GET', headers=get_auth_header())
     img_data = requests.get(image["src"]).content
-    fp = settings["images_folder"] + image["uuid"]
+    if not img_data:
+        return None
+    fp = settings["images_folder"] + image_uuid
     with open(fp, 'wb') as output_file:
         output_file.write(img_data)
-        logging.info("Saving Image " + image["uuid"])
+        logging.info("Saving Image " + image_uuid)
 
 
 def get_server_last_update_time():
