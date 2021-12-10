@@ -101,8 +101,8 @@ def message_handler(msg):
         r.set("refresh-browser", 1)
 
 
-def wait_for_device_uuid(retries: int, wt=1) -> bool:
-    for _ in range(retries):
+def wait_for_device_uuid(wt=1) -> bool:
+    while True:
         if settings["device_uuid"] in [None, "None", ""]:
             logging.warning("Waiting websocket: No device UUID")
             sleep(wt)
@@ -115,9 +115,8 @@ def wait_for_device_uuid(retries: int, wt=1) -> bool:
 if __name__ == "__main__":
     settings.load()
     logging.getLogger().setLevel(logging.DEBUG if settings['debug_logging'] else logging.INFO)
+    # Don't try and connect if we don't have a device uuid yet
+    wait_for_device_uuid()
 
     sync.full_sync()
-
-    # Don't try and open a websocket if we don't have a device uuid yet
-    wait_for_device_uuid(retries=100)
     asyncio.run(subscribe_to_updates())

@@ -8,6 +8,9 @@
 <div class="logo-container page-header text-center">
     <img src="img/kenbanlogo.png" class="img-fluid"/>
 </div>
-{{ message }}
+Flask server error
+{% if message %}
+    {{ message }}
+{% endif %}
 </body>
 </html>

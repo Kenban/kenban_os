@@ -72,8 +72,10 @@ def splash_page():
 @app.route('/error')
 def connection_error():
     message = request.args['message']
-    if not message:
-        message = "Error"
     return render_template('error.html', message=message)
 
+
+# @app.errorhandler(404)
+# def page_not_found(e):
+#     return render_template('error.html'), 404
 

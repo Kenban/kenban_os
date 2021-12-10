@@ -7,15 +7,13 @@ from datetime import datetime
 from time import sleep
 
 import humanize
-import requests
 
 import sync
 from authentication import register_new_client, poll_for_authentication, get_auth_header
 from lib.browser_handler import BrowserHandler
 from lib.models import ScheduleSlot
 from lib.scheduler import Scheduler
-from lib.utils import connect_to_redis, \
-    get_db_mtime, wait_for_server, wait_for_wifi_manager
+from lib.utils import connect_to_redis, get_db_mtime, wait_for_server, wait_for_wifi_manager, kenban_server_request
 from settings import settings, LISTEN, PORT
 
 __license__ = "Dual License: GPLv2 and Commercial License"
@@ -133,17 +131,7 @@ def show_hotspot_page(browser_handler: BrowserHandler):
 
 def confirm_setup_completion():
     url = settings['server_address'] + settings['setup_complete'] + "/" + settings["device_uuid"]
-    headers = get_auth_header()
-    logging.debug(f"Confirming setup completion to {url}")
-    try:
-        response = requests.post(url=url, headers=headers)
-        response.raise_for_status()
-    except requests.exceptions.HTTPError as error:
-        logging.warning("HTTP Error confirming completion:" + str(error))
-        return None
-    except ConnectionError:
-        logging.warning("Could not connect to authorisation server at {0}".format(url))
-        return None
+    kenban_server_request(url=url, method='POST', data={"complete": True}, headers=get_auth_header())
 
 
 def device_pair(browser_handler: BrowserHandler):

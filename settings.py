@@ -24,6 +24,7 @@ DEFAULTS = {
     'api': {
         'device_register_uri': '/api/v1/device_pairing/new',
         'device_auth_uri': '/api/v1/device_pairing/authorise',
+        'setup_complete': '/api/v1/device_pairing/setup-complete',
         'refresh_access_token_url': '/api/v1/auth/access-token-refresh',
         'update_url': '/api/v1/screen/last_update',
         'image_url': '/api/v1/image/',
