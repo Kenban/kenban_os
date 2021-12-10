@@ -98,6 +98,16 @@ def monitoring_loop():
             sleep(1)
 
 
+def wait_for_network(retries=10, wt=1):
+    # FIXME On first startup this basically waits for 10 seconds and assumes that NetworkManager is set up by then.
+    #  Briefly tried implementing the pydbus connection like in screenly, but couldn't get it working
+    for _ in range(0, retries):
+        if gateways().get('default'):
+            return
+        else:
+            sleep(wt)
+
+
 if __name__ == "__main__":
 
     logging.basicConfig(filename='wifi_manager.log',
@@ -106,7 +116,7 @@ if __name__ == "__main__":
                         level=logging.DEBUG,
                         datefmt='%Y-%m-%d %H:%M:%S')
 
-    sleep(10)  # fixme This is here to allow the network to start up or we will create a hotspot every time. This isn't ideal
+    wait_for_network()
     wait_for_redis(500)
     initial_startup()
     # Start infinite loop

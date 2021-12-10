@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import os
 import socket
 from datetime import datetime
 from time import sleep
@@ -103,7 +102,8 @@ def message_handler(msg):
 
 def wait_for_refresh_token(wt=5) -> bool:
     while True:
-        if settings["access_token"] in [None, "None", ""]:
+        settings.load()
+        if settings["refresh_token"] in [None, "None", ""]:
             logging.warning("Websocket waiting to start: No refresh token")
             sleep(wt)
             continue
