@@ -109,6 +109,7 @@ sudo find /usr/share/locale \
   -exec rm -r {} \;
 
 sudo chown -R pi:pi /home/pi
+sudo chmod 755 /home/pi/kenban/network/wifi-connect
 
 # Run sudo w/out password
 if [ ! -f /etc/sudoers.d/010_pi-nopasswd ]; then

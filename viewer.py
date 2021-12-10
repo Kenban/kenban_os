@@ -140,7 +140,8 @@ def device_pair(browser_handler: BrowserHandler):
         device_code, verification_uri = register_new_client()
         if device_code is None:
             logging.error("Failed to register new client with server")
-            show_error_page(browser_handler, "Error trying to contact Kenban server to register device")
+            error_text = "Error trying to contact Kenban server to register device. Please try again later."
+            show_error_page(browser_handler, error_text)
             sleep(10)
             continue
         else:
@@ -155,7 +156,8 @@ def device_pair(browser_handler: BrowserHandler):
                 return
             else:
                 logging.error("Authentication polling failed")
-                show_error_page(browser_handler, "Authentication polling failed")
+                error_text = "Error trying to contact Kenban server to register device. Please try again later."
+                show_error_page(browser_handler, error_text)
                 sleep(10)
                 continue
 
