@@ -101,10 +101,10 @@ def message_handler(msg):
         r.set("refresh-browser", 1)
 
 
-def wait_for_device_uuid(wt=1) -> bool:
+def wait_for_refresh_token(wt=5) -> bool:
     while True:
-        if settings["device_uuid"] in [None, "None", ""]:
-            logging.warning("Waiting websocket: No device UUID")
+        if settings["access_token"] in [None, "None", ""]:
+            logging.warning("Websocket waiting to start: No refresh token")
             sleep(wt)
             continue
         else:
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     settings.load()
     logging.getLogger().setLevel(logging.DEBUG if settings['debug_logging'] else logging.INFO)
     # Don't try and connect if we don't have a device uuid yet
-    wait_for_device_uuid()
+    wait_for_refresh_token()
 
     sync.full_sync()
     asyncio.run(subscribe_to_updates())
