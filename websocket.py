@@ -115,8 +115,13 @@ def wait_for_refresh_token(wt=5) -> bool:
 if __name__ == "__main__":
     settings.load()
     logging.getLogger().setLevel(logging.DEBUG if settings['debug_logging'] else logging.INFO)
-    # Don't try and connect if we don't have a device uuid yet
+    # Don't try and connect if we don't have a token yet
     wait_for_refresh_token()
+    r = connect_to_redis()
+    if r.exists("new-setup"):
+        # Allow the server to set up the new user before performing a sync
+        sleep(5)
 
     sync.full_sync()
+    r.set("initial-sync-completed", 1, 60)
     asyncio.run(subscribe_to_updates())

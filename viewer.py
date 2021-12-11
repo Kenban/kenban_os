@@ -13,7 +13,8 @@ from authentication import register_new_client, poll_for_authentication, get_aut
 from lib.browser_handler import BrowserHandler
 from lib.models import ScheduleSlot
 from lib.scheduler import Scheduler
-from lib.utils import connect_to_redis, get_db_mtime, wait_for_server, wait_for_wifi_manager, kenban_server_request
+from lib.utils import connect_to_redis, get_db_mtime, wait_for_server, wait_for_wifi_manager, kenban_server_request, \
+    wait_for_initial_sync
 from settings import settings, LISTEN, PORT
 
 __license__ = "Dual License: GPLv2 and Commercial License"
@@ -45,9 +46,8 @@ def build_schedule_slot_uri(schedule_slot: ScheduleSlot, event=None) -> str:
 
     # Add any other info
     r = connect_to_redis()
-    logging.info("new_setup:")
-    if schedule_slot.display_text == "" and r.exists("new_setup"):
-        url_parameters["display_text"] = "Visit kenban.co.uk to add a schedule your new device"
+    if schedule_slot.display_text in [None, ""] and r.exists("new-setup"):
+        url_parameters["display_text"] = "Customise this screen by visiting kenban.co.uk/schedule"
     url_parameters["banner_message"] = create_banner_message()
 
     url_parameters = urllib.parse.urlencode(url_parameters)
@@ -151,8 +151,6 @@ def device_pair(browser_handler: BrowserHandler):
             auth_success = poll_for_authentication(device_code=device_code)
             if auth_success:
                 logging.info("Device paired successfully")
-                r = connect_to_redis()
-                r.set("new_setup", "True", ex=3600)
                 return
             else:
                 logging.error("Authentication polling failed")
@@ -191,11 +189,12 @@ def main():
             show_error_page(browser_handler, "Unable to start wifi manager. Please try restarting your device")
 
     if settings["refresh_token"] in [None, "None", ""]:
+        r = connect_to_redis()
+        r.set("new-setup", 1, ex=3600)
         wait_for_server(retries=5)
         device_pair(browser_handler)
         browser_handler.view_image(NEW_SETUP_SCREEN)
-        sleep(10)  # Wait for the server to setup the new screen before continuing
-        sync.full_sync()
+        wait_for_initial_sync()
         confirm_setup_completion()
     else:
         logging.info(f"Device already paired")
