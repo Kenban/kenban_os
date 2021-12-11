@@ -29,6 +29,7 @@ def kenban_display():
     template_uuid = request.args.get('template_uuid')
     display_text = request.args.get('display_text', default="")
     foreground_image_uuid = request.args.get('foreground_image_uuid', default="")
+    time_format = int(request.args.get('time_format', default=0))
     event_text = request.args.get('event_text', default="")
     event_image_uuid = request.args.get('event_image_uuid', default="")
 
@@ -43,6 +44,7 @@ def kenban_display():
                            image_folder_address=image_folder_address,
                            display_text=display_text,
                            foreground_image_uuid=foreground_image_uuid,
+                           time_format=time_format,
                            event_text=event_text,
                            event_image_uuid=event_image_uuid,
                            banner_message=banner_message)
