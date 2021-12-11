@@ -30,11 +30,13 @@ class BrowserHandler(object):
         if self.current_browser_url != uri:
             self._browser_bus.loadPage(uri)
             self.current_browser_url = uri
+            logging.debug('Current url is {0}'.format(self.current_browser_url))
         elif r.exists("refresh-browser"):
+            logging.info('Browser refresh forced')
             r.delete("refresh-browser")
             self._browser_bus.loadPage(uri)
             self.current_browser_url = uri
-        logging.info('Current url is {0}'.format(self.current_browser_url))
+            logging.debug('Current url is {0}'.format(self.current_browser_url))
 
     def view_image(self, uri):
         if self.browser is None or not self.browser.process.alive:
@@ -42,7 +44,7 @@ class BrowserHandler(object):
         if self.current_browser_url is not uri:
             self._browser_bus.loadImage(uri)
             self.current_browser_url = uri
-        logging.info('Current url is {0}'.format(self.current_browser_url))
+        logging.debug('Current url is {0}'.format(self.current_browser_url))
 
         if string_to_bool(getenv('WEBVIEW_DEBUG', '0')):
             logging.info(self.browser.process.stdout)
