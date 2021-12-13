@@ -116,10 +116,9 @@ def refresh_access_token():
     data = json.dumps({"refresh_token": settings["refresh_token"]})
     url = settings['server_address'] + settings["refresh_access_token_url"]
     response = kenban_server_request(url=url, method='POST', data=data)
-    access_token = response["access_token"]
-    if not access_token:
-        logging.error("Failed to get access token from server response")
+    if response is None or "access_token" not in response:
+        logging.error("Failed to get access token from server")
         return None
-    settings["access_token"] = access_token
+    settings["access_token"] = response["access_token"]
     settings.save()
-    return access_token
+    return response["access_token"]
