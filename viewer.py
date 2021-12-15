@@ -8,7 +8,6 @@ from time import sleep
 
 import humanize
 
-import sync
 from authentication import register_new_client, poll_for_authentication, get_auth_header
 from lib.browser_handler import BrowserHandler
 from lib.models import ScheduleSlot
@@ -20,7 +19,7 @@ from settings import settings, LISTEN, PORT
 __license__ = "Dual License: GPLv2 and Commercial License"
 
 EMPTY_PL_DELAY = 5  # secs
-SCREEN_TICK_DELAY = 0.1  # secs
+SCREEN_TICK_DELAY = 0.2  # secs
 LOAD_SCREEN = f'http://{LISTEN}:{PORT}/img/loading.png'
 NEW_SETUP_SCREEN = f'http://{LISTEN}:{PORT}/img/new-setup.png'
 
