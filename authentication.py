@@ -30,7 +30,10 @@ def get_access_token():
 
 def get_auth_header():
     access_token = get_access_token()
-    header = {"Authorization": "Bearer " + access_token}
+    if access_token:
+        header = {"Authorization": "Bearer " + access_token}
+    else:
+        header = {}
     return header
 
 
