@@ -8,6 +8,7 @@ from lib.utils import WEEKDAY_DICT, get_db_mtime
 
 class Scheduler(object):
     def __init__(self):
+        self.refresh_needed = True
         self.last_update_db_mtime = None
         self.slots: List[ScheduleSlot] = []
         self.current_slot = None
@@ -49,6 +50,7 @@ class Scheduler(object):
         elif WEEKDAY_DICT[self.next_slot.weekday] == datetime.now().weekday() and \
                 datetime.now().time() > self.next_slot.start_time:
             self.set_current_slot(self.next_slot)
+            self.refresh_needed = True
 
         if self.daily_events_date != datetime.now().date():
             self.calculate_daily_events()
@@ -104,3 +106,4 @@ class Scheduler(object):
                 new_events.remove(e)
         self.events = new_events
         self.calculate_daily_events()
+        self.refresh_needed = True

@@ -4,13 +4,12 @@ import os
 import string
 from datetime import datetime, time
 from distutils.util import strtobool
-from os import getenv
 from time import sleep
 
 import redis
 import requests
 
-from settings import settings, LISTEN, PORT
+from settings import settings
 
 WEEKDAY_DICT = {
     "Monday": 0,
@@ -22,7 +21,7 @@ WEEKDAY_DICT = {
     "Sunday": 6
 }
 
-redis_pool = redis.ConnectionPool(host='redis')
+redis_pool = redis.ConnectionPool(host='localhost')  # todo change to local
 
 
 def string_to_bool(s):
@@ -34,6 +33,7 @@ def is_ci():
     Returns True when run on Travis.
     """
     return string_to_bool(os.getenv('CI', False))
+
 
 def connect_to_redis():
     return redis.Redis(connection_pool=redis_pool)
@@ -49,18 +49,6 @@ def wait_for_redis(retries: int, wt=0.1):
         except redis.exceptions.ConnectionError:
             sleep(wt)
     logging.error("Failed to wait for redis to start")
-
-
-def is_docker():
-    return os.path.isfile('/.dockerenv')
-
-
-def is_balena_app():
-    """
-    Checks the application is running on Balena Cloud
-    :return: bool
-    """
-    return bool(getenv('RESIN', False)) or bool(getenv('BALENA', False))
 
 
 def get_db_mtime():
@@ -91,17 +79,8 @@ def time_parser(t) -> time:
         return time(0, 0)
 
 
-def wait_for_server(retries: int, wt=1) -> bool:
-    for _ in range(retries):
-        try:
-            requests.get('http://{0}:{1}'.format(LISTEN, PORT))
-            return True
-        except requests.exceptions.ConnectionError:
-            sleep(wt)
-    return False
-
-
 def wait_for_wifi_manager(retries=50, wt=0.1) -> bool:
+    logging.info("Waiting for wifi_manager to startup")
     wait_for_redis(200, 0.1)
     r = connect_to_redis()
     for _ in range(0, retries):

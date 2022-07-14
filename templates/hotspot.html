@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Hotspot Page</title>
+    <style type="text/css">
+        html, body {
+            height: 100%;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+<body class="splash container d-table">
+<div class="col-12 d-table-cell align-middle">
+    <div class="splash-body p-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="logo-container page-header text-center">
+                    <img src="logo.png" class="img-fluid"/>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12 text-center">
+                <b>AP Mode</b>
+                <p>To configure Wi-Fi connection, connect to the access point using your phone or other device. Follow the instructions on the device to enter the details for your home network.
+                <div class="form-actions">
+                <span>
+                    SSID: {{ ssid }}
+                    <br>
+                    Password: {{ ssid_password }}
+                </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

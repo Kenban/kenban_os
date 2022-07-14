@@ -10,7 +10,7 @@ import redis
 from netifaces import gateways, interfaces
 
 r = redis.Redis("127.0.0.1", port=6379)
-
+# FIXME There's a bug with the wifi connect UI creating 2 password fields
 """ Handles the WiFi for the Pi.Runs natively on the Pi and checks for network info. If no  """
 
 def generate_password(pw_length=10):

@@ -1,8 +1,0 @@
-[Plymouth Theme]
-Name=Kenban
-Description=Kenban Splash Screen
-ModuleName=script
-
-[script]
-ImageDir=/usr/share/plymouth/themes/kenban
-ScriptFile=/usr/share/plymouth/themes/kenban/kenban.script

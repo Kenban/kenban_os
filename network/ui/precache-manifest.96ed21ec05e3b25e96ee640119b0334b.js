@@ -25,6 +25,6 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
   },
   {
     "revision": "34c0c94e712ddb861346d68dfb00ab87",
-    "url": "/static/media/kenbanlogo.png"
+    "url": "/static/media/logo.34c0c94e.svg"
   }
 ]);

@@ -1,0 +1,14 @@
+redis==3.5.3
+requests==2.24.0
+SQLAlchemy==1.4.23
+python-dateutil==2.8.1
+sh==1.8
+pydbus==0.6.0
+PyYAML==5.4.1
+netifaces==0.10.9
+celery==4.4.7
+Flask==1.1.2
+humanize==3.13.1
+configparser==4.0.2
+websockets==10.1
+PyJWT==1.7.1
