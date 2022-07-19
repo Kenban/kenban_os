@@ -1,6 +1,6 @@
 import datetime
 import json
-import logging
+import logging.config
 import uuid
 from json import JSONDecodeError
 from os import getenv
@@ -17,6 +17,8 @@ from settings import settings
 
 PORT = int(getenv('PORT', 8080))
 LISTEN = getenv('LISTEN', '127.0.0.1')
+
+logging.config.fileConfig(fname='logging.ini', disable_existing_loggers=True)
 
 
 def get_access_token():

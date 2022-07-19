@@ -1,10 +1,11 @@
-import logging
+import logging.config
 
 from dateutil.parser import parse
 
 from lib.models import Session, ScheduleSlot, Event
 from lib.utils import time_parser
 
+logging.config.fileConfig(fname='logging.ini', disable_existing_loggers=True)
 
 def create_or_update_schedule_slot(session: Session, slot: ScheduleSlot):
     logging.debug("Saving schedule slot")

@@ -1,7 +1,9 @@
 #!/usr/bin/python
-import logging
+import logging.config
+import os
 import random
 import re
+import signal
 import subprocess
 from datetime import datetime
 from time import sleep
@@ -11,7 +13,9 @@ from netifaces import gateways, interfaces
 
 r = redis.Redis("127.0.0.1", port=6379)
 # FIXME There's a bug with the wifi connect UI creating 2 password fields
-""" Handles the WiFi for the Pi.Runs natively on the Pi and checks for network info. If no  """
+
+logging.config.fileConfig(fname='../logging.ini', disable_existing_loggers=True)
+logger = logging.getLogger("wifi_manager")
 
 def generate_password(pw_length=10):
     characters = 'ABCDEFGHJKLMNPRSTUVWXYZ'
@@ -28,21 +32,27 @@ def generate_random_word_password(no_of_words=3):
 
 
 def start_wifi_connect():
-    logging.info("Creating hotspot with wifi-connect application")
+    logger.info("Creating hotspot with wifi-connect application")
     ssid = 'Kenban-{}'.format(generate_password(pw_length=4))
     ssid_password = generate_random_word_password(no_of_words=3)
 
     r.set("ssid", ssid)
     r.set("ssid-password", ssid_password)
-    logging.debug(f"ssid {ssid}")
-    logging.debug(f"password: {ssid_password}")
+    logger.debug(f"ssid {ssid}")
+    logger.debug(f"password: {ssid_password}")
 
     args = ("./wifi-connect", "-s", ssid, "-p", ssid_password)
-    subprocess.Popen(args, stdout=subprocess.PIPE)
-    while True:
-        if gateways().get('default'):
-            return True
-        sleep(1)
+    process = subprocess.Popen(args, stdout=subprocess.PIPE)
+    # todo test if this kills the process
+    try:
+        while True:
+            if gateways().get('default'):
+                os.kill(process.pid, signal.SIGINT)
+                return True
+            sleep(1)
+    except:
+        logger.error("Killing wifi-connect due to exception in wifi_manager.py")
+        os.kill(process.pid, signal.SIGINT)
 
 
 def wait_for_redis(retries: int, wt=0.1):
@@ -53,7 +63,7 @@ def wait_for_redis(retries: int, wt=0.1):
             return
         except redis.exceptions.ConnectionError:
             sleep(wt)
-    logging.error("Failed to wait for redis to start")
+    logger.error("Failed to wait for redis to start")
 
 
 def initial_startup():
@@ -68,13 +78,13 @@ def initial_startup():
         r.setbit("internet-connected", offset=0, value=0)
         r.setbit("wifi-manager-connecting", offset=0, value=1)
         start_wifi_connect()
-        logging.info("wifi-connect finished")
+        logger.info("wifi-connect finished")
         r.setbit("internet-connected", offset=0, value=1)
         r.setbit("wifi-manager-connecting", offset=0, value=0)
 
     else:
         r.setbit("internet-connected", offset=0, value=0)
-        logging.error("Could not find wireless connection")
+        logger.error("Could not find wireless connection")
         sleep(1)
 
 
@@ -84,7 +94,7 @@ def monitoring_loop():
         if gateways().get('default'):
             r.setbit("internet-connected", offset=0, value=1)
             if last_connected:
-                logging.info("Internet reconnected")
+                logger.info("Internet reconnected")
                 last_connected = None
             logging.debug("Connected")
             sleep(10)
@@ -94,7 +104,7 @@ def monitoring_loop():
             if not last_connected:
                 last_connected = datetime.now()
                 r.set("last-connected", last_connected.timestamp())
-                logging.error("Internet disconnected")
+                logger.error("Internet disconnected")
             sleep(1)
 
 

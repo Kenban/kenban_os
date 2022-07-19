@@ -1,6 +1,6 @@
 import asyncio
 import json
-import logging
+import logging.config
 import socket
 from datetime import datetime
 from time import sleep
@@ -19,20 +19,9 @@ from settings import settings
 from lib.models import Base, engine
 Base.metadata.create_all(engine)
 
-
+logging.config.fileConfig(fname='logging.ini', disable_existing_loggers=True)
 logger = logging.getLogger("websocket")
-logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-f_handler = logging.FileHandler('log-websocket.log')
-f_handler.setLevel(logging.DEBUG)
-f_handler.setFormatter(formatter)
-logger.addHandler(f_handler)
 
-s_handler = logging.StreamHandler()
-s_handler.setLevel(logging.DEBUG)
-s_handler.setFormatter(formatter)
-logger.addHandler(s_handler)
-logger.info("Starting Websocket")
 
 async def subscribe_to_updates():
     """ Open a websocket connection with the server """
@@ -122,7 +111,7 @@ def wait_for_refresh_token(wt=5) -> bool:
     while True:
         settings.load()
         if settings["refresh_token"] in [None, "None", ""]:
-            logger.warning("Websocket waiting to start: No refresh token")
+            logger.debug("Websocket waiting to start: No refresh token")
             sleep(wt)
             continue
         else:

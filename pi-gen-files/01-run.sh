@@ -23,7 +23,6 @@ on_chroot << EOF
   raspi-config nonint do_boot_behaviour B2
   sed -i 's/sam/pi/g' /etc/systemd/system/getty@tty1.service.d/autologin.conf
   
-  systemctl disable dhcpcd dnsmasq
   systemctl enable websocket-sync.service kenban-wifi-manager.service
 
   pip install -r /home/${FIRST_USER_NAME}/kenban/requirements/requirements.txt

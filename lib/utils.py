@@ -1,5 +1,5 @@
 import json
-import logging
+import logging.config
 import os
 import string
 from datetime import datetime, time
@@ -10,6 +10,8 @@ import redis
 import requests
 
 from settings import settings
+
+logging.config.fileConfig(fname='logging.ini', disable_existing_loggers=True)
 
 WEEKDAY_DICT = {
     "Monday": 0,

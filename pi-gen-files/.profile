@@ -32,6 +32,7 @@ if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then
   #exec startx
   # Could use xinit instead of startx
   #exec xinit -- /usr/bin/X -nolisten tcp vt7
+  cd /home/pi/kenban
   xinit /home/pi/kenban/start_viewer.sh $* -- -nocursor :0 vt$XDG_VTNR
 fi
 

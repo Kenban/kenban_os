@@ -1,4 +1,4 @@
-import logging
+import logging.config
 import os
 from datetime import datetime
 from time import sleep
@@ -18,10 +18,11 @@ from lib.utils import connect_to_redis, get_db_mtime, wait_for_wifi_manager, ken
     wait_for_initial_sync
 from settings import settings
 
-__license__ = "Dual License: GPLv2 and Commercial License"
-
 EMPTY_PL_DELAY = 5  # secs
 SCREEN_TICK_DELAY = 0.2  # secs
+
+logging.config.fileConfig(fname='logging.ini', disable_existing_loggers=True)
+logger = logging.getLogger("viewer")
 
 default_templates_env = Environment(
     loader=FileSystemLoader(settings["default_templates_folder"]),
@@ -53,7 +54,7 @@ class DisplayHandler(QThread):
 
     def display_loop(self):
         if self.scheduler.current_slot is None:
-            logging.info('Playlist is empty. Sleeping for %s seconds', EMPTY_PL_DELAY)
+            logger.info('Playlist is empty. Sleeping for %s seconds', EMPTY_PL_DELAY)
             self.show_default_template("loading.html")
             sleep(EMPTY_PL_DELAY)
         else:
@@ -79,9 +80,9 @@ class DisplayHandler(QThread):
         r = connect_to_redis()
         ssid = r.get("ssid").decode("utf-8")
         ssid_password = r.get("ssid-password").decode("utf-8")
-        logging.info("Displaying hotspot page")
-        logging.info(f"SSID = {ssid}")
-        logging.info(f"SSID Password = {ssid_password}")
+        logger.info("Displaying hotspot page")
+        logger.info(f"SSID = {ssid}")
+        logger.info(f"SSID Password = {ssid_password}")
         html = default_templates_env.get_template("hotspot.html").render(ssid=ssid, ssid_password=ssid_password)
         self.show_default_template(html)
 
@@ -90,11 +91,11 @@ class DisplayHandler(QThread):
             sleep(0.1)
 
     def device_pair(self):
-        logging.info("Starting pairing")
+        logger.info("Starting pairing")
         while True:
             device_code, verification_uri = register_new_client()
             if device_code is None:
-                logging.error("Failed to register new client with server")
+                logger.error("Failed to register new client with server")
                 error_text = "Error trying to contact Kenban server to register device. Please try again later."
                 self.show_error_page(error_text)
                 sleep(10)
@@ -104,10 +105,10 @@ class DisplayHandler(QThread):
                 self.show_default_template(html=html)
                 auth_success = poll_for_authentication(device_code=device_code)
                 if auth_success:
-                    logging.info("Device paired successfully")
+                    logger.info("Device paired successfully")
                     return
                 else:
-                    logging.error("Authentication polling failed")
+                    logger.error("Authentication polling failed")
                     error_text = "Error trying to contact Kenban server to register device. Please try again later."
                     self.show_error_page(error_text)
                     sleep(10)
@@ -136,7 +137,7 @@ class DisplayHandler(QThread):
             if settings["refresh_token"] in [None, "None", ""]:
                 # If device is paired, continue anyway
                 r = connect_to_redis()
-                logging.warning("Continuing without wifi setup")
+                logger.warning("Continuing without wifi setup")
             else:
                 # If device isn't paired, we can't continue
                 self.show_error_page("Unable to start wifi manager. Please try restarting your device")
@@ -149,9 +150,9 @@ class DisplayHandler(QThread):
             wait_for_initial_sync()
             self.confirm_setup_completion()
         else:
-            logging.info(f"Device already paired")
+            logger.info(f"Device already paired")
 
-        logging.debug('Entering infinite loop.')
+        logger.debug('Entering infinite loop.')
         r.set("rebooted", 1, ex=15)
         while True:
             self.display_loop()
@@ -160,7 +161,7 @@ class DisplayHandler(QThread):
         # Add the info for the schedule slot
         if not schedule_slot:
             html = default_templates_env.get_template("splash-page.html").render()
-            logging.warning("build_schedule_slot_uri called with no active slot")
+            logger.warning("build_schedule_slot_uri called with no active slot")
             return html
 
         display_text = schedule_slot.display_text if schedule_slot.display_text else ""

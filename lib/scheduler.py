@@ -1,10 +1,11 @@
-import logging
+import logging.config
 from datetime import datetime, timedelta
 from typing import List
 
 from lib.models import ScheduleSlot, Event, Session
 from lib.utils import WEEKDAY_DICT, get_db_mtime
 
+logging.config.fileConfig(fname='logging.ini', disable_existing_loggers=True)
 
 class Scheduler(object):
     def __init__(self):

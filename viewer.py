@@ -1,4 +1,4 @@
-import logging
+import logging.config
 import sys
 
 from PyQt5.QtCore import QUrl, Qt
@@ -14,18 +14,8 @@ Base.metadata.create_all(engine)
 
 app = QApplication(sys.argv)
 
+logging.config.fileConfig(fname='logging.ini', disable_existing_loggers=True)
 logger = logging.getLogger("viewer")
-logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-f_handler = logging.FileHandler('log-viewer.log')
-f_handler.setLevel(logging.DEBUG)
-f_handler.setFormatter(formatter)
-logger.addHandler(f_handler)
-
-s_handler = logging.StreamHandler()
-s_handler.setLevel(logging.DEBUG)
-s_handler.setFormatter(formatter)
-logger.addHandler(s_handler)
 
 
 class WebEngineView(QWidget):

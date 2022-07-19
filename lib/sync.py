@@ -1,5 +1,5 @@
 import os
-import logging
+import logging.config
 from datetime import timedelta
 from random import randrange
 
@@ -12,6 +12,8 @@ from lib.db_helper import create_or_update_schedule_slot, create_or_update_event
 from lib.models import Session
 from lib.utils import kenban_server_request, connect_to_redis
 from settings import settings
+
+logging.config.fileConfig(fname='logging.ini', disable_existing_loggers=True)
 
 HOME = os.getenv('HOME', '/home/pi')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
