@@ -1,39 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <title>Hotspot Page</title>
-    <style type="text/css">
-        html, body {
-            height: 100%;
-            overflow-y: hidden;
-        }
-    </style>
+    <title>Hotspot</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body class="splash container d-table">
-<div class="col-12 d-table-cell align-middle">
-    <div class="splash-body p-5">
-        <div class="row">
-            <div class="col-12">
-                <div class="logo-container page-header text-center">
-                    <img src="logo.png" class="img-fluid"/>
+<body>
+
+<div class="container">
+    <div class="logo-container page-header text-center">
+        <img src="logo.png" class="img-fluid" alt="NoticeHome Logo"/>
+    </div>
+
+
+    <div class="message-container">
+        <div>
+            <p class="message">To connect this NoticeHome to your Wi-Fi, you'll need to use your phone or other device. Connect to the following Wi-Fi network using your phone and follow the instructions to provide your home network's Wi-Fi password.
+
+        </div>
+        <div class="credentials">
+            <div class="credential">
+                Wi-Fi Name:
+                <div class="code">
+                    {{ ssid }}
+                </div>
+            </div>
+            <div class="credential">
+                Password:
+                <div class="code">
+                    {{ ssid_password }}
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-12 text-center">
-                <b>AP Mode</b>
-                <p>To configure Wi-Fi connection, connect to the access point using your phone or other device. Follow the instructions on the device to enter the details for your home network.
-                <div class="form-actions">
-                <span>
-                    SSID: {{ ssid }}
-                    <br>
-                    Password: {{ ssid_password }}
-                </span>
-                </div>
-            </div>
-        </div>
+
     </div>
 </div>
 </body>
 </html>
+
+<style>
+    .credentials {
+
+        box-sizing: border-box;
+        font-style: normal;
+        font-weight: 400;
+        font-size: 20px;
+        line-height: 40px;
+        padding-bottom: 20px;
+
+        display: flex;
+        flex-direction: column;
+        align-self: center;
+        position: center;
+
+    }
+
+    .code {
+        font-size: 30px;
+    }
+
+</style>

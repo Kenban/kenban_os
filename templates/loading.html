@@ -1,32 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <title>Welcome to Kenban OSE</title>
-
-    <style type="text/css">
-        html, body {
-            height: 100%;
-            overflow-y: hidden;
-        }
-    </style>
+    <title>Loading</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body class="splash container d-table">
-<div class="col-12 d-table-cell align-middle">
-    <div class="splash-body p-5">
-        <div class="row">
-            <div class="col-12">
-                <div class="logo-container page-header text-center">
-                    <img src="logo.png" class="img-fluid"/>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-12 text-center">
-                Splash page
-            </div>
-        </div>
+<body>
+
+<div class="container">
+    <div class="logo-container page-header text-center">
+        <img src="logo.png" class="img-fluid" alt="NoticeHome Logo"/>
     </div>
+
+
+    <h1 class="message" id="loading-text">Loading...</h1>
+    <div class="lds-hourglass"></div>
 </div>
 </body>
 </html>
+
+<style>
+
+    #loading-text {
+        font-style: italic;
+    }
+
+    .lds-hourglass {
+        display: inline-block;
+        position: relative;
+        width: 80px;
+        height: 80px;
+    }
+    .lds-hourglass:after {
+        content: " ";
+        display: block;
+        border-radius: 50%;
+        width: 0;
+        height: 0;
+        margin: 8px;
+        box-sizing: border-box;
+        border: 32px solid #6ccaf2;
+        border-color: #6ccaf2 transparent #6ccaf2 transparent;
+        animation: lds-hourglass 2s infinite;
+    }
+    @keyframes lds-hourglass {
+        0% {
+            transform: rotate(0);
+            animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+        }
+        50% {
+            transform: rotate(900deg);
+            animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+        100% {
+            transform: rotate(1800deg);
+        }
+    }
+
+
+
+</style>
