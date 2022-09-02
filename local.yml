@@ -1,0 +1,9 @@
+# ansible playbook
+---
+- name: Update
+  hosts: localhost
+  remote_user: root
+
+  tasks:
+    - name: apt upgrade
+
