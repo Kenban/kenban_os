@@ -7,7 +7,7 @@
   tasks:
     - name: Update nginx to latest
       apt:
-        name: nginx=1.18.0
-        state: present
+        name: nginx
+        state: latest
         update_cache: yes
 
