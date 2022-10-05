@@ -1,1 +1,1 @@
-0 2 * * 2 sleep $(( RANDOM \% 10800)); ansible-pull -U https://github.com/kenban/kenban_os/
+0 2 * * 2 sleep $(( RANDOM \% 10800)); ansible-pull -U https://github.com/kenban/kenban_os/ -C master
