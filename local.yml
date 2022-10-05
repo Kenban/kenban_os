@@ -1,8 +1,7 @@
 # ansible playbook
 ---
 - name: Update
-  hosts: localhost
-  remote_user: pi
+  hosts: all
   become: true
 
   tasks:
