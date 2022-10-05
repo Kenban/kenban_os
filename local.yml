@@ -3,6 +3,8 @@
 - name: Update
   hosts: localhost
   remote_user: root
+  become: true
+  become_method: sudo
 
   tasks:
     - name: Update nginx to 1.18.0
