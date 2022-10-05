@@ -5,7 +5,7 @@
   become: true
 
   tasks:
-    - name: Update nginx to 1.18.0
+    - name: Update nginx to latest
       apt:
         name: nginx=1.18.0
         state: present
