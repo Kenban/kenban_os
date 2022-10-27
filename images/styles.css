@@ -44,7 +44,7 @@ body {
     padding-bottom: 20px;
 }
 
-.success-message {
+.bottom-message {
     display: flex;
     text-align: center;
     align-items: flex-start;
@@ -58,6 +58,29 @@ body {
 .delayed-message {
     animation: appearAnimation 0s none 5s;
     visibility: hidden;
+}
+
+.connecting-container {
+    box-sizing: border-box;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 40px;
+    padding-bottom: 20px;
+
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    position: center;
+}
+
+.connecting-message {
+    display: flex;
+    flex-direction: row;
+    align-self: center;
+    padding: 3px 53px;
+    gap: 10px;
+    position: center;
 }
 
 @keyframes appearAnimation {

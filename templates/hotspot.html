@@ -8,6 +8,7 @@
 <body>
 
 <div class="container">
+
     <div class="logo-container page-header text-center">
         <img src="logo.png" class="img-fluid" alt="NoticeHome Logo"/>
     </div>
@@ -15,7 +16,9 @@
 
     <div class="message-container">
         <div>
-            <p class="message">To connect this NoticeHome to your Wi-Fi, you'll need to use your phone or other device. Connect to the following Wi-Fi network using your phone and follow the instructions to provide your home network's Wi-Fi password.
+            <p class="message">To connect this NoticeHome to your Wi-Fi, you'll need to use your phone or other device.
+                Connect to the following Wi-Fi network using your phone and follow the instructions to provide your home
+                network's Wi-Fi password.
         </div>
         <div class="credentials">
             <div class="credential">
@@ -31,8 +34,45 @@
                 </div>
             </div>
         </div>
-
+        {% if connecting %}
+            <div class="connecting-container">
+                <div><p class="connecting-message">Connecting</p></div>
+                <div class="spin connecting-message"></div>
+            </div>
+        {% endif %}
+        {% if error %}
+            <div class="bottom-message">
+                <p class="message" style="color: red">Error:</p>
+                <p class="message">Failed to connect. Did you enter the correct password for your Wi-Fi? The
+                    password may be on your router. </p>
+            </div>
+        {% endif %}
     </div>
 </div>
 </body>
 </html>
+
+<style>
+    @keyframes spinner {
+        0% {
+            transform: translate3d(-50%, -50%, 0) rotate(0deg);
+        }
+        100% {
+            transform: translate3d(-50%, -50%, 0) rotate(360deg);
+        }
+    }
+
+    .spin::before {
+        animation: 1.5s linear infinite spinner;
+        animation-play-state: inherit;
+        border: solid 5px #ffffff;
+        border-bottom-color: #6ccaf2;
+        border-radius: 50%;
+        content: "";
+        height: 40px;
+        width: 40px;
+        position: absolute;
+        transform: translate3d(-50%, -50%, 0);
+        will-change: transform;
+    }
+</style>

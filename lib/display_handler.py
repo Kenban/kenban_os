@@ -1,8 +1,8 @@
 import logging.config
 import os
-import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import sleep
+
 import humanize
 
 if os.environ.get("DEV") == "True":
@@ -35,6 +35,7 @@ user_templates_env = Environment(
 )
 
 
+# noinspection PyMethodMayBeStatic
 class DisplayHandler(QThread):
     default_template = pyqtSignal(str)
     user_template = pyqtSignal(str)
@@ -48,9 +49,11 @@ class DisplayHandler(QThread):
     #     self.wait()
 
     def show_default_template(self, html):
+        # noinspection PyUnresolvedReferences
         self.default_template.emit(html)
 
     def show_user_template(self, html):
+        # noinspection PyUnresolvedReferences
         self.user_template.emit(html)
 
     def display_loop(self):
@@ -78,18 +81,31 @@ class DisplayHandler(QThread):
 
     def show_hotspot_page(self):
         r = connect_to_redis()
-        r.setbit("hotspot-connected-this-session", offset=0, value=1)
+        r.set("hotspot-connected-this-session", value="True", ex=timedelta(seconds=30))
         ssid = r.get("ssid").decode("utf-8")
         ssid_password = r.get("ssid-password").decode("utf-8")
         logger.info("Displaying hotspot page")
         logger.info(f"SSID = {ssid}")
         logger.info(f"SSID Password = {ssid_password}")
-        html = default_templates_env.get_template("hotspot.html").render(ssid=ssid, ssid_password=ssid_password)
-        self.show_default_template(html)
-
-        # Stay in a loop until the wifi status changes
-        while not r.getbit("internet-connected", offset=0):
-            sleep(0.1)
+        connecting = False
+        error = False
+        current_html = ""
+        status = ""
+        # Enter a loop to update the display according to wifi-connect progress
+        while status != "success":
+            status = r.get("wifi-connect-status").decode('utf-8')
+            if status == "connecting":
+                connecting = True
+                error = False
+            elif status == "user-error":
+                connecting = False
+                error = True
+            new_html = default_templates_env.get_template("hotspot.html").\
+                render(ssid=ssid, ssid_password=ssid_password, connecting=connecting, error=error)
+            if new_html != current_html:
+                current_html = new_html
+                self.show_default_template(current_html)
+            sleep(0.2)
 
     def device_pair(self):
         logger.info("Starting pairing")

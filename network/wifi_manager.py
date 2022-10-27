@@ -1,9 +1,7 @@
 #!/usr/bin/python
 import logging.config
-import os
 import random
 import re
-import signal
 import subprocess
 from datetime import datetime
 from time import sleep
@@ -15,6 +13,11 @@ r = redis.Redis("127.0.0.1", port=6379)
 
 logging.config.fileConfig(fname='../logging.ini', disable_existing_loggers=True)
 logger = logging.getLogger("wifi_manager")
+
+CONNECTING_MESSAGE = "Stopping access point"
+SUCCESS_MESSAGE = "Internet connectivity established"
+PASSWORD_LENGTH_ERROR = "Password length should be at least"
+FAILED_TO_CONNECT_ERROR = "Connection to access point not activated"
 
 
 def generate_password(pw_length=10):
@@ -49,25 +52,28 @@ def start_wifi_connect():
     logger.debug(f"password: {ssid_password}")
 
     args = ("./wifi-connect", "-s", ssid, "-p", ssid_password)
-    process = subprocess.Popen(args, stdout=subprocess.PIPE)
-    # TODO We can't detect the user entering the wrong password. wifi-connect will restart automatically
-    try:
-        while True:
-            if gateways().get('default'):
-                logger.debug("wifi_manager success")
-                os.kill(process.pid, signal.SIGINT)
+    process = subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    while process.poll() is None:
+        # Read the stdout to determine the status of wifi-connect
+        line = process.stdout.readline().decode("utf-8")
+        if line:
+            logger.debug(line)
+            if CONNECTING_MESSAGE in line:
+                r.set("wifi-connect-status", "connecting")
+                logger.info("Connecting to Wi-Fi")
+            if SUCCESS_MESSAGE in line:
+                r.set("wifi-connect-status", "success")
+                r.setbit("internet-connected", offset=0, value=1)
+                logger.info("Connected")
                 return True
-            if process.poll is None:
-                r.setbit("wifi_connect_error", offset=0, value=1)
-                logger.warning("Wifi-connect is no longer running. Killing wifi_manager.py")
-                exit()
-            logger.debug("wifi_manager waiting")
-            sleep(1)
-    except:
-        logger.error("Killing wifi-connect due to exception in wifi_manager.py")
-        os.kill(process.pid, signal.SIGINT)
-        sleep(1)
-        exit()
+            if PASSWORD_LENGTH_ERROR in line:
+                r.set("wifi-connect-status", "user-error")
+                logger.warning("Incorrect password entered")
+            if FAILED_TO_CONNECT_ERROR in line:
+                r.set("wifi-connect-status", "user-error")
+                logger.warning("Failed to connect to Wi-Fi")
+    # If we reach this point, wifi-connect has failed. Exit and retry
+    exit()
 
 
 def wait_for_redis(retries: int, wt=0.1):
@@ -135,6 +141,7 @@ def wait_for_network(retries=10, wt=1):
 
 if __name__ == "__main__":
     r.setbit("internet-connected", offset=0, value=0)
+    r.set("wifi-connect-status", "starting")
     wait_for_network()
     wait_for_redis(500)
     initial_startup()
