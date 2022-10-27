@@ -1,8 +1,8 @@
 import logging.config
 import os
+import re
 from datetime import datetime
 from time import sleep
-
 import humanize
 
 if os.environ.get("DEV") == "True":
@@ -33,6 +33,7 @@ user_templates_env = Environment(
     loader=FileSystemLoader(settings["templates_folder"]),
     autoescape=select_autoescape()
 )
+
 
 class DisplayHandler(QThread):
     default_template = pyqtSignal(str)
@@ -76,8 +77,8 @@ class DisplayHandler(QThread):
         sleep(SCREEN_TICK_DELAY)
 
     def show_hotspot_page(self):
-        # fixme There's a bug causing the SSID/password to change and not being reflected on the display
         r = connect_to_redis()
+        r.setbit("hotspot-connected-this-session", offset=0, value=1)
         ssid = r.get("ssid").decode("utf-8")
         ssid_password = r.get("ssid-password").decode("utf-8")
         logger.info("Displaying hotspot page")
@@ -96,12 +97,17 @@ class DisplayHandler(QThread):
             device_code, verification_uri = register_new_client()
             if device_code is None:
                 logger.error("Failed to register new client with server")
-                error_text = "Error trying to contact Kenban server to register device. Please try again later."
+                error_text = "Network error. Please try restarting your device. If this persists, contact support."
                 self.show_error_page(error_text)
                 sleep(10)
                 continue
             else:
-                html = default_templates_env.get_template("pair.html").render(pair_code=device_code, verification_uri=verification_uri)
+                r = connect_to_redis()
+                show_connection_success = r.exists("hotspot-connected-this-session")
+                html = default_templates_env.get_template("pair.html").render(
+                    pair_code=device_code,
+                    verification_uri=verification_uri,
+                    show_connection_success=show_connection_success)
                 self.show_default_template(html=html)
                 auth_success = poll_for_authentication(device_code=device_code)
                 if auth_success:
@@ -109,7 +115,7 @@ class DisplayHandler(QThread):
                     return
                 else:
                     logger.error("Authentication polling failed")
-                    error_text = "Error trying to contact Kenban server to register device. Please try again later."
+                    error_text = "Network error. Please try restarting your device. If this persists, contact support."
                     self.show_error_page(error_text)
                     sleep(10)
                     continue
@@ -126,21 +132,22 @@ class DisplayHandler(QThread):
         r = connect_to_redis()
         wm = wait_for_wifi_manager()
 
-        # Check to see if we have internet and if wifi manager is starting a hotspot
+        # Check to see if we have internet and if Wi-Fi manager is starting a hotspot
         if wm:
             while not r.getbit("internet-connected", 0):
                 if r.getbit("wifi-manager-connecting", 0):
                     self.show_hotspot_page()
                 else:
                     sleep(0.1)
-        else:  # Wifi manager has failed to start
+        else:  # Wi-Fi manager has failed to start
             if settings["refresh_token"] in [None, "None", ""]:
                 # If device is paired, continue anyway
                 r = connect_to_redis()
                 logger.warning("Continuing without wifi setup")
             else:
                 # If device isn't paired, we can't continue
-                self.show_error_page("Unable to start wifi manager. Please try restarting your device")
+                error_text = "Network error. Please try restarting your device. If this persists, contact support."
+                self.show_error_page(error_text)
 
         if settings["refresh_token"] in [None, "None", ""]:
             r = connect_to_redis()

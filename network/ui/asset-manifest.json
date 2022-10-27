@@ -8,7 +8,7 @@
     "precache-manifest.96ed21ec05e3b25e96ee640119b0334b.js": "/precache-manifest.96ed21ec05e3b25e96ee640119b0334b.js",
     "service-worker.js": "/service-worker.js",
     "static/js/2.ef060f46.chunk.js.LICENSE.txt": "/static/js/2.ef060f46.chunk.js.LICENSE.txt",
-    "static/media/logo.svg": "/static/media/logo.34c0c94e.svg"
+    "static/media/logo.svg": "/static/media/logo.png"
   },
   "entrypoints": [
     "static/js/runtime-main.2a78626f.js",

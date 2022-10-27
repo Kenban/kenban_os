@@ -26,6 +26,7 @@ class WebEngineView(QWidget):
         self.webEngineView = None
         self.initUI()
 
+    # noinspection PyPep8Naming
     def initUI(self):
         vbox = QVBoxLayout(self)
         vbox.setContentsMargins(0, 0, 0, 0)

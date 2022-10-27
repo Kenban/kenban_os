@@ -44,3 +44,4 @@ node_modules
 
 *.log
 /kenban.dev.conf
+/kenban.conf

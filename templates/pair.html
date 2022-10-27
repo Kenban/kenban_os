@@ -12,17 +12,20 @@
         <img src="logo.png" class="img-fluid" alt="NoticeHome Logo"/>
     </div>
 
-
     <div class="message-container">
+        {% if show_connection_success %}
+        <div class="success-message">
+            <img class="success-tick" src="success-tick.gif" alt="success tick">
+            <p class="message">Wi-Fi connected </p>
+        </div>
+        {% endif %}
         <div>
-            <p class="message">This screen is not paired to an account. Visit {{ verification_uri }} on a phone or
-                computer and enter this
-                code:</p>
+            <p class="message">To pair this NoticeHome with your account, visit {{ verification_uri }} on a phone or
+                computer and enter this code:</p>
         </div>
         <div class="code">
             <h1>{{ pair_code }}</h1>
         </div>
-
     </div>
 </div>
 </body>

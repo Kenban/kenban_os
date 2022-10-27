@@ -44,6 +44,42 @@ body {
     padding-bottom: 20px;
 }
 
+.success-message {
+    display: flex;
+    text-align: center;
+    align-items: flex-start;
+}
+
+.success-tick {
+    height: 75px;
+    float: right;
+}
+
+.delayed-message {
+    animation: appearAnimation 0s none 5s;
+    visibility: hidden;
+}
+
+@keyframes appearAnimation {
+    to {
+        visibility: visible;
+    }
+}
+
+.credentials {
+    box-sizing: border-box;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 40px;
+    padding-bottom: 20px;
+
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    position: center;
+}
+
 .code {
 
     /* Rectangle 2 */
