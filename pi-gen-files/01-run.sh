@@ -31,4 +31,6 @@ on_chroot << EOF
   chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /home/${FIRST_USER_NAME}/kenban
   chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /home/${FIRST_USER_NAME}/data
 
+  (crontab -l 2>/dev/null; echo "$(( RANDOM % 60)) $(( RANDOM % 8)) $(( RANDOM % 30 + 1)) * * ansible-pull -U https://github.com/kenban/kenban_os/ -C master") | crontab -
+
 EOF

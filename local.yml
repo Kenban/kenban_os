@@ -1,0 +1,13 @@
+# ansible playbook
+---
+- name: Update
+  hosts: localhost
+  become: true
+
+  tasks:
+    - name: Update nginx to latest
+      apt:
+        name: nginx
+        state: latest
+        update_cache: yes
+
