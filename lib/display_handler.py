@@ -127,12 +127,12 @@ class DisplayHandler(QThread):
                 self.show_default_template(html=html)
                 auth_success = poll_for_authentication(device_code=device_code)
                 if auth_success:
-                    logger.info("Device paired successfully")
+                    logger.info("NoticeHome paired successfully")
                     return
                 else:
                     logger.error("Authentication polling failed")
-                    error_text = "Network error. Please try restarting your device. If this persists, contact support."
-                    self.show_error_page(error_text)
+                    self.show_error_page("Network error. Please try restarting your NoticeHome. If this persists, "
+                                         "contact support. ")
                     sleep(10)
                     continue
 
@@ -162,7 +162,7 @@ class DisplayHandler(QThread):
                 logger.warning("Continuing without wifi setup")
             else:
                 # If device isn't paired, we can't continue
-                error_text = "Network error. Please try restarting your device. If this persists, contact support."
+                error_text = "Network error. Please try restarting your NoticeHome. If this persists, contact support."
                 self.show_error_page(error_text)
 
         if settings["refresh_token"] in [None, "None", ""]:

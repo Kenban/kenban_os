@@ -23,7 +23,7 @@ WEEKDAY_DICT = {
     "Sunday": 6
 }
 
-redis_pool = redis.ConnectionPool(host='localhost')  # todo change to local
+redis_pool = redis.ConnectionPool(host='localhost')
 
 
 def string_to_bool(s):
