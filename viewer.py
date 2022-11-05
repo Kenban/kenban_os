@@ -5,6 +5,7 @@ from PyQt5.QtCore import QUrl, Qt
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from lib.display_handler import DisplayHandler
 from lib.models import Base, engine
@@ -16,6 +17,11 @@ app = QApplication(sys.argv)
 
 logging.config.fileConfig(fname='logging.ini', disable_existing_loggers=True)
 logger = logging.getLogger("viewer")
+
+default_templates_env = Environment(
+    loader=FileSystemLoader(settings["default_templates_folder"]),
+    autoescape=select_autoescape()
+)
 
 
 class WebEngineView(QWidget):
@@ -38,7 +44,8 @@ class WebEngineView(QWidget):
         # setting the minimum size
         self.setMinimumSize(width, height)
         self.webEngineView = QWebEngineView()
-        self.webEngineView.setHtml("loading")
+        html = default_templates_env.get_template("loading.html").render()
+        self.webEngineView.setHtml(html, baseUrl=QUrl(f"file://{settings['default_images_folder']}"))
         vbox.addWidget(self.webEngineView)
         self.setLayout(vbox)
 

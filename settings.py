@@ -3,7 +3,7 @@ import os
 from collections import UserDict
 from os import path, getenv
 
-CONFIG_DIR = '/home/pi/data/'
+CONFIG_DIR = '/home/user/data/'
 CONFIG_FILE = 'kenban.conf'
 
 DEFAULTS = {
@@ -28,10 +28,10 @@ DEFAULTS = {
         'event_url': '/api/v1/event/screen/',
     },
     'folders': {
-        'default_templates_folder': '/home/pi/data/default_templates/',
-        'default_images_folder': '/home/pi/data/default_images/',
-        'images_folder': '/home/pi/data/user_images/',
-        'templates_folder': '/home/pi/data/user_templates/',
+        'default_templates_folder': '/home/user/data/default_templates/',
+        'default_images_folder': '/home/user/data/default_images/',
+        'images_folder': '/home/user/data/user_images/',
+        'templates_folder': '/home/user/data/user_templates/',
         'database': os.path.join(CONFIG_DIR, 'kenban.db'),
     },
     'viewer': {

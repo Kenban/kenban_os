@@ -59,7 +59,8 @@ class DisplayHandler(QThread):
     def display_loop(self):
         if self.scheduler.current_slot is None:
             logger.info('Playlist is empty. Sleeping for %s seconds', EMPTY_PL_DELAY)
-            self.show_default_template("loading.html")
+            html = default_templates_env.get_template("loading.html").render()
+            self.show_default_template(html)
             sleep(EMPTY_PL_DELAY)
         else:
             event = None

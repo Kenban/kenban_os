@@ -17,14 +17,15 @@ install -m 644 files/kenban_os/pi-gen-files/kenbanxorg.conf "${ROOTFS_DIR}/etc/X
 on_chroot << EOF
   
   raspi-config nonint do_boot_behaviour B2
-  sed -i 's/sam/pi/g' /etc/systemd/system/getty@tty1.service.d/autologin.conf
-  
+  sed -i 's/sam/${FIRST_USER_NAME}/g' /etc/systemd/system/getty@tty1.service.d/autologin.conf
   systemctl enable websocket-sync.service kenban-wifi-manager.service
 
-  pip install -r /home/${FIRST_USER_NAME}/kenban/requirements/requirements.txt
+  pip install -r /home/${FIRST_USER_NAME}/kenban/requirements.txt
 
   chmod 755 /home/${FIRST_USER_NAME}/kenban/network/wifi-connect
   chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /home/${FIRST_USER_NAME}/kenban
   chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /home/${FIRST_USER_NAME}/data
+
+  (crontab -l 2>/dev/null; echo "$(( RANDOM % 60)) $(( RANDOM % 8)) $(( RANDOM % 30 + 1)) * * ansible-pull -U https://github.com/kenban/kenban_os/ -C production") | crontab -
 
 EOF

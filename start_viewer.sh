@@ -1,1 +1,1 @@
-/usr/bin/python3 /home/pi/kenban/viewer.py
+/usr/bin/python3 /home/user/kenban/viewer.py

@@ -2,13 +2,13 @@
 Description=Python websocket to sync with Kenban server
 
 [Service]
-WorkingDirectory=/home/pi/kenban
-User=pi
+WorkingDirectory=/home/user/kenban
+User=user
 Type=simple
 Restart=always
 RestartSec=1
 
-ExecStart=/usr/bin/python3 /home/pi/kenban/websocket.py
+ExecStart=/usr/bin/python3 /home/user/kenban/websocket.py
 
 [Install]
 WantedBy=multi-user.target

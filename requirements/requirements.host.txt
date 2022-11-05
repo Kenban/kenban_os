@@ -1,5 +1,0 @@
-ansible==5.0.1
-docker==5.0.3
-docker-compose==1.29.2
-redis==3.5.3
-netifaces==0.10.9

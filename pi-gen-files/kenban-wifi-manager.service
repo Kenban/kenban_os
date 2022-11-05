@@ -4,13 +4,13 @@ Wants=NetworkManager.service
 After=NetworkManager.service
 
 [Service]
-WorkingDirectory=/home/pi/kenban/network
+WorkingDirectory=/home/user/kenban/network
 User=root
 Type=simple
 Restart=always
 RestartSec=1
 
-ExecStart=/usr/bin/python3 /home/pi/kenban/network/wifi_manager.py
+ExecStart=/usr/bin/python3 /home/user/kenban/network/wifi_manager.py
 
 [Install]
 WantedBy=multi-user.target
