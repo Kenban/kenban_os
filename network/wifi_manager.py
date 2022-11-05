@@ -47,6 +47,7 @@ def start_wifi_connect():
         ssid_password = r.get("ssid-password")
     else:
         ssid_password = generate_random_word_password(no_of_words=3)
+        r.set("ssid-password", ssid_password)
 
     logger.debug(f"ssid {ssid}")
     logger.debug(f"password: {ssid_password}")
