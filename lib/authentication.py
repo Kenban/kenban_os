@@ -63,7 +63,7 @@ def register_new_client():
     except JSONDecodeError:
         logging.warning(f"Failed to decode JSON response during authorisation polling. Response: {response}")
         return None, None
-    return response_body["device_code"], response_body["verification_uri"]
+    return response_body.get("device_code"), response_body.get("verification_uri")
 
 
 def poll_for_authentication(device_code):

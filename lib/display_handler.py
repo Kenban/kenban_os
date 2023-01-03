@@ -144,7 +144,11 @@ class DisplayHandler(QThread):
                     verification_uri=verification_uri,
                     show_connection_success=show_connection_success)
                 self.show_default_template(html=html)
-                auth_success = poll_for_authentication(device_code=device_code)
+                try:
+                    auth_success = poll_for_authentication(device_code=device_code)
+                except Exception:
+                    logger.exception(msg="Authentication polling failed")
+                    auth_success = False
                 if auth_success:
                     logger.info("NoticeHome paired successfully")
                     return
