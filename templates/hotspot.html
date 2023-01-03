@@ -15,10 +15,11 @@
 
 
     <div class="message-container">
+        {%  if show_hotspot_connection_instructions %}
         <div>
             <p class="message">To connect this NoticeHome to your Wi-Fi, you'll need to use your phone or other device.
                 Connect to the following Wi-Fi network using your phone and follow the instructions to provide your home
-                network's Wi-Fi password.
+                network's Wi-Fi password.</p>
         </div>
         <div class="credentials">
             <div class="credential">
@@ -34,6 +35,12 @@
                 </div>
             </div>
         </div>
+        {% endif %}
+        {% if show_home_wifi_password_instructions %}
+            <div>
+                <p class="message">Now enter the password for your home Wi-Fi network into the web portal on your phone</p>
+            </div>
+        {% endif %}
         {% if connecting %}
             <div class="connecting-container">
                 <div><p class="connecting-message">Connecting</p></div>

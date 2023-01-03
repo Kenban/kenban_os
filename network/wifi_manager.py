@@ -15,14 +15,10 @@ logging.config.fileConfig(fname='../logging.ini', disable_existing_loggers=True)
 logger = logging.getLogger("wifi_manager")
 
 CONNECTING_MESSAGE = "Stopping access point"
+USER_ON_PORTAL_MESSAGE = "User Connected to the captive portal"
 SUCCESS_MESSAGE = "Internet connectivity established"
 PASSWORD_LENGTH_ERROR = "Password length should be at least"
 FAILED_TO_CONNECT_ERROR = "Connection to access point not activated"
-
-
-def generate_password(pw_length=10):
-    characters = 'ABCDEFGHJKLMNPRSTUVWXYZ'
-    return "".join(random.SystemRandom().choice(characters) for _ in range(pw_length))
 
 
 def generate_random_word_password(no_of_words=3):
@@ -40,13 +36,13 @@ def start_wifi_connect():
     if r.exists("ssid"):
         ssid = r.get("ssid")
     else:
-        ssid = 'Kenban-{}'.format(generate_password(pw_length=4))
+        ssid = f'NoticeHome-{random.randrange(0,100)}'
         r.set("ssid", ssid)
 
     if r.exists("ssid-password"):
         ssid_password = r.get("ssid-password")
     else:
-        ssid_password = generate_random_word_password(no_of_words=3)
+        ssid_password = generate_random_word_password(no_of_words=2)
         r.set("ssid-password", ssid_password)
 
     logger.debug(f"ssid {ssid}")
@@ -59,6 +55,8 @@ def start_wifi_connect():
         line = process.stdout.readline().decode("utf-8")
         if line:
             logger.debug(line)
+            if USER_ON_PORTAL_MESSAGE in line:
+                r.set("wifi-connect-status", "user-on-portal")
             if CONNECTING_MESSAGE in line:
                 r.set("wifi-connect-status", "connecting")
                 logger.info("Connecting to Wi-Fi")

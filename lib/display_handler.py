@@ -82,27 +82,45 @@ class DisplayHandler(QThread):
 
     def show_hotspot_page(self):
         r = connect_to_redis()
+        # Set a flag, so we can display "connection successful" on the next screen
         r.set("hotspot-connected-this-session", value="True", ex=timedelta(seconds=30))
         ssid = r.get("ssid").decode("utf-8")
         ssid_password = r.get("ssid-password").decode("utf-8")
         logger.info("Displaying hotspot page")
         logger.info(f"SSID = {ssid}")
         logger.info(f"SSID Password = {ssid_password}")
-        connecting = False
-        error = False
         current_html = ""
         status = ""
         # Enter a loop to update the display according to wifi-connect progress
         while status != "success":
             status = r.get("wifi-connect-status").decode('utf-8')
-            if status == "connecting":
-                connecting = True
-                error = False
+            if status == "user-on-portal":
+                show_hotspot_connection_instructions = False
+                show_home_wifi_password_instructions = True
+                show_connecting_spinner = False
+                show_error_message = False
+            elif status == "connecting":
+                show_hotspot_connection_instructions = False
+                show_home_wifi_password_instructions = False
+                show_connecting_spinner = True
+                show_error_message = False
             elif status == "user-error":
-                connecting = False
-                error = True
+                show_hotspot_connection_instructions = True
+                show_home_wifi_password_instructions = False
+                show_connecting_spinner = False
+                show_error_message = True
+            else:
+                show_hotspot_connection_instructions = True
+                show_home_wifi_password_instructions = False
+                show_connecting_spinner = False
+                show_error_message = False
             new_html = default_templates_env.get_template("hotspot.html").\
-                render(ssid=ssid, ssid_password=ssid_password, connecting=connecting, error=error)
+                render(ssid=ssid,
+                       ssid_password=ssid_password,
+                       show_hotspot_connection_instructions=show_hotspot_connection_instructions,
+                       connecting=show_connecting_spinner,
+                       error=show_error_message,
+                       show_home_wifi_password_instructions=show_home_wifi_password_instructions)
             if new_html != current_html:
                 current_html = new_html
                 self.show_default_template(current_html)
