@@ -11,3 +11,6 @@
         state: latest
         update_cache: yes
 
+    - name: Update redis
+      pip:
+        name: redis==4.4.0
