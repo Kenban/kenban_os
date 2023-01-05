@@ -8,8 +8,8 @@ CONFIG_FILE = 'kenban.conf'
 
 DEFAULTS = {
     'main': {
-        'server_address': 'https://api.kenban.co.uk',
-        'websocket_updates_address': 'wss://api.kenban.co.uk/ws/v1/updates/screen_schedule/',
+        'server_address': 'http://192.168.0.100:5000',
+        'websocket_updates_address': 'ws://192.168.0.100:5000/ws/v1/updates/screen-schedule/',
         'device_uuid': None,
         'last_update': None,
         'access_token': None,
@@ -17,11 +17,11 @@ DEFAULTS = {
         'screen_name': None,
     },
     'api': {
-        'device_register_uri': '/api/v1/device_pairing/new',
-        'device_auth_uri': '/api/v1/device_pairing/authorise',
-        'setup_complete': '/api/v1/device_pairing/setup_complete',
-        'refresh_access_token_url': '/api/v1/auth/access_token_refresh',
-        'update_url': '/api/v1/screen/last_update',
+        'device_register_uri': '/api/v1/device-pairing/new',
+        'device_auth_uri': '/api/v1/device-pairing/authorise',
+        'setup_complete': '/api/v1/device-pairing/setup-complete',
+        'refresh_access_token_url': '/api/v1/auth/access-token-refresh',
+        'update_url': '/api/v1/screen/last-update',
         'image_url': '/api/v1/image/',
         'template_url': '/api/v1/template/',
         'schedule_url': '/api/v1/schedule/screen/',

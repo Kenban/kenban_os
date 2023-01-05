@@ -189,6 +189,7 @@ class DisplayHandler(QThread):
                 self.show_error_page(error_text)
 
         if settings["refresh_token"] in [None, "None", ""]:
+            # todo we need to catch all exceptions here to stop the gui failing
             r = connect_to_redis()
             r.set("new-setup", 1, ex=3600)
             self.device_pair()

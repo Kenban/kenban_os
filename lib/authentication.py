@@ -23,7 +23,7 @@ logging.config.fileConfig(fname='logging.ini', disable_existing_loggers=True)
 
 def get_access_token():
     access_token = settings["access_token"]
-    decoded_access_token = jwt.decode(access_token, algorithm="HS256", verify=False)
+    decoded_access_token = jwt.decode(access_token, algorithms=["HS256"], options={"verify_signature": False})
     current_timestamp = mktime(datetime.datetime.now().timetuple())
     if current_timestamp > decoded_access_token["exp"]:
         access_token = refresh_access_token()
