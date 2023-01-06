@@ -1,17 +1,12 @@
 import logging.config
-import os
 from datetime import datetime, timedelta
 from time import sleep
 
 import humanize
-
-if os.environ.get("DEV") == "True":
-    from PyQt6.QtCore import QThread, pyqtSignal
-else:
-    from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.QtCore import QThread, pyqtSignal
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from lib.authentication import register_new_client, poll_for_authentication, get_auth_header
-from jinja2 import Environment, FileSystemLoader, select_autoescape
 from lib.models import ScheduleSlot
 from lib.scheduler import Scheduler
 from lib.utils import connect_to_redis, get_db_mtime, wait_for_wifi_manager, kenban_server_request, \
@@ -44,9 +39,6 @@ class DisplayHandler(QThread):
         self.scheduler = Scheduler()
         self.current_banner_message = ""
         super(DisplayHandler, self).__init__()
-
-    # def __del__(self):
-    #     self.wait()
 
     def show_default_template(self, html):
         # noinspection PyUnresolvedReferences
@@ -114,7 +106,7 @@ class DisplayHandler(QThread):
                 show_home_wifi_password_instructions = False
                 show_connecting_spinner = False
                 show_error_message = False
-            new_html = default_templates_env.get_template("hotspot.html").\
+            new_html = default_templates_env.get_template("hotspot.html"). \
                 render(ssid=ssid,
                        ssid_password=ssid_password,
                        show_hotspot_connection_instructions=show_hotspot_connection_instructions,
@@ -144,18 +136,14 @@ class DisplayHandler(QThread):
                     verification_uri=verification_uri,
                     show_connection_success=show_connection_success)
                 self.show_default_template(html=html)
-                try:
-                    auth_success = poll_for_authentication(device_code=device_code)
-                except Exception:
-                    logger.exception(msg="Authentication polling failed")
-                    auth_success = False
+                auth_success = poll_for_authentication(device_code=device_code)
                 if auth_success:
                     logger.info("NoticeHome paired successfully")
                     return
                 else:
                     logger.error("Authentication polling failed")
                     self.show_error_page("Network error. Please try restarting your NoticeHome. If this persists, "
-                                         "contact support. ")
+                                         "contact Kenban support. ")
                     sleep(10)
                     continue
 
@@ -164,50 +152,56 @@ class DisplayHandler(QThread):
         self.show_default_template(html)
 
     def run(self):
-        # todo handle first start up with an internet connection but not a connection to the server
-        from settings import settings
-        settings.load()
+        # noinspection PyBroadException
+        try:
+            from settings import settings
+            settings.load()
 
-        r = connect_to_redis()
-        wm = wait_for_wifi_manager()
-
-        # Check to see if we have internet and if Wi-Fi manager is starting a hotspot
-        if wm:
-            while not r.getbit("internet-connected", 0):
-                if r.getbit("wifi-manager-connecting", 0):
-                    self.show_hotspot_page()
-                else:
-                    sleep(0.1)
-        else:  # Wi-Fi manager has failed to start
-            if settings["refresh_token"] in [None, "None", ""]:
-                # If device is paired, continue anyway
-                r = connect_to_redis()
-                logger.warning("Continuing without wifi setup")
-            else:
-                # If device isn't paired, we can't continue
-                error_text = "Network error. Please try restarting your NoticeHome. If this persists, contact support."
-                self.show_error_page(error_text)
-
-        if settings["refresh_token"] in [None, "None", ""]:
-            # todo we need to catch all exceptions here to stop the gui failing
             r = connect_to_redis()
-            r.set("new-setup", 1, ex=3600)
-            self.device_pair()
-            self.show_default_template("new-setup-screen.html")
-            wait_for_initial_sync()
-            self.confirm_setup_completion()
-        else:
-            logger.info(f"Device already paired")
+            wm = wait_for_wifi_manager()
 
-        logger.debug('Entering infinite loop.')
-        r.set("rebooted", 1, ex=15)
-        while True:
-            self.display_loop()
+            # Check to see if we have internet and if Wi-Fi manager is starting a hotspot
+            if wm:
+                while not r.getbit("internet-connected", 0):
+                    if r.getbit("wifi-manager-connecting", 0):
+                        self.show_hotspot_page()
+                    else:
+                        sleep(0.1)
+            else:  # Wi-Fi manager has failed to start
+                if settings["refresh_token"] in [None, "None", ""]:
+                    # If device is paired, continue anyway
+                    r = connect_to_redis()
+                    logger.warning("Continuing without wifi setup")
+                else:
+                    # If device isn't paired, we can't continue
+                    error_text = "Network error. Please try restarting your NoticeHome. If this persists, contact" \
+                                 " Kenban support."
+                    self.show_error_page(error_text)
+
+            if settings["refresh_token"] in [None, "None", ""]:
+                r = connect_to_redis()
+                r.set("new-setup", 1, ex=3600)
+                self.device_pair()
+                self.show_default_template("new-setup-screen.html")
+                wait_for_initial_sync()
+                self.confirm_setup_completion()
+            else:
+                logger.info(f"Device already paired")
+
+            logger.debug('Entering infinite loop.')
+            r.set("rebooted", 1, ex=15)
+            while True:
+                self.display_loop()
+        except:
+            logger.exception("Error in display handler")
+            error_text = "Error. Please try restarting your NoticeHome. If this persists, contact Kenban support."
+            self.show_error_page(error_text)
 
     def render_display_html(self, schedule_slot: ScheduleSlot, event=None) -> str:
         # Add the info for the schedule slot
         if not schedule_slot:
-            html = default_templates_env.get_template("splash-page.html").render()
+            error_message = "Error. Please try restarting your NoticeHome. If this persists, contact Kenban support."
+            html = default_templates_env.get_template("error.html").render(message=error_message)
             logger.warning("build_schedule_slot_uri called with no active slot")
             return html
 
@@ -241,7 +235,6 @@ class DisplayHandler(QThread):
         kenban_server_request(url=url, method='POST', data={"complete": True}, headers=get_auth_header())
 
     def create_banner_message(self):
-        # todo if wifi manager doesnt start we dont see a banner
         """ Build banner message text for error messages, based on flags that have been set in redis """
         r = connect_to_redis()
 
