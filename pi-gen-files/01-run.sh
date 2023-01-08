@@ -19,7 +19,7 @@ on_chroot << EOF
   
   raspi-config nonint do_boot_behaviour B2
   sed -i 's/sam/${FIRST_USER_NAME}/g' /etc/systemd/system/getty@tty1.service.d/autologin.conf
-  systemctl enable websocket-sync.service kenban-wifi-manager.service
+  systemctl enable websocket-sync.service local-websocket.service kenban-wifi-manager.service
 
   pip install -r /home/${FIRST_USER_NAME}/kenban/requirements.txt
   cd /home/${FIRST_USER_NAME}/kenban/local-websocket && npm install

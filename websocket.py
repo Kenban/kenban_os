@@ -23,6 +23,9 @@ logging.config.fileConfig(fname='logging.ini', disable_existing_loggers=True)
 logger = logging.getLogger("websocket")
 
 
+r = connect_to_redis()
+
+
 async def subscribe_to_updates():
     """ Open a websocket connection with the server """
     while True:
@@ -49,7 +52,6 @@ async def websocket_loop(ws):
     logger.info("Keeping websocket open")
     while True:
         try:
-            r = connect_to_redis()
             r.setbit("websocket-connected", offset=0, value=1)
             if r.exists("websocket-dc-timestamp"):
                 logger.info("Websocket reconnected")
@@ -57,7 +59,6 @@ async def websocket_loop(ws):
             msg = await asyncio.wait_for(ws.recv(), timeout=None)
             message_handler(msg)
         except Exception:
-            r = connect_to_redis()
             r.setbit("websocket-connected", offset=0, value=0)
             logger.exception("Websocket error")
             await asyncio.sleep(9)
@@ -73,11 +74,9 @@ async def authenticate_websocket(ws):
         auth_response = await asyncio.wait_for(ws.recv(), timeout=10)
         logger.info(f"Authentication response: {auth_response}")
         if auth_response != "success":
-            r = connect_to_redis()
             r.setbit("websocket-connected", offset=0, value=0)
             logger.error("Failed to authenticate websocket")
     except (asyncio.TimeoutError, websockets.ConnectionClosed):
-        r = connect_to_redis()
         r.setbit("websocket-connected", offset=0, value=0)
         logger.exception("Error authenticating websocket")
     logger.info("Websocket authenticated")
@@ -102,8 +101,7 @@ def message_handler(msg):
     if message_type == "image":
         image_uuid = payload["image_uuid"]
         sync.get_image(image_uuid)
-        r = connect_to_redis()
-        # Browser always refreshes if event/slot changes, because this alters the url. Need to force one for images
+        # An image change needs a force refresh because the url doesn't change (which causes a refresh)
         r.set("refresh-browser", 1)
 
 
@@ -123,7 +121,6 @@ if __name__ == "__main__":
     settings.load()
     # Don't try and connect if we don't have a token yet
     wait_for_refresh_token()
-    r = connect_to_redis()
     if r.exists("new-setup"):
         # Allow the server to set up the new user before performing a sync
         sleep(5)
