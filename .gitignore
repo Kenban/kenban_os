@@ -46,3 +46,4 @@ node_modules
 /kenban.dev.conf
 /kenban.conf
 /kenban.debug.conf
+/local-websocket/nodejs/

@@ -1,0 +1,14 @@
+[Unit]
+Description=Local js websocket server for the browser to connect to
+
+[Service]
+WorkingDirectory=/home/user/kenban/local-websocket
+User=user
+Type=simple
+Restart=always
+RestartSec=1
+
+ExecStart=/home/user/kenban/local-websocket/nodejs/bin/node /home/user/kenban/local-websocket/ws-server.js
+
+[Install]
+WantedBy=multi-user.target

@@ -1,1 +1,1 @@
-git-core libffi-dev libssl-dev python3-pip python3-setuptools python3-wheel network-manager ansible redis python3-gi python3-pyqt5 python3-pyqt5.qtwebengine xorg
+git-core libffi-dev libssl-dev npm python3-pip python3-setuptools python3-wheel network-manager ansible redis python3-gi python3-pyqt5 python3-pyqt5.qtwebengine xorg

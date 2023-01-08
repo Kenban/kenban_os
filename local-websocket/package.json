@@ -1,0 +1,15 @@
+{
+  "name": "local-websocket",
+  "version": "1.0.0",
+  "description": "",
+  "main": "ws-server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sam Bannister",
+  "license": "ISC",
+  "dependencies": {
+    "redis": "^4.5.1",
+    "ws": "^8.11.0"
+  }
+}

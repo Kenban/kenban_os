@@ -49,6 +49,7 @@ class DisplayHandler(QThread):
         self.user_template.emit(html)
 
     def display_loop(self):
+        r = connect_to_redis()
         if self.scheduler.current_slot is None:
             logger.info('Playlist is empty. Sleeping for %s seconds', EMPTY_PL_DELAY)
             html = default_templates_env.get_template("loading.html").render()
@@ -64,8 +65,7 @@ class DisplayHandler(QThread):
                 self.scheduler.refresh_needed = False
             banner_message = self.create_banner_message()
             if banner_message != self.current_banner_message:
-                self.scheduler.refresh_needed = True
-                self.current_banner_message = banner_message
+                r.publish("banner_message", banner_message)
 
         if get_db_mtime() > self.scheduler.last_update_db_mtime:
             self.scheduler.update_assets_from_db()
@@ -182,7 +182,8 @@ class DisplayHandler(QThread):
                 r = connect_to_redis()
                 r.set("new-setup", 1, ex=3600)
                 self.device_pair()
-                self.show_default_template("new-setup-screen.html")
+                html = default_templates_env.get_template("new-setup-screen.html").render()
+                self.show_default_template(html)
                 wait_for_initial_sync()
                 self.confirm_setup_completion()
             else:
@@ -208,7 +209,6 @@ class DisplayHandler(QThread):
         display_text = schedule_slot.display_text if schedule_slot.display_text else ""
         foreground_image_uuid = schedule_slot.foreground_image_uuid
         time_format = schedule_slot.time_format
-        banner_message = self.create_banner_message()
 
         # Add new setup message
         r = connect_to_redis()
@@ -226,8 +226,7 @@ class DisplayHandler(QThread):
             foreground_image_uuid=foreground_image_uuid,
             time_format=time_format,
             event_text=event_text,
-            event_image_uuid=event_image_uuid,
-            banner_message=banner_message)
+            event_image_uuid=event_image_uuid)
         return html
 
     def confirm_setup_completion(self):
@@ -261,7 +260,6 @@ class DisplayHandler(QThread):
             return f"Unable to reach Kenban server."
         elif r.exists("rebooted"):
             if settings["screen_name"] not in [None, "", "None"]:
-                # todo I don't like this because it causes a refresh (and screen flashes) a few seconds after startup
                 return f"Screen name = {settings['screen_name']}"
             else:
                 return ""

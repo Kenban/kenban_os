@@ -11,6 +11,7 @@ cp -r files/kenban_os/templates/* "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/de
 install -m 664 files/kenban_os/pi-gen-files/.profile "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.profile"
 install -m 664 files/kenban_os/pi-gen-files/.xinitrc "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.xinitrc"
 install -m 644 files/kenban_os/pi-gen-files/websocket-sync.service "${ROOTFS_DIR}/etc/systemd/system/websocket-sync.service"
+install -m 644 files/kenban_os/pi-gen-files/websocket-local.service "${ROOTFS_DIR}/etc/systemd/system/websocket-local.service"
 install -m 644 files/kenban_os/pi-gen-files/kenban-wifi-manager.service "${ROOTFS_DIR}/etc/systemd/system/kenban-wifi-manager.service"
 install -m 644 files/kenban_os/pi-gen-files/kenbanxorg.conf "${ROOTFS_DIR}/etc/X11/xorg.conf.d/kenban.conf"
 
@@ -21,6 +22,7 @@ on_chroot << EOF
   systemctl enable websocket-sync.service kenban-wifi-manager.service
 
   pip install -r /home/${FIRST_USER_NAME}/kenban/requirements.txt
+  cd /home/${FIRST_USER_NAME}/kenban/local-websocket && npm install
 
   chmod 755 /home/${FIRST_USER_NAME}/kenban/network/wifi-connect
   chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /home/${FIRST_USER_NAME}/kenban
