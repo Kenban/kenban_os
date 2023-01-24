@@ -56,11 +56,12 @@ class DisplayHandler(QThread):
             self.show_default_template(html)
             sleep(EMPTY_PL_DELAY)
         else:
-            event = None
             if self.scheduler.event_active:
-                event = self.scheduler.active_events[0]  # Just get the first event for now, maybe change this later
+                events = self.scheduler.active_events
+            else:
+                events = []
             if self.scheduler.refresh_needed or r.exists("refresh-browser"):
-                html = self.render_display_html(self.scheduler.current_slot, event)
+                html = self.render_display_html(self.scheduler.current_slot, events)
                 self.show_user_template(html)
                 self.scheduler.refresh_needed = False
                 r.delete("refresh-browser")
@@ -200,7 +201,7 @@ class DisplayHandler(QThread):
             error_text = "Error. Please try restarting your NoticeHome. If this persists, contact Kenban support."
             self.show_error_page(error_text)
 
-    def render_display_html(self, schedule_slot: ScheduleSlot, event=None) -> str:
+    def render_display_html(self, schedule_slot: ScheduleSlot, events) -> str:
         # Add the info for the schedule slot
         if not schedule_slot:
             error_message = "Error. Please try restarting your NoticeHome. If this persists, contact Kenban support."
@@ -208,27 +209,14 @@ class DisplayHandler(QThread):
             logger.warning("build_schedule_slot_uri called with no active slot")
             return html
 
-        display_text = schedule_slot.display_text if schedule_slot.display_text else ""
-        foreground_image_uuid = schedule_slot.foreground_image_uuid
-        time_format = schedule_slot.time_format
-
         # Add new setup message
         r = connect_to_redis()
         if schedule_slot.display_text in [None, ""] and r.exists("new-setup"):
-            display_text = "Customise this screen by visiting kenban.co.uk/schedule"
+            schedule_slot.display_text = "Customise this screen by visiting kenban.co.uk/schedule"
 
-        if event:
-            event_text = event.display_text if event.display_text else ""
-            event_image_uuid = event.foreground_image_uuid
-        else:
-            event_text = None
-            event_image_uuid = None
         html = user_templates_env.get_template(schedule_slot.template_uuid).render(
-            display_text=display_text,
-            foreground_image_uuid=foreground_image_uuid,
-            time_format=time_format,
-            event_text=event_text,
-            event_image_uuid=event_image_uuid)
+            slot=schedule_slot,
+            events=events)
         return html
 
     def confirm_setup_completion(self):
