@@ -14,10 +14,10 @@
 
     <div class="message-container">
         {% if show_connection_success %}
-        <div class="bottom-message">
-            <img class="success-tick" src="success-tick.gif" alt="success tick">
-            <p class="message">Wi-Fi connected </p>
-        </div>
+            <div class="bottom-message">
+                <img class="success-tick" src="success-tick.gif" alt="success tick">
+                <p class="message">Wi-Fi connected </p>
+            </div>
         {% endif %}
         <div>
             <p class="message">To pair this NoticeHome with your account, visit {{ verification_uri }} on a phone or
@@ -29,4 +29,9 @@
     </div>
 </div>
 </body>
+<style>
+    body {
+        overflow: hidden; /* Hide scrollbars */
+    }
+</style>
 </html>
