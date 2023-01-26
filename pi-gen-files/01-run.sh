@@ -2,11 +2,13 @@
 
 mkdir -p "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/default_images"
 mkdir -p "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/default_templates"
+mkdir -p "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/user_templates"
 mkdir -p "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/kenban"
 
 cp -r files/kenban_os/* "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/kenban"
 cp -r files/kenban_os/images/* "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/default_images"
 cp -r files/kenban_os/templates/* "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/default_templates"
+cp files/kenban_os/templates/macros.html "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/user_templates/"
 
 install -m 664 files/kenban_os/pi-gen-files/.profile "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.profile"
 install -m 664 files/kenban_os/pi-gen-files/.xinitrc "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.xinitrc"

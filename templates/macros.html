@@ -1,0 +1,223 @@
+{% macro date_and_time_text(time_format) %}
+    {# Shows a clock in the given format. The ID of the clock will be "clock-text-format-x" where x is the format. #}
+
+    {% set clock_text_id = "clock-text-format-" + time_format|string %}
+    <p id="{{ clock_text_id }}" class="clock-text">
+    </p>
+    <script>
+
+        let dateTimeFormat = Number('{{ time_format }}')
+
+        function setTime() {
+            document.getElementById("{{ clock_text_id }}").innerText = assembleDatetimeText();
+            let t = setTimeout(function () {
+                setTime()
+            }, 1000);
+        }
+
+        function assembleDatetimeText() {
+            let d = new Date()
+            let text = ""
+            switch (dateTimeFormat) {
+                case 1:
+                    // 13:12
+                    text = Time24hr(d)
+                    break
+                case 2:
+                    // 1:12 p.m.
+                    text = Time12hr(d)
+                    break
+                case 3:
+                    // 13:12
+                    // Monday 3rd August
+                    text = Time24hr(d) + "\n " + getDayText(d) + " " + getDateDay(d) + " " + getMonthText(d)
+                    break
+                case 4:
+                    // 1:12 p.m.
+                    // Monday 3rd August
+                    text = Time12hr(d) + "\n " + getDayText(d) + " " + getDateDay(d) + " " + getMonthText(d)
+                    break
+                case 5:
+                    // It's 13:12 in the afternoon
+                    // Monday 3rd August
+                    text = "It's " + Time24hr(d) + " " + getTimeofDayDescription(d) + "\n " + getDayText(d) + " " + getDateDay(d) + " " + getMonthText(d)
+                    break
+                case 6:
+                    // It's 1:12 p.m. in the afternoon
+                    // Monday 3rd August
+                    text = "It's " + Time12hr(d) + " " + getTimeofDayDescription(d) + "\n " + getDayText(d) + " " + getDateDay(d) + " " + getMonthText(d)
+                    break
+                default:
+                    // 1:12pm
+                    text = Time12hr(d)
+                    break
+            }
+            return text
+        }
+
+        function Time24hr(date) {
+            let hour = date.getHours()
+            let min = date.getMinutes()
+
+            hour = addLeadingZero(hour)
+            min = addLeadingZero(min)
+            return hour + ":" + min
+        }
+
+        function Time12hr(date) {
+            let hour = date.getHours()
+            let min = date.getMinutes()
+            let session = "a.m."
+            if (hour === 0) {
+                hour = 12;
+            }
+            if (hour > 12) {
+                hour = hour - 12;
+                session = "p.m.";
+            }
+
+            //hour = addLeadingZero(hour)
+            //min = addLeadingZero(min)
+
+            return hour + ":" + min + " " + session
+        }
+
+        function getDayText(date) {
+            const weekday = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            return weekday[date.getDay()]
+        }
+
+        function getMonthText(date) {
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September",
+                "October", "November", "December"]
+            return months[date.getMonth()]
+        }
+
+        function addLeadingZero(n) {
+            return (n < 10) ? "0" + n : n
+        }
+
+        function getDateDay(date) {
+            let dayNo = date.getDate()
+            if (dayNo === 1 || dayNo === 21 || dayNo === 31) {
+                return dayNo + "ˢᵗ"
+            } else if (dayNo === 2 || dayNo === 22) {
+                return dayNo + "ⁿᵈ"
+            } else if (dayNo === 3 || dayNo === 23) {
+                return dayNo + "ʳᵈ"
+            } else {
+                return dayNo + "ᵗʰ"
+            }
+        }
+
+        function getTimeofDayDescription(date) {
+            let hour = date.getHours()
+            if (hour < 5) {
+                return "in the middle of the night"
+            } else if (hour < 12) {
+                return "in the morning"
+            } else if (hour < 17) {
+                return "in the afternoon"
+            } else if (hour < 21) {
+                return "in the evening"
+            } else {
+                return "at night"
+            }
+        }
+
+        setTime();
+    </script>
+{% endmacro %}
+
+
+{% macro websocket_banner_message() %}
+    {# An element containing the banner message from the local websocket on the Pi. Javascript to connect to the
+    websocket is included. #}
+    <div id="banner" class="banner">
+        <div id="banner-message" class="banner-message" hidden></div>
+    </div>
+    <script>
+        let localSocket = new WebSocket("ws://localhost:8000")
+        const bannerMessage = document.getElementById("banner-message")
+
+        localSocket.onmessage = function (event) {
+            if (event.data === "") {
+                bannerMessage.hidden = true
+            } else {
+                bannerMessage.hidden = false
+                bannerMessage.innerText = event.data
+            }
+        }
+    </script>
+    <style>
+        .banner {
+            display: flex;
+            justify-content: center;
+            top: 0;
+            font-family: monospace;
+        }
+        .banner-message {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2px 5px;
+        }
+
+
+    </style>
+{% endmacro %}
+
+{% macro events_marquee(events) %}
+    {#  If there are 2 or more events, creates a marquee scrolling sideways.
+        To edit styles, classes are "event", "event-image", "event-text" #}
+
+    <div class="{{ 'events-marquee' if events|length > 1 }}">
+        {% for event in events %}
+            <div class="event">
+                <img class="event-image" src="{{ event.foreground_image_uuid }}" alt="event image">
+                <p class="event-text">
+                    {{ event.display_text }}
+                </p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <style>
+        .event {
+            display: flex;
+            flex-direction: row;
+            flex: 0 1 auto;
+            margin-right: 100px;
+        }
+
+        .event-image {
+            height: 80px;
+            border-radius: 50px;
+            margin-right: 10px;
+        }
+
+        .event-text {
+            font-size: 56px;
+            white-space: nowrap;
+        }
+
+        .events-marquee {
+            display: flex;
+            flex-direction: row;
+            animation: marquee 20s linear infinite;
+        }
+
+        .events-marquee {
+            display: flex;
+            flex-direction: row;
+            animation: marquee 50s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% {
+                transform: translate(100vw, 0);
+            }
+            100% {
+                transform: translate(-100%, 0);
+            }
+        }
+    </style>
+{% endmacro %}
