@@ -95,36 +95,38 @@ def sync_images(overwrite=False):
 
 def sync_templates(overwrite=False):
     url = settings['server_address'] + settings['template_url']
-    template_uuids = kenban_server_request(url=url, method='GET', headers=get_auth_header())
-    if not template_uuids:
+    templates = kenban_server_request(url=url, method='GET', headers=get_auth_header())
+    if not templates:
         return None
     if not os.path.exists(settings["templates_folder"]):
         os.makedirs(settings["templates_folder"])
     existing_template_uuids = os.listdir(settings["templates_folder"])
     logging.debug("Existing templates: " + str(existing_template_uuids))
-    for template_uuid in template_uuids:
-        if template_uuid in existing_template_uuids and not overwrite:
-            logging.debug("Already got template " + template_uuid)
+    for template in templates:
+        if template["uuid"] in existing_template_uuids and not overwrite:
+            logging.debug("Already got template " + template["uuid"])
             continue
-        url = settings["server_address"] + settings["template_url"] + template_uuid
+        url = settings["server_address"] + settings["template_url"] + template.uuid
         template = kenban_server_request(url=url, method='GET', headers=get_auth_header(), decode_json=False)
-        fp = settings["templates_folder"] + template_uuid
+        fp = settings["templates_folder"] + template["filename"]
         with open(fp, 'wb') as output_file:
             output_file.write(template)
-            logging.info("Saved template " + template_uuid)
+            logging.info("Saved template " + template.uuid)
             
 
 def get_template(template_uuid):
     url = settings["server_address"] + settings["template_url"] + template_uuid
+    html_url = settings["server_address"] + settings["template_url"] + "html/" + template_uuid
     template = kenban_server_request(url=url, method='GET', headers=get_auth_header(), decode_json=False)
+    template_html = kenban_server_request(url=html_url, method='GET', headers=get_auth_header(), decode_json=False)
     if not template:
         return None
     if not os.path.exists(settings["templates_folder"]):
         os.makedirs(settings["templates_folder"])
-    fp = settings["templates_folder"] + template_uuid
+    fp = settings["templates_folder"] + template["filename"]
     with open(fp, 'wb') as output_file:
-        output_file.write(template)
-        logging.info("Saved template " + template_uuid)
+        output_file.write(template_html)
+        logging.info("Saved template " + template["filename"])
 
 
 def get_image(image_uuid):
