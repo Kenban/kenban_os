@@ -8,8 +8,8 @@ CONFIG_FILE = 'kenban.conf'
 
 DEFAULTS = {
     'main': {
-        'server_address': 'http://192.168.0.100:5000',
-        'websocket_updates_address': 'ws://192.168.0.100:5000/ws/v1/updates/screen-schedule/',
+        'server_address': 'https://api.kenban.co.uk',
+        'websocket_updates_address': 'wss://api.kenban.co.uk/ws/v1/updates/screen-schedule/',
         'device_uuid': None,
         'last_update': None,
         'access_token': None,

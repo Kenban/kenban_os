@@ -202,7 +202,6 @@ class DisplayHandler(QThread):
             self.show_error_page(error_text)
 
     def render_display_html(self, schedule_slot: ScheduleSlot, events) -> str:
-        # Add the info for the schedule slot
         if not schedule_slot:
             error_message = "Error. Please try restarting your NoticeHome. If this persists, contact Kenban support."
             html = default_templates_env.get_template("error.html").render(message=error_message)
@@ -213,6 +212,8 @@ class DisplayHandler(QThread):
         r = connect_to_redis()
         if schedule_slot.display_text in [None, ""] and r.exists("new-setup"):
             schedule_slot.display_text = "Customise this screen by visiting kenban.co.uk/schedule"
+        if not schedule_slot.display_text:
+            schedule_slot.display_text = ""
 
         html = user_templates_env.get_template(schedule_slot.template_uuid).render(
             slot=schedule_slot,
