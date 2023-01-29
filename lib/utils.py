@@ -94,7 +94,7 @@ def wait_for_wifi_manager(retries=50, wt=0.1) -> bool:
     return False
 
 
-def wait_for_initial_sync(retries=500, wt=0.1):
+def wait_for_initial_sync(retries=5000, wt=0.1):
     r = connect_to_redis()
     for _ in range(0, retries):
         if r.exists("initial-sync-completed"):
