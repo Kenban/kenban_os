@@ -5,17 +5,17 @@ mkdir -p "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/default_templates"
 mkdir -p "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/user_templates"
 mkdir -p "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/kenban"
 
-cp -r files/kenban_os/* "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/kenban"
-cp -r files/kenban_os/images/* "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/default_images"
-cp -r files/kenban_os/templates/* "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/default_templates"
-cp files/kenban_os/templates/macros.html "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/user_templates/"
+git clone https://github.com/Kenban/kenban_os.git "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/kenban"
+cp -r "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/kenban/images/*" "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/default_images"
+cp -r "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/kenban/templates/*" "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/default_templates"
+cp "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/kenban/templates/macros.html" "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/user_templates/"
 
-install -m 664 files/kenban_os/pi-gen-files/.profile "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.profile"
-install -m 664 files/kenban_os/pi-gen-files/.xinitrc "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.xinitrc"
-install -m 644 files/kenban_os/pi-gen-files/websocket-sync.service "${ROOTFS_DIR}/etc/systemd/system/websocket-sync.service"
-install -m 644 files/kenban_os/pi-gen-files/websocket-local.service "${ROOTFS_DIR}/etc/systemd/system/websocket-local.service"
-install -m 644 files/kenban_os/pi-gen-files/kenban-wifi-manager.service "${ROOTFS_DIR}/etc/systemd/system/kenban-wifi-manager.service"
-install -m 644 files/kenban_os/pi-gen-files/kenbanxorg.conf "${ROOTFS_DIR}/etc/X11/xorg.conf.d/kenban.conf"
+install -m 664 "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/kenban/pi-gen-files/.profile" "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.profile"
+install -m 664 "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/kenban/pi-gen-files/.xinitrc" "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.xinitrc"
+install -m 644 "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/kenban/pi-gen-files/websocket-sync.service" "${ROOTFS_DIR}/etc/systemd/system/websocket-sync.service"
+install -m 644 "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/kenban/pi-gen-files/websocket-local.service" "${ROOTFS_DIR}/etc/systemd/system/websocket-local.service"
+install -m 644 "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/kenban/pi-gen-files/kenban-wifi-manager.service" "${ROOTFS_DIR}/etc/systemd/system/kenban-wifi-manager.service"
+install -m 644 "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/kenban/pi-gen-files/kenbanxorg.conf" "${ROOTFS_DIR}/etc/X11/xorg.conf.d/kenban.conf"
 
 on_chroot << EOF
   
