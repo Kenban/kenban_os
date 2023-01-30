@@ -103,17 +103,10 @@ def sync_templates(overwrite=False):
     existing_template_uuids = os.listdir(settings["templates_folder"])
     logging.debug("Existing templates: " + str(existing_template_uuids))
     for template in templates:
-        if template["uuid"] in existing_template_uuids and not overwrite:
-            logging.debug("Already got template " + template["uuid"])
-            continue
-        url = settings["server_address"] + settings["template_url"] + template.uuid
-        template = kenban_server_request(url=url, method='GET', headers=get_auth_header(), decode_json=False)
-        fp = settings["templates_folder"] + template["filename"]
-        with open(fp, 'wb') as output_file:
-            output_file.write(template)
-            logging.info("Saved template " + template.uuid)
-            
+        if template["uuid"] not in existing_template_uuids or overwrite:
+            get_template(template["uuid"])
 
+            
 def get_template(template_uuid):
     url = settings["server_address"] + settings["template_url"] + template_uuid
     html_url = settings["server_address"] + settings["template_url"] + "html/" + template_uuid
