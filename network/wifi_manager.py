@@ -15,7 +15,7 @@ logging.config.fileConfig(fname='../logging.ini', disable_existing_loggers=True)
 logger = logging.getLogger("wifi_manager")
 
 CONNECTING_MESSAGE = "Stopping access point"
-USER_ON_PORTAL_MESSAGE = "User Connected to the captive portal"
+USER_ON_PORTAL_MESSAGE = "User connected to the captive portal"
 SUCCESS_MESSAGE = "Internet connectivity established"
 PASSWORD_LENGTH_ERROR = "Password length should be at least"
 FAILED_TO_CONNECT_ERROR = "Connection to access point not activated"
