@@ -74,7 +74,7 @@ def sync_events():
 
 
 def sync_images(overwrite=False):
-    url = settings['server_address'] + settings['image_url']
+    url = settings['server_address'] + settings['image_url'] + "?public=true&user=true&profile=true"
     images = kenban_server_request(url=url, method='GET', headers=get_auth_header())
     if not images:
         return None
