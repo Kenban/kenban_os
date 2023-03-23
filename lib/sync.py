@@ -94,32 +94,32 @@ def sync_images(overwrite=False):
 
 
 def sync_templates(overwrite=False):
-    url = settings['server_address'] + settings['template_url']
-    templates = kenban_server_request(url=url, method='GET', headers=get_auth_header())
-    if not templates:
+    url = settings['server_address'] + settings['template_info_url']
+    db_templates = kenban_server_request(url=url, method='GET', headers=get_auth_header())
+    if not db_templates:
+        logging.error(f"Failed to get templates from server at {url}")
         return None
     if not os.path.exists(settings["templates_folder"]):
         os.makedirs(settings["templates_folder"])
     existing_template_uuids = os.listdir(settings["templates_folder"])
     logging.debug("Existing templates: " + str(existing_template_uuids))
-    for template in templates:
+    for template in db_templates:
         if template["uuid"] not in existing_template_uuids or overwrite:
             get_template(template["uuid"])
 
             
 def get_template(template_uuid):
-    url = settings["server_address"] + settings["template_url"] + template_uuid
-    html_url = settings["server_address"] + settings["template_url"] + "html/" + template_uuid
+    url = settings["server_address"] + settings["template_raw_url"] + template_uuid
     template = kenban_server_request(url=url, method='GET', headers=get_auth_header(), decode_json=False)
-    template_html = kenban_server_request(url=html_url, method='GET', headers=get_auth_header(), decode_json=False)
     if not template:
+        logging.error(f"Failed to get template {template_uuid} from server at {url}")
         return None
     if not os.path.exists(settings["templates_folder"]):
         os.makedirs(settings["templates_folder"])
-    fp = settings["templates_folder"] + template["filename"]
+    fp = settings["templates_folder"] + template_uuid
     with open(fp, 'wb') as output_file:
-        output_file.write(template_html)
-        logging.info("Saved template " + template["filename"])
+        output_file.write(template)
+        logging.info("Saved template " + template_uuid)
 
 
 def get_image(image_uuid):
