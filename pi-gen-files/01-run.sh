@@ -26,8 +26,8 @@ on_chroot << EOF
   systemctl enable websocket-sync.service websocket-local.service kenban-wifi-manager.service
 
   mkdir -p /home/${FIRST_USER_NAME}/kenban/local-websocket/nodejs
-  wget https://nodejs.org/dist/v18.13.0/node-v18.13.0-linux-x64.tar.xz
-  tar -xvf node-v18.13.0-linux-x64.tar.xz -C /home/${FIRST_USER_NAME}/kenban/local-websocket/nodejs --strip-components=1
+  wget https://nodejs.org/dist/v18.15.0/node-v18.15.0-linux-arm64.tar.xz
+  tar -xvf node-v18.15.0-linux-arm64.tar.xz -C /home/${FIRST_USER_NAME}/kenban/local-websocket/nodejs --strip-components=1
 
   pip install -r /home/${FIRST_USER_NAME}/kenban/requirements.txt
   cd /home/${FIRST_USER_NAME}/kenban/local-websocket && npm install
