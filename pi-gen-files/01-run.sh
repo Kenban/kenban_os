@@ -8,10 +8,11 @@ on_chroot << EOF
   mkdir -p "/home/${FIRST_USER_NAME}/kenban"
 
   git clone https://github.com/Kenban/kenban_os.git "/home/${FIRST_USER_NAME}/kenban"
+  mkdir -p "/home/${FIRST_USER_NAME}/kenban/logs"
 
-  cp -r "/home/${FIRST_USER_NAME}/kenban/images/*" "/home/${FIRST_USER_NAME}/data/default_images"
-  cp -r "/home/${FIRST_USER_NAME}/kenban/templates/*" "/home/${FIRST_USER_NAME}/data/default_templates"
-  cp "/home/${FIRST_USER_NAME}/kenban/templates/macros.html" "/home/${FIRST_USER_NAME}/data/user_templates/"
+  cp -R /home/${FIRST_USER_NAME}/kenban/images/* /home/${FIRST_USER_NAME}/data/default_images
+  cp -R /home/${FIRST_USER_NAME}/kenban/templates/* /home/${FIRST_USER_NAME}/data/default_templates
+  cp /home/${FIRST_USER_NAME}/kenban/templates/macros.html /home/${FIRST_USER_NAME}/data/user_templates/
 
   install -m 664 "/home/${FIRST_USER_NAME}/kenban/pi-gen-files/.profile" "/home/${FIRST_USER_NAME}/.profile"
   install -m 664 "/home/${FIRST_USER_NAME}/kenban/pi-gen-files/.xinitrc" "/home/${FIRST_USER_NAME}/.xinitrc"
@@ -22,7 +23,7 @@ on_chroot << EOF
 
   raspi-config nonint do_boot_behaviour B2
   sed -i 's/sam/${FIRST_USER_NAME}/g' /etc/systemd/system/getty@tty1.service.d/autologin.conf
-  systemctl enable websocket-sync.service local-websocket.service kenban-wifi-manager.service
+  systemctl enable websocket-sync.service websocket-local.service kenban-wifi-manager.service
 
   mkdir -p /home/${FIRST_USER_NAME}/kenban/local-websocket/nodejs
   wget https://nodejs.org/dist/v18.13.0/node-v18.13.0-linux-x64.tar.xz
