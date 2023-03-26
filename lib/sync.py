@@ -2,6 +2,7 @@ import os
 import logging.config
 from datetime import timedelta
 from random import randrange
+from urllib.parse import urlencode, urljoin
 
 import requests
 from celery.schedules import crontab
@@ -74,7 +75,20 @@ def sync_events():
 
 
 def sync_images(overwrite=False):
-    url = settings['server_address'] + settings['image_url'] + "?public=true&user=true&profile=true"
+    image_params = {
+        'thumbnail': 'false',
+        'public': 'true',
+        'user': 'true',
+        'foreground': 'true',
+        'background': 'true',
+        'template_preview': 'false',
+        'profile': 'true',
+    }
+
+    query_string = urlencode(image_params)
+    base_url = urljoin(settings['server_address'], settings['image_url'])
+    url = f"{base_url}?{query_string}"
+
     images = kenban_server_request(url=url, method='GET', headers=get_auth_header())
     if not images:
         return None
