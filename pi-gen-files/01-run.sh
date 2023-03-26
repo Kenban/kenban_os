@@ -5,9 +5,9 @@ on_chroot << EOF
   mkdir -p "/home/${FIRST_USER_NAME}/data/default_images"
   mkdir -p "/home/${FIRST_USER_NAME}/data/default_templates"
   mkdir -p "/home/${FIRST_USER_NAME}/data/user_templates"
-  mkdir -p "/home/${FIRST_USER_NAME}/kenban/logs"
 
   git clone https://github.com/Kenban/kenban_os.git "/home/${FIRST_USER_NAME}/kenban"
+  mkdir -p "/home/${FIRST_USER_NAME}/kenban/logs"
 
   cp -R /home/${FIRST_USER_NAME}/kenban/images/* /home/${FIRST_USER_NAME}/data/default_images
   cp -R /home/${FIRST_USER_NAME}/kenban/templates/* /home/${FIRST_USER_NAME}/data/default_templates
