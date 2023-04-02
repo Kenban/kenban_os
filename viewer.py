@@ -1,5 +1,6 @@
 import logging.config
 import sys
+from pathlib import Path
 
 from PyQt5.QtCore import QUrl, Qt
 from PyQt5.QtGui import QCursor
