@@ -137,17 +137,40 @@
         <div id="banner-message" class="banner-message" hidden></div>
     </div>
     <script>
-        let localSocket = new WebSocket("ws://localhost:8000")
+        let localSocket
+        let reconnectIntervalMs = 3000
         const bannerMessage = document.getElementById("banner-message")
 
-        localSocket.onmessage = function (event) {
-            if (event.data === "") {
-                bannerMessage.hidden = true
-            } else {
-                bannerMessage.hidden = false
-                bannerMessage.innerText = event.data
+        function setupWebSocket() {
+            localSocket = new WebSocket("ws://localhost:8000")
+
+            localSocket.onopen = function () {
+                console.log("WebSocket connection established.")
+            }
+
+            localSocket.onmessage = function (event) {
+                if (event.data === "") {
+                    bannerMessage.hidden = true
+                } else {
+                    bannerMessage.hidden = false
+                    bannerMessage.innerText = event.data
+                }
+            }
+
+            localSocket.onerror = function (error) {
+                console.error("WebSocket error:", error)
+            }
+
+            localSocket.onclose = function (event) {
+                console.log("WebSocket connection closed:", event)
+                setTimeout(() => {
+                    console.log("Attempting to reconnect...")
+                    setupWebSocket()
+                }, reconnectIntervalMs)
             }
         }
+
+        setupWebSocket();
     </script>
     <style>
         .banner {
