@@ -15,6 +15,8 @@ Base.metadata.create_all(engine)
 
 app = QApplication(sys.argv)
 
+logs_path = Path("logs")
+logs_path.mkdir(exist_ok=True)
 logging.config.fileConfig(fname='logging.ini', disable_existing_loggers=True)
 logger = logging.getLogger("viewer")
 

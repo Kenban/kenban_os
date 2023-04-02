@@ -11,6 +11,8 @@ from netifaces import gateways, interfaces
 
 r = redis.Redis("127.0.0.1", port=6379)
 
+logs_path = Path("logs")
+logs_path.mkdir(exist_ok=True)
 logging.config.fileConfig(fname='../logging.ini', disable_existing_loggers=True)
 logger = logging.getLogger("wifi_manager")
 
