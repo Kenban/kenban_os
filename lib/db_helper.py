@@ -7,6 +7,7 @@ from lib.utils import time_parser
 
 logging.config.fileConfig(fname='logging.ini', disable_existing_loggers=True)
 
+
 def create_or_update_schedule_slot(session: Session, slot: ScheduleSlot):
     logging.debug("Saving schedule slot")
     db_slot = session.query(ScheduleSlot).filter_by(uuid=slot["uuid"]).first()
@@ -22,7 +23,7 @@ def create_or_update_schedule_slot(session: Session, slot: ScheduleSlot):
     db_slot.weekday = slot["weekday"]
 
 
-def create_or_update_event(session: Session, event: Event):
+def create_or_update_event(session: Session, event):
     logging.debug("Saving event")
     db_event = session.query(Event).filter_by(uuid=event["uuid"]).first()
     if not db_event:
@@ -33,4 +34,4 @@ def create_or_update_event(session: Session, event: Event):
     db_event.display_text = event["display_text"]
     db_event.event_start = parse(event["event_start"])
     db_event.event_end = parse(event["event_end"])
-    db_event.override = event["override"]
+    db_event.override = event.get("override")

@@ -137,6 +137,8 @@ def get_template(template_uuid):
 
 
 def get_image(image_uuid):
+    if not image_uuid:
+        return None
     kenban_url = settings['server_address'] + settings['image_url'] + image_uuid
     image = kenban_server_request(url=kenban_url, method='GET', headers=get_auth_header())
     img_data = requests.get(image["src"]).content
