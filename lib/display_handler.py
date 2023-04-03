@@ -66,9 +66,8 @@ class DisplayHandler(QThread):
                 self.scheduler.refresh_needed = False
                 r.delete("refresh-browser")
             banner_message = self.create_banner_message()
-            if banner_message != self.current_banner_message:
-                r.publish("banner_message", banner_message)
-                self.current_banner_message = banner_message
+            r.publish("banner_message", banner_message)
+            self.current_banner_message = banner_message
 
         if get_db_mtime() > self.scheduler.last_update_db_mtime:
             self.scheduler.update_assets_from_db()
