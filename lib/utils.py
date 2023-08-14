@@ -1,6 +1,7 @@
 import json
 import logging.config
 import os
+import socket
 import string
 from datetime import datetime, time
 from distutils.util import strtobool
@@ -94,14 +95,28 @@ def wait_for_wifi_manager(retries=50, wt=0.1) -> bool:
     return False
 
 
-def wait_for_initial_sync(retries=5000, wt=0.1):
+def wait_for_internet_ping(retries=50, wt=0.1) -> bool:
+    """ Attempt to reach 1.1.1.1 before continuing """
+    host = socket.gethostbyname("1.1.1.1")
+    for _ in range(0, retries):
+        try:
+            s = socket.create_connection((host, 80), 2)
+            s.close()
+            return True
+        except OSError:
+            sleep(wt)
+    logging.error("Failed to ping 1.1.1.1")
+    return False
+
+
+def wait_for_startup_sync(retries=5000, wt=0.1):
     r = connect_to_redis()
     for _ in range(0, retries):
-        if r.exists("initial-sync-completed"):
+        if r.exists("startup-sync-completed"):
             return True
         else:
             sleep(wt)
-    logging.error("Failed to wait for initial sync")
+    logging.error("Failed to wait for startup sync")
 
 
 def kenban_server_request(url: string, method: string, data=None, headers=None, decode_json=True):

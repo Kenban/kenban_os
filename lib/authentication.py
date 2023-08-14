@@ -53,10 +53,10 @@ def register_new_client():
                                  data=data,
                                  headers={'content-type': 'application/json'})
     except ConnectionError:
-        logging.warning("Could not connect to authorisation server at {0}".format(url))
+        logging.exception("Could not connect to authorisation server at {0}".format(url))
         return None, None
     except ValueError:
-        logging.warning("Failed to decode server response during authorisation polling")
+        logging.exception("Failed to decode server response during authorisation polling")
         return None, None
     try:
         response_body = json.loads(response.content)

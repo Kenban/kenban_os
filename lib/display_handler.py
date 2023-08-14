@@ -10,7 +10,7 @@ from lib.authentication import register_new_client, poll_for_authentication, get
 from lib.models import ScheduleSlot
 from lib.scheduler import Scheduler
 from lib.utils import connect_to_redis, get_db_mtime, wait_for_wifi_manager, kenban_server_request, \
-    wait_for_initial_sync
+    wait_for_startup_sync, wait_for_internet_ping
 from settings import settings
 
 EMPTY_PL_DELAY = 5  # secs
@@ -180,13 +180,21 @@ class DisplayHandler(QThread):
                                  " Kenban support."
                     self.show_error_page(error_text)
 
+            # Check to see if we can reach the internet before proceeding
+            ping = wait_for_internet_ping(50, 0.1)
+            if not ping:
+                error_text = "Network error. Please try restarting your NoticeHome. If this persists, contact" \
+                             " Kenban support."
+                self.show_error_page(error_text)
+
+            # If we don't have a refresh token, we need to pair the device
             if settings["refresh_token"] in [None, "None", ""]:
                 r = connect_to_redis()
                 r.set("new-setup", 1, ex=3600)
                 self.device_pair()
                 html = default_templates_env.get_template("new-setup-screen.html").render()
                 self.show_default_template(html)
-                wait_for_initial_sync()
+                wait_for_startup_sync()
                 self.confirm_setup_completion()
             else:
                 logger.info(f"Device already paired")

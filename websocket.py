@@ -12,7 +12,7 @@ from lib import sync
 from lib.authentication import get_access_token
 from lib.db_helper import create_or_update_schedule_slot, create_or_update_event
 from lib.models import Session
-from lib.utils import connect_to_redis
+from lib.utils import connect_to_redis, wait_for_internet_ping
 from settings import settings
 
 
@@ -121,10 +121,12 @@ if __name__ == "__main__":
     settings.load()
     # Don't try and connect if we don't have a token yet
     wait_for_refresh_token()
+    # Wait for an internet connection
+    wait_for_internet_ping()
     if r.exists("new-setup"):
         # Allow the server to set up the new user before performing a sync
         sleep(5)
 
     sync.full_sync()
-    r.set("initial-sync-completed", 1, 60)
+    r.set("startup-sync-completed", 1, 60)
     asyncio.run(subscribe_to_updates())
