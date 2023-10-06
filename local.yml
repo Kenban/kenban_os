@@ -6,11 +6,10 @@
 
   tasks:
 
-    - name: Update repository
-      git:
-        repo: 'https://github.com/kenban/kenban_os.git'
-        dest: '/home/user/kenban'
-        update: yes
+    - name: git pull
+      command:
+        cmd: git pull
+        chdir: '/home/user/kenban'
 
     - name: Schedule system reboot at 3am
       command: "shutdown -r 03:00"
