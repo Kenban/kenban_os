@@ -3,6 +3,7 @@ import logging.config
 import os
 import socket
 import string
+import struct
 from datetime import datetime, time
 from distutils.util import strtobool
 from time import sleep
@@ -107,6 +108,26 @@ def wait_for_internet_ping(retries=500, wt=0.1) -> bool:
             sleep(wt)
     logging.error("Failed to ping 1.1.1.1")
     return False
+
+
+def force_ntp_update():
+    """ Connect to NTP server and set system time. Used because the system time wasn't being set in time for the
+    startup sync causing SSL certificate errors"""
+
+    unix_epoch = 2208988800  # difference between Unix and NTP epoch time
+    client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    data = b'\x1b' + 47 * b'\0'
+    client.sendto(data, ('0.uk.pool.ntp.org', 123))
+    data, address = client.recvfrom(1024)
+    if data:
+        t = struct.unpack('!12I', data)[10]
+        t -= unix_epoch
+    else:
+        logging.error("Failed to get time from NTP server. Waiting 30 seconds")
+        sleep(30)
+    dt = datetime.fromtimestamp(t)
+    date_string = dt.strftime('%Y-%m-%d %H:%M:%S')
+    os.system(f"sudo date -s '{date_string}'")
 
 
 def wait_for_startup_sync(retries=5000, wt=0.1):

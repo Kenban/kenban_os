@@ -10,7 +10,7 @@ from lib.authentication import register_new_client, poll_for_authentication, get
 from lib.models import ScheduleSlot
 from lib.scheduler import Scheduler
 from lib.utils import connect_to_redis, get_db_mtime, wait_for_wifi_manager, kenban_server_request, \
-    wait_for_startup_sync, wait_for_internet_ping
+    wait_for_startup_sync, wait_for_internet_ping, force_ntp_update
 from settings import settings
 
 EMPTY_PL_DELAY = 5  # secs
@@ -86,18 +86,17 @@ class DisplayHandler(QThread):
         current_html = ""
         status = ""
         # Enter a loop to update the display according to wifi-connect progress
+        show_error_message = False
         while status != "success":
             status = r.get("wifi-connect-status").decode('utf-8')
             if status == "user-on-portal":
                 show_hotspot_connection_instructions = False
                 show_home_wifi_password_instructions = True
                 show_connecting_spinner = False
-                show_error_message = False
             elif status == "connecting":
                 show_hotspot_connection_instructions = False
                 show_home_wifi_password_instructions = False
                 show_connecting_spinner = True
-                show_error_message = False
             elif status == "user-error":
                 show_hotspot_connection_instructions = True
                 show_home_wifi_password_instructions = False
@@ -107,7 +106,6 @@ class DisplayHandler(QThread):
                 show_hotspot_connection_instructions = True
                 show_home_wifi_password_instructions = False
                 show_connecting_spinner = False
-                show_error_message = False
             new_html = default_templates_env.get_template("hotspot.html"). \
                 render(ssid=ssid,
                        ssid_password=ssid_password,
@@ -182,6 +180,8 @@ class DisplayHandler(QThread):
 
             # Check to see if we can reach the internet before proceeding
             ping = wait_for_internet_ping(500, 0.1)
+            # Force an NTP update, in case we've been offline for a while and reject SSL certs
+            force_ntp_update()
             if not ping:
                 error_text = "Network error. Please try restarting your NoticeHome. If this persists, contact" \
                              " Kenban support."
