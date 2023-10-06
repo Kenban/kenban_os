@@ -5,12 +5,13 @@
   become: true
 
   tasks:
-    - name: Update nginx to latest
-      apt:
-        name: nginx
-        state: latest
-        update_cache: yes
 
-    - name: Update redis
-      pip:
-        name: redis==4.4.0
+    - name: Update repository
+      git:
+        repo: 'https://github.com/kenban/kenban_os.git'
+        dest: '/home/user/kenban'
+        update: yes
+
+    - name: Schedule system reboot at 3am
+      command: "shutdown -r 03:00"
+      become: yes

@@ -181,7 +181,7 @@ class DisplayHandler(QThread):
                     self.show_error_page(error_text)
 
             # Check to see if we can reach the internet before proceeding
-            ping = wait_for_internet_ping(50, 0.1)
+            ping = wait_for_internet_ping(500, 0.1)
             if not ping:
                 error_text = "Network error. Please try restarting your NoticeHome. If this persists, contact" \
                              " Kenban support."

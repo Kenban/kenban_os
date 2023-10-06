@@ -122,7 +122,9 @@ if __name__ == "__main__":
     # Don't try and connect if we don't have a token yet
     wait_for_refresh_token()
     # Wait for an internet connection
-    wait_for_internet_ping()
+    if not wait_for_internet_ping():
+        logger.error("No internet connection")
+        exit(1)
     if r.exists("new-setup"):
         # Allow the server to set up the new user before performing a sync
         sleep(5)

@@ -95,7 +95,7 @@ def wait_for_wifi_manager(retries=50, wt=0.1) -> bool:
     return False
 
 
-def wait_for_internet_ping(retries=50, wt=0.1) -> bool:
+def wait_for_internet_ping(retries=500, wt=0.1) -> bool:
     """ Attempt to reach 1.1.1.1 before continuing """
     host = socket.gethostbyname("1.1.1.1")
     for _ in range(0, retries):
