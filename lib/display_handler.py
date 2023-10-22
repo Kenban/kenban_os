@@ -75,6 +75,10 @@ class DisplayHandler(QThread):
         sleep(SCREEN_TICK_DELAY)
 
     def show_hotspot_page(self):
+        # FIXME only shows error message for one loop
+        # TODO Could the errors in the hotspot page be due to some missing dbus libraries?
+        #  Building python-networkmanager comes up with some errors due to dbus, maybe the same thing is happening quietly for wifi-connect
+
         r = connect_to_redis()
         # Set a flag, so we can display "connection successful" on the next screen
         r.set("hotspot-connected-this-session", value="True", ex=timedelta(seconds=30))

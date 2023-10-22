@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connect to your Wi-Fi</title>
+</head>
+<body>
+
+<h2>Connect to Wi-Fi</h2>
+<form action="/submit" method="post">
+    SSID: <label>
+
+    <select>
+        {% for n in networks %}
+            <option value="{{ n.ssid }}">{{ n.ssid }}</option>
+        {% endfor %}
+    </select>
+</label><br><br>
+    Password: <label>
+    <input type="password" name="password">
+</label><br><br>
+    <input type="submit" value="Connect">
+</form>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <p><strong>{{ message }}</strong></p>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+</body>
+</html>

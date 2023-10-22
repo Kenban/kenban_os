@@ -3,10 +3,12 @@ import logging.config
 import random
 import re
 import subprocess
+import uuid
 from datetime import datetime
 from pathlib import Path
 from time import sleep
 
+import dbus
 import redis
 from netifaces import gateways, interfaces
 
@@ -51,31 +53,44 @@ def start_wifi_connect():
     logger.debug(f"ssid {ssid}")
     logger.debug(f"password: {ssid_password}")
 
-    args = ("./wifi-connect", "-s", ssid, "-p", ssid_password)
-    process = subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-    while process.poll() is None:
-        # Read the stdout to determine the status of wifi-connect
-        line = process.stdout.readline().decode("utf-8")
-        if line:
-            logger.debug(line)
-            if USER_ON_PORTAL_MESSAGE in line:
-                r.set("wifi-connect-status", "user-on-portal")
-            if CONNECTING_MESSAGE in line:
-                r.set("wifi-connect-status", "connecting")
-                logger.info("Connecting to Wi-Fi")
-            if SUCCESS_MESSAGE in line:
-                r.set("wifi-connect-status", "success")
-                r.setbit("internet-connected", offset=0, value=1)
-                logger.info("Connected")
-                return True
-            if PASSWORD_LENGTH_ERROR in line:
-                r.set("wifi-connect-status", "user-error")
-                logger.warning("Incorrect password entered")
-            if FAILED_TO_CONNECT_ERROR in line:
-                r.set("wifi-connect-status", "user-error")
-                logger.warning("Failed to connect to Wi-Fi")
+    subprocess.run(['sudo', 'systemctl', 'start', 'dnsmasq'], check=True, text=True, capture_output=True)
+    subprocess.run(['sudo', 'systemctl', 'start', 'hostapd'], check=True, text=True, capture_output=True)
+
+    flask_app = subprocess.Popen(["gunicorn", "-w", "1", "app:app", "--bind", "0.0.0.0:8080"])
+    while r.get("wifi-connect-status") != "success":
+        sleep(1)
+    flask_app.terminate()
+
+
+    # args = ("./wifi-connect", "-s", ssid, "-p", ssid_password)
+    # process = subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    # while process.poll() is None:
+    #     # Read the stdout to determine the status of wifi-connect
+    #     line = process.stdout.readline().decode("utf-8")
+    #     if line:
+    #         logger.debug(line)
+    #         if USER_ON_PORTAL_MESSAGE in line:
+    #             r.set("wifi-connect-status", "user-on-portal")
+    #         if CONNECTING_MESSAGE in line:
+    #             r.set("wifi-connect-status", "connecting")
+    #             logger.info("Connecting to Wi-Fi")
+    #         if SUCCESS_MESSAGE in line:
+    #             r.set("wifi-connect-status", "success")
+    #             r.setbit("internet-connected", offset=0, value=1)
+    #             logger.info("Connected")
+    #             return True
+    #         if PASSWORD_LENGTH_ERROR in line:
+    #             r.set("wifi-connect-status", "user-error")
+    #             logger.warning("Incorrect password entered")
+    #         if FAILED_TO_CONNECT_ERROR in line:
+    #             r.set("wifi-connect-status", "user-error")
+    #             logger.warning("Failed to connect to Wi-Fi")
+
     # If we reach this point, wifi-connect has failed. Exit and retry
     exit()
+
+
+
 
 
 def wait_for_redis(retries: int, wt=0.1):

@@ -10,6 +10,7 @@
       command:
         cmd: git pull
         chdir: '/home/user/kenban'
+        # FIXME - this is not working
 
     - name: Schedule system reboot at 3am
       command: "shutdown -r 03:00"
