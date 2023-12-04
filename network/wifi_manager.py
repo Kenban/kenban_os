@@ -24,34 +24,9 @@ PASSWORD_LENGTH_ERROR = "Password length should be at least"
 FAILED_TO_CONNECT_ERROR = "Connection to access point not activated"
 
 
-def generate_random_word_password(no_of_words=3):
-    lines = open('wordlist.txt').read().splitlines()
-    words = []
-    for x in range(0, no_of_words):
-        word = random.choice(lines)
-        words.append(word)
-    return "-".join(words)
-
-
 def start_wifi_connect():
     logger.info("Creating hotspot with wifi-connect application")
-
-    if r.exists("ssid"):
-        ssid = r.get("ssid")
-    else:
-        ssid = f'NoticeHome-{random.randrange(0,100)}'
-        r.set("ssid", ssid)
-
-    if r.exists("ssid-password"):
-        ssid_password = r.get("ssid-password")
-    else:
-        ssid_password = generate_random_word_password(no_of_words=2)
-        r.set("ssid-password", ssid_password)
-
-    logger.debug(f"ssid {ssid}")
-    logger.debug(f"password: {ssid_password}")
-
-    args = ("./wifi-connect", "-s", ssid, "-p", ssid_password)
+    args = ("./wifi-connect", "-s", "NoticeHome")
     process = subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
     while process.poll() is None:
         # Read the stdout to determine the status of wifi-connect

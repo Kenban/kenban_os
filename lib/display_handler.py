@@ -78,11 +78,7 @@ class DisplayHandler(QThread):
         r = connect_to_redis()
         # Set a flag, so we can display "connection successful" on the next screen
         r.set("hotspot-connected-this-session", value="True", ex=timedelta(seconds=30))
-        ssid = r.get("ssid").decode("utf-8")
-        ssid_password = r.get("ssid-password").decode("utf-8")
         logger.info("Displaying hotspot page")
-        logger.info(f"SSID = {ssid}")
-        logger.info(f"SSID Password = {ssid_password}")
         current_html = ""
         status = ""
         # Enter a loop to update the display according to wifi-connect progress
@@ -107,8 +103,7 @@ class DisplayHandler(QThread):
                 show_home_wifi_password_instructions = False
                 show_connecting_spinner = False
             new_html = default_templates_env.get_template("hotspot.html"). \
-                render(ssid=ssid,
-                       ssid_password=ssid_password,
+                render(ssid="NoticeHome",
                        show_hotspot_connection_instructions=show_hotspot_connection_instructions,
                        connecting=show_connecting_spinner,
                        error=show_error_message,
