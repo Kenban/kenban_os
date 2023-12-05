@@ -28,12 +28,6 @@
                     {{ ssid }}
                 </div>
             </div>
-            <div class="credential">
-                Password:
-                <div class="code">
-                    {{ ssid_password }}
-                </div>
-            </div>
         </div>
         {% endif %}
         {% if show_home_wifi_password_instructions %}
@@ -87,4 +81,19 @@
         transform: translate3d(-50%, -50%, 0);
         will-change: transform;
     }
+
+    @media only screen and (max-width: 600px) {
+        .message-container, .credentials, .connecting-container, .bottom-message {
+            width: 100%; /* Adjust width to be more responsive */
+            padding: 10px; /* Add some padding for small screens */
+        }
+        .message {
+            font-size: smaller; /* Adjust font size for readability */
+        }
+        .spin::before {
+            height: 20px; /* Adjust spinner size */
+            width: 20px;
+        }
+    }
+
 </style>

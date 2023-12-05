@@ -26,15 +26,6 @@ PASSWORD_LENGTH_ERROR = "Password length should be at least"
 FAILED_TO_CONNECT_ERROR = "Connection to access point not activated"
 
 
-def generate_random_word_password(no_of_words=3):
-    lines = open('wordlist.txt').read().splitlines()
-    words = []
-    for x in range(0, no_of_words):
-        word = random.choice(lines)
-        words.append(word)
-    return "-".join(words)
-
-
 def start_wifi_connect():
     logger.info("Creating hotspot with wifi-connect application")
 
