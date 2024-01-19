@@ -38,7 +38,7 @@ on_chroot << EOF
 
   chmod 755 /home/${FIRST_USER_NAME}/kenban/update.sh
   echo "0 2 1 * * ${FIRST_USER_NAME} bash /home/${FIRST_USER_NAME}/kenban/update.sh" > /etc/cron.d/kenban-update
-  echo alias update="/home/${FIRST_USER_NAME}/kenban/update.sh --no-wait" >> /home/${FIRST_USER_NAME}/.bashrc
+  echo alias update="bash /home/${FIRST_USER_NAME}/kenban/update.sh --no-wait" >> /home/${FIRST_USER_NAME}/.bashrc
   chmod 600 /etc/cron.d/kenban-update
 
 EOF
