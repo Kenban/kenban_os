@@ -36,6 +36,7 @@ on_chroot << EOF
   chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /home/${FIRST_USER_NAME}/kenban
   chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /home/${FIRST_USER_NAME}/data
 
-  echo "$(( RANDOM % 60)) $(( RANDOM % 8)) $(( RANDOM % 30 + 1)) * * root ansible-pull -U https://github.com/kenban/kenban_os/ -C production" > /etc/cron.d/kenban-ansible-pull
+  echo "0 2 1 * * ${FIRST_USER_NAME} /home/${FIRST_USER_NAME}/kenban/pi-gen-files/update.sh" > /etc/cron.d/kenban-update
+  chmod 600 /etc/cron.d/kenban-update
 
 EOF

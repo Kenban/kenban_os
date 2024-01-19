@@ -93,6 +93,7 @@ class DisplayHandler(QThread):
                 show_hotspot_connection_instructions = False
                 show_home_wifi_password_instructions = False
                 show_connecting_spinner = True
+                show_error_message = False
             elif status == "user-error":
                 show_hotspot_connection_instructions = True
                 show_home_wifi_password_instructions = False
