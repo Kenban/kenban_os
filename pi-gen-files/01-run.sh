@@ -36,7 +36,9 @@ on_chroot << EOF
   chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /home/${FIRST_USER_NAME}/kenban
   chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /home/${FIRST_USER_NAME}/data
 
-  echo "0 2 1 * * ${FIRST_USER_NAME} /home/${FIRST_USER_NAME}/kenban/pi-gen-files/update.sh" > /etc/cron.d/kenban-update
+  chmod 755 /home/${FIRST_USER_NAME}/kenban/update.sh
+  echo "0 2 1 * * ${FIRST_USER_NAME} bash /home/${FIRST_USER_NAME}/kenban/update.sh" > /etc/cron.d/kenban-update
+  echo alias update="/home/${FIRST_USER_NAME}/kenban/update.sh --no-wait" >> /home/${FIRST_USER_NAME}/.bashrc
   chmod 600 /etc/cron.d/kenban-update
 
 EOF
