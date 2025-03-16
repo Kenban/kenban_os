@@ -29,6 +29,8 @@ on_chroot << EOF
   wget https://nodejs.org/dist/v18.15.0/node-v18.15.0-linux-arm64.tar.xz
   tar -xvf node-v18.15.0-linux-arm64.tar.xz -C /home/${FIRST_USER_NAME}/kenban/local-websocket/nodejs --strip-components=1
 
+  python3 -m venv /home/${FIRST_USER_NAME}/kenban/venv
+  source /home/${FIRST_USER_NAME}/kenban/venv/bin/activate
   pip install -r /home/${FIRST_USER_NAME}/kenban/requirements.txt
   cd /home/${FIRST_USER_NAME}/kenban/local-websocket && npm install
 

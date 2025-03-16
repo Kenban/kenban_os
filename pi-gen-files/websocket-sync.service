@@ -8,7 +8,7 @@ Type=simple
 Restart=always
 RestartSec=1
 
-ExecStart=/usr/bin/python3 /home/user/kenban/websocket.py
+ExecStart=/home/user/kenban/venv/bin/python3 /home/user/kenban/websocket.py
 
 [Install]
 WantedBy=multi-user.target
