@@ -14,3 +14,13 @@
     - name: Schedule system reboot at 3am
       command: "shutdown -r 03:00"
       become: yes
+
+    - name: Record last update timestamp
+      lineinfile:
+        path: /var/log/kenban_update.log
+        line: "Last update run: {{ ansible_date_time.iso8601 }}"
+        insertafter: EOF
+        create: yes
+        mode: "0644"
+        owner: root
+        group: root
