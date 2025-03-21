@@ -10,7 +10,7 @@ Type=simple
 Restart=always
 RestartSec=1
 
-ExecStart=/usr/bin/python3 /home/user/kenban/network/wifi_manager.py
+ExecStart=/home/user/kenban/venv/bin/python /home/user/kenban/network/wifi_manager.py
 
 [Install]
 WantedBy=multi-user.target
