@@ -98,6 +98,7 @@ def message_handler(msg):
             sync.ensure_images_and_templates_in_local_storage(payload)
             create_or_update_event(session, payload)
             session.commit()
+        r.set("recalculate-events")
     if message_type == "image":
         image_uuid = payload["image_uuid"]
         sync.get_image(image_uuid)

@@ -3,9 +3,11 @@ from datetime import datetime, timedelta
 from typing import List
 
 from lib.models import ScheduleSlot, Event, Session
-from lib.utils import WEEKDAY_DICT, get_db_mtime
+from lib.utils import WEEKDAY_DICT, get_db_mtime, connect_to_redis
 
 logging.config.fileConfig(fname='logging.ini', disable_existing_loggers=True)
+
+r = connect_to_redis()
 
 class Scheduler(object):
     def __init__(self):
@@ -53,7 +55,7 @@ class Scheduler(object):
             self.set_current_slot(self.next_slot)
             self.refresh_needed = True
 
-        if self.daily_events_date != datetime.now().date():
+        if self.daily_events_date != datetime.now().date() or r.get("recalculate-events"):
             self.calculate_daily_events()
 
         self.calculate_current_events()
@@ -79,6 +81,7 @@ class Scheduler(object):
                              if (e.event_start < day_start > e.event_end)  # Starts before day, ends during/after day
                              or (day_start < e.event_start < day_end)]  # Starts during day
         self.daily_events_date = today.date()
+        r.delete("recalculate-events")
 
     def calculate_current_events(self):
         self.active_events = [e for e in self.daily_events if e.event_start < datetime.now() < e.event_end]
